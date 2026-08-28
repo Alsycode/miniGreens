@@ -8,7 +8,7 @@ import { Typography } from '../../components/ui/Typography';
 
 const TABS: { name: string; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { name: 'index',         label: 'Home',    icon: 'home' },
-  { name: 'explore',       label: 'Explore',  icon: 'search' },
+  { name: 'explore',       label: 'Search',  icon: 'search' },
   { name: 'subscriptions', label: 'Plans',    icon: 'calendar' },
   { name: 'orders',        label: 'Orders',   icon: 'receipt' },
   { name: 'profile',       label: 'Profile',  icon: 'person' },

@@ -6,6 +6,7 @@ import {
   Dimensions,
   TouchableOpacity,
   TextInput,
+  Image,
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -39,6 +40,7 @@ import {
 } from '../../mock';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useCartStore } from '../../store/useCartStore';
+import { resolveImageSource } from '../../utils/placeholders';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -73,6 +75,7 @@ export default function HomeScreen() {
   const featuredProducts = products.filter((p) => p.isFeatured);
   const seasonalProducts = products.filter((p) => p.isSeasonal);
   const bestSellers = products.filter((p) => p.isBestSeller);
+  const [activeCat, setActiveCat] = useState(categories[0]?.id);
 
   const headerStyle   = useStaggeredEntry(0);
   const searchStyle   = useStaggeredEntry(80);
@@ -120,7 +123,7 @@ export default function HomeScreen() {
               {firstName} <Typography variant="h3" color={colors.primary}>🌿</Typography>
             </Typography>
             <Typography variant="caption" color={colors.textTertiary} style={{ marginTop: 2 }}>
-              Fuel your body. Refresh your mind.
+              Fuel your body. Refresh your mind. 🌿
             </Typography>
           </View>
           <View style={styles.headerActions}>
@@ -129,6 +132,7 @@ export default function HomeScreen() {
               onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
             >
               <Ionicons name="notifications-outline" size={20} color={colors.text} />
+              <View style={styles.bellDot} />
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.iconButton}
@@ -160,7 +164,7 @@ export default function HomeScreen() {
             <SearchBar
               value=""
               onChangeText={() => {}}
-              placeholder="Search fresh microgreens..."
+              placeholder="Search smoothies, juices, bowls..."
               onPress={handleSearchPress}
             />
           </TouchableOpacity>
@@ -174,11 +178,15 @@ export default function HomeScreen() {
         {/* Featured Categories */}
         <Animated.View style={[styles.section, section1Style]}>
           <View style={styles.sectionHeader}>
-            <Typography variant="h4" color={colors.text}>Categories</Typography>
-            <TouchableOpacity onPress={() => router.push('/(tabs)/explore')}>
-              <Typography variant="bodySmall" color={colors.primary} weight="semibold">
-                See All
+            <View>
+              <Typography variant="h4" color={colors.text}>Categories</Typography>
+              <Typography variant="caption" color={colors.textTertiary} style={styles.sectionSub}>
+                Pick your fresh fix
               </Typography>
+            </View>
+            <TouchableOpacity style={styles.viewAll} onPress={() => router.push('/(tabs)/explore')}>
+              <Typography variant="bodySmall" color={colors.primary} weight="semibold">View all</Typography>
+              <Ionicons name="arrow-forward" size={14} color={colors.primary} />
             </TouchableOpacity>
           </View>
           <ScrollView
@@ -191,7 +199,8 @@ export default function HomeScreen() {
                 key={cat.id}
                 category={cat}
                 index={i}
-                onPress={() => handleCategoryPress(cat.slug)}
+                active={cat.id === activeCat}
+                onPress={() => { setActiveCat(cat.id); handleCategoryPress(cat.slug); }}
               />
             ))}
           </ScrollView>
@@ -200,11 +209,15 @@ export default function HomeScreen() {
         {/* Best Sellers */}
         <Animated.View style={[styles.section, section2Style]}>
           <View style={styles.sectionHeader}>
-            <Typography variant="h4" color={colors.text}>Best Sellers</Typography>
-            <TouchableOpacity onPress={() => router.push('/(tabs)/explore')}>
-              <Typography variant="bodySmall" color={colors.primary} weight="semibold">
-                See All
+            <View>
+              <Typography variant="h4" color={colors.text}>Best Sellers</Typography>
+              <Typography variant="caption" color={colors.textTertiary} style={styles.sectionSub}>
+                Our most loved picks 💚
               </Typography>
+            </View>
+            <TouchableOpacity style={styles.viewAll} onPress={() => router.push('/(tabs)/explore')}>
+              <Typography variant="bodySmall" color={colors.primary} weight="semibold">View all</Typography>
+              <Ionicons name="arrow-forward" size={14} color={colors.primary} />
             </TouchableOpacity>
           </View>
           <ScrollView
@@ -223,38 +236,44 @@ export default function HomeScreen() {
           </ScrollView>
         </Animated.View>
 
-        {/* Seasonal — dark editorial block */}
-        <Animated.View style={section3Style}>
-          <View style={styles.seasonalBlock}>
-            <LinearGradient
-              colors={[colors.surfaceDark, colors.surfaceDarkMid]}
+        {/* Spring Fresh Collection — promo card */}
+        <Animated.View style={[section3Style, styles.section]}>
+          <View style={styles.promoCard}>
+            <Image
+              source={resolveImageSource(
+                (seasonalProducts[0]?.images?.[0]) ??
+                products.find((p) => p.slug === 'mint-melon-smoothie')?.images?.[0] ??
+                banners[0].image
+              )}
               style={StyleSheet.absoluteFill}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
+              resizeMode="cover"
             />
-            <View style={styles.seasonalTag}>
-              <Typography variant="caption" color={colors.secondary} weight="bold" style={{ letterSpacing: 2, fontSize: 9 }}>
-                · SEASONAL ·
+            <LinearGradient
+              colors={['rgba(8,19,13,0.98)', 'rgba(8,19,13,0.9)', 'rgba(8,19,13,0.45)']}
+              locations={[0, 0.5, 1]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={StyleSheet.absoluteFill}
+            />
+            <View style={styles.promoText}>
+              <Typography variant="caption" color={colors.primary} weight="bold" style={styles.promoKicker}>
+                LIMITED TIME ONLY
               </Typography>
-            </View>
-            <Typography variant="h3" color={colors.textInverse} style={styles.seasonalTitle}>
-              Spring Fresh{'\n'}Collection
-            </Typography>
-            <Typography variant="bodySmall" color="rgba(255,255,255,0.6)" style={styles.seasonalDesc}>
-              Harness the flavors of the season with our limited selection.
-            </Typography>
-            <View style={styles.seasonalCta}>
+              <Typography variant="h3" color={colors.textInverse} style={styles.promoTitle}>
+                Spring Fresh{'\n'}Collection
+              </Typography>
+              <Typography variant="bodySmall" color="rgba(255,255,255,0.7)" style={styles.promoDesc}>
+                Harvest the best of the season in every sip.
+              </Typography>
               <TouchableOpacity
-                style={styles.seasonalBtn}
+                style={styles.promoBtn}
                 onPress={() => {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   router.push('/(tabs)/explore');
                 }}
               >
-                <Typography variant="bodySmall" color={colors.primaryDark} weight="bold">
-                  Shop Seasonal
-                </Typography>
-                <Ionicons name="arrow-forward" size={14} color={colors.primaryDark} style={{ marginLeft: 6 }} />
+                <Typography variant="bodySmall" color="#06130D" weight="bold">Explore Collection</Typography>
+                <Ionicons name="arrow-forward" size={14} color="#06130D" style={{ marginLeft: 6 }} />
               </TouchableOpacity>
             </View>
           </View>
@@ -378,9 +397,20 @@ export default function HomeScreen() {
             {lifestyleArticles.map((article, i) => (
               <TouchableOpacity key={article.id} style={styles.articleCard} activeOpacity={0.85}>
                 <View style={styles.articleImageContainer}>
-                  <View style={styles.articleImagePlaceholder} />
+                  <LinearGradient
+                    colors={[colors.surfaceDarkMid, colors.surfaceDark]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.articleImagePlaceholder}
+                  />
+                  <Ionicons
+                    name="reader-outline"
+                    size={30}
+                    color="rgba(52,211,153,0.35)"
+                    style={styles.articleImageIcon}
+                  />
                   <View style={styles.articleCategoryPill}>
-                    <Typography variant="caption" color={colors.textInverse} weight="bold" style={{ fontSize: 9, letterSpacing: 1 }}>
+                    <Typography variant="caption" color="#06130D" weight="bold" style={{ fontSize: 9, letterSpacing: 1 }}>
                       {article.category.toUpperCase()}
                     </Typography>
                   </View>
@@ -411,13 +441,7 @@ export default function HomeScreen() {
           >
             {testimonials.map((testimonial) => (
               <View key={testimonial.id} style={styles.testimonialCard}>
-                <LinearGradient
-                  colors={[colors.surfaceDark, '#162E1E']}
-                  style={StyleSheet.absoluteFill}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                />
-                <Typography variant="h1" color="rgba(202,239,97,0.2)" style={styles.quoteChar}>
+                <Typography variant="h1" color={colors.primary} style={styles.quoteChar}>
                   "
                 </Typography>
                 <View style={styles.starsRow}>
@@ -536,6 +560,74 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 3,
+  },
+  bellDot: {
+    position: 'absolute',
+    top: 9,
+    right: 10,
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: colors.primary,
+    borderWidth: 1.5,
+    borderColor: colors.surface,
+  },
+  sectionSub: {
+    marginTop: 2,
+  },
+  viewAll: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  promoCard: {
+    borderRadius: borderRadius['2xl'],
+    overflow: 'hidden',
+    backgroundColor: colors.surfaceDark,
+    borderWidth: 1,
+    borderColor: colors.border,
+    minHeight: 190,
+    justifyContent: 'center',
+  },
+  promoText: {
+    width: '72%',
+    padding: spacing.xl,
+    zIndex: 2,
+  },
+  promoKicker: {
+    letterSpacing: 1.5,
+    fontSize: 10,
+    marginBottom: spacing.sm,
+  },
+  promoTitle: {
+    marginBottom: spacing.sm,
+  },
+  promoDesc: {
+    lineHeight: 18,
+    marginBottom: spacing.lg,
+  },
+  promoBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm + 2,
+    borderRadius: borderRadius.full,
+  },
+  promoImage: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: '55%',
+  },
+  promoImageMask: {
+    position: 'absolute',
+    right: '45%',
+    left: 0,
+    top: 0,
+    bottom: 0,
   },
   searchContainer: {
     paddingHorizontal: spacing.lg,
@@ -656,7 +748,13 @@ const styles = StyleSheet.create({
     width: 190,
     height: 130,
     borderRadius: borderRadius.lg,
-    backgroundColor: colors.surfaceVariant,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  articleImageIcon: {
+    position: 'absolute',
+    right: spacing.md,
+    bottom: spacing.md,
   },
   articleCategoryPill: {
     position: 'absolute',
@@ -678,6 +776,9 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     padding: spacing.xl,
     position: 'relative',
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   quoteChar: {
     position: 'absolute',

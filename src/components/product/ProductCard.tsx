@@ -30,6 +30,14 @@ function useSpringPress(to = 0.96) {
   return { animStyle, onPressIn, onPressOut };
 }
 
+// Per-product accent (size badge + price), keyed off the slug so it's stable.
+const ACCENTS = ['#F472B6', '#FB923C', '#A78BFA', '#34D399', '#22D3EE', '#FBBF24'];
+function accentFor(slug: string) {
+  let h = 0;
+  for (let i = 0; i < slug.length; i++) h = (h * 31 + slug.charCodeAt(i)) >>> 0;
+  return ACCENTS[h % ACCENTS.length];
+}
+
 // ─── Inline cart stepper ─────────────────────────────────────────────────────
 
 function CartStepper({ slug, compact = false }: { slug: string; compact?: boolean }) {
@@ -47,18 +55,10 @@ function CartStepper({ slug, compact = false }: { slug: string; compact?: boolea
     updateQuantity(cartItem.productId, qty - 1);
   };
 
-  if (qty === 0) {
-    return (
-      <Pressable style={[styles.addBtn, compact && styles.addBtnCompact]} onPress={inc} hitSlop={8}>
-        <Ionicons name="add" size={compact ? 16 : 18} color="#06130D" />
-      </Pressable>
-    );
-  }
-
   return (
     <View style={[styles.stepper, compact && styles.stepperCompact]}>
-      <Pressable style={styles.stepperBtn} onPress={dec} hitSlop={6}>
-        <Ionicons name="remove" size={14} color={colors.primary} />
+      <Pressable style={styles.stepperBtn} onPress={dec} hitSlop={6} disabled={qty === 0}>
+        <Ionicons name="remove" size={14} color={qty === 0 ? colors.textTertiary : colors.primary} />
       </Pressable>
       <Typography variant="bodySmall" weight="bold" color={colors.text} style={styles.stepperQty}>
         {qty}
@@ -73,6 +73,7 @@ function CartStepper({ slug, compact = false }: { slug: string; compact?: boolea
 export function ProductCard({ product, onPress, variant = 'default', index = 0, style }: ProductCardProps) {
   const { animStyle, onPressIn, onPressOut } = useSpringPress();
   const [favorited, setFavorited] = useState(false);
+  const accent = accentFor(product.slug);
 
   const toggleFavorite = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -113,7 +114,7 @@ export function ProductCard({ product, onPress, variant = 'default', index = 0, 
               </Typography>
             </View>
             <View style={styles.priceRow}>
-              <Typography variant="h4" color={colors.primaryLight} weight="bold">
+              <Typography variant="h4" color={accent} weight="bold">
                 ₹{product.price.toFixed(0)}
               </Typography>
               {product.originalPrice && (
@@ -145,7 +146,7 @@ export function ProductCard({ product, onPress, variant = 'default', index = 0, 
               {product.name}
             </Typography>
             <View style={styles.compactPriceRow}>
-              <Typography variant="bodySmall" color={colors.primaryLight} weight="bold">
+              <Typography variant="bodySmall" color={accent} weight="bold">
                 ₹{product.price.toFixed(0)}
               </Typography>
               <CartStepper slug={product.slug} compact />
@@ -186,7 +187,7 @@ export function ProductCard({ product, onPress, variant = 'default', index = 0, 
             />
           </Pressable>
 
-          <View style={styles.unitBadge}>
+          <View style={[styles.unitBadge, { backgroundColor: accent }]}>
             <Typography style={styles.unitBadgeText} color="#06130D">
               {product.unit}
             </Typography>
@@ -207,7 +208,7 @@ export function ProductCard({ product, onPress, variant = 'default', index = 0, 
           </Typography>
 
           <View style={styles.bottomRow}>
-            <Typography variant="h4" weight="bold" color={colors.primaryLight}>
+            <Typography variant="h4" weight="bold" color={accent}>
               ₹{product.price.toFixed(0)}
             </Typography>
             <CartStepper slug={product.slug} />
