@@ -1,0 +1,97 @@
+@import "tailwindcss";
+
+@theme inline {
+  /* Brand palette */
+  --color-brand-primary: #3D7A52;
+  --color-brand-primary-light: #5A9E6F;
+  --color-brand-primary-dark: #0A2416;
+  --color-brand-secondary: #CAEF61;
+  --color-brand-secondary-light: #DDF590;
+  --color-brand-bg: #F5F0E8;
+  --color-brand-surface: #FFFFFF;
+  --color-brand-border: #E0DAD1;
+
+  /* Semantic */
+  --color-background: #F5F0E8;
+  --color-foreground: #1C1C1C;
+  --color-muted: #6B7280;
+
+  /* Font */
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background-color: #F5F0E8;
+  color: #1C1C1C;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Stagger-fade animation for page load */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Skeleton shimmer */
+@keyframes shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    #e8e3da 25%,
+    #f0ebe2 50%,
+    #e8e3da 75%
+  );
+  background-size: 800px 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+/* Slide-over drawer */
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Delivered strike-through */
+@keyframes strike-through {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0.45; transform: translateY(0); }
+}
+
+.animate-delivered {
+  animation: strike-through 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
