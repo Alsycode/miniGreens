@@ -37,6 +37,7 @@ function getMenuSections(role: string | undefined): { title: string; items: Menu
       items: [
         { icon: 'person-outline', label: 'Edit Profile', route: '/profile/edit' },
         { icon: 'location-outline', label: 'Saved Addresses', route: '/profile/addresses' },
+        { icon: 'pricetag-outline', label: 'My Offers', route: '/offers' },
         { icon: 'calendar-outline', label: 'My Subscription', route: '/subscription/manage' },
         partnerItem,
       ],

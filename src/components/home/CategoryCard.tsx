@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Image, StyleSheet, Pressable } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, {
   useSharedValue,
@@ -38,6 +39,20 @@ export function CategoryCard({ category, onPress, index = 0, active = false }: C
         onPressOut={() => { scale.value = withSpring(1, { damping: 31, stiffness: 220 }); }}
         style={[styles.card, active && styles.cardActive]}
       >
+        <Image source={resolveImageSource(category.image)} style={styles.image} resizeMode="cover" />
+        {/* Fade the image's left edge into the card so there's no hard seam */}
+        <LinearGradient
+          colors={
+            active
+              ? ['rgba(15,36,27,1)', 'rgba(15,36,27,1)', 'rgba(15,36,27,0)']
+              : ['rgba(22,22,22,1)', 'rgba(22,22,22,1)', 'rgba(22,22,22,0)']
+          }
+          locations={[0, 0.32, 0.78]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={StyleSheet.absoluteFill}
+          pointerEvents="none"
+        />
         <View style={styles.iconChip}>
           <Ionicons
             name={(category.icon || 'leaf') as any}
@@ -45,7 +60,6 @@ export function CategoryCard({ category, onPress, index = 0, active = false }: C
             color={active ? colors.primary : colors.textTertiary}
           />
         </View>
-        <Image source={resolveImageSource(category.image)} style={styles.image} />
         <Typography
           variant="caption"
           weight="semibold"
@@ -98,7 +112,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 0,
     top: 0,
-    bottom: 0,
+    height: CARD_H,
     width: CARD_W * 0.62,
   },
   label: {

@@ -56,13 +56,25 @@ export interface Banner {
   gradientEnd: string;
 }
 
+export interface ArticleBlock {
+  /** Optional sub-heading rendered above the paragraph. */
+  heading?: string;
+  /** Body copy for this block. */
+  body: string;
+}
+
 export interface LifestyleArticle {
   id: string;
+  slug: string;
   title: string;
   excerpt: string;
   image: string;
   category: string;
   readTime: string;
+  author: string;
+  publishedAt: string;
+  /** Full article body, rendered block by block in the reader. */
+  content: ArticleBlock[];
 }
 
 export interface Testimonial {

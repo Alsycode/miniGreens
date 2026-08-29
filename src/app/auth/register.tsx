@@ -8,6 +8,7 @@ import { Typography } from '../../components/ui/Typography';
 import { TextField } from '../../components/ui/TextField';
 import { Button } from '../../components/ui/Button';
 import { useAuthStore } from '../../store/useAuthStore';
+import { maskDobInput, parseDobInput } from '../../utils/date';
 
 export default function RegisterScreen() {
   const insets = useSafeAreaInsets();
@@ -17,6 +18,7 @@ export default function RegisterScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [dob, setDob] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [confirmationSent, setConfirmationSent] = useState(false);
@@ -34,9 +36,22 @@ export default function RegisterScreen() {
       setError('Passwords do not match.');
       return;
     }
+    let dobIso: string | null = null;
+    if (dob.trim()) {
+      dobIso = parseDobInput(dob);
+      if (!dobIso) {
+        setError('Enter your date of birth as DD/MM/YYYY.');
+        return;
+      }
+    }
     setError(null);
     setLoading(true);
-    const { error: signUpError, needsConfirmation } = await signUp(email.trim(), password, fullName.trim());
+    const { error: signUpError, needsConfirmation } = await signUp(
+      email.trim(),
+      password,
+      fullName.trim(),
+      dobIso,
+    );
     setLoading(false);
     if (signUpError) {
       setError(signUpError);
@@ -97,6 +112,15 @@ export default function RegisterScreen() {
             keyboardType="email-address"
             value={email}
             onChangeText={setEmail}
+          />
+          <TextField
+            label="Date of Birth (optional)"
+            leftIcon="calendar-outline"
+            placeholder="DD/MM/YYYY"
+            keyboardType="number-pad"
+            maxLength={10}
+            value={dob}
+            onChangeText={(t) => setDob(maskDobInput(t))}
           />
           <TextField
             label="Password"

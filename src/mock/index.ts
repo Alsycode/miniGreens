@@ -1,30 +1,36 @@
 import { Product, Category, Banner, LifestyleArticle, Testimonial, SubscriptionPlan, Order, Address, Profile, FAQ } from '../types';
 
 // Product images
-const wheatgrassImg = require('../assets/wheatgrass.webp');
+const wheatgrassImg = require('../assets/wheatgrass.png');
 const whiteRadishImg = require('../assets/whiteraddish.webp');
-const redRadishImg = require('../assets/redraddish.jpg');
-const beetrootImg = require('../assets/beetroot.jpeg');
-const bokChoyImg = require('../assets/bokchoy.jpg');
-const sunflowerImg = require('../assets/sunflowershoots.webp');
-const redCabbageImg = require('../assets/redcabbage.webp');
-const strawberryBananaImg = require('../assets/strawberry-banana.jpg');
-const mangoFreshImg = require('../assets/Mango Fresh.jpg');
+const redRadishImg = require('../assets/redraddish.png');
+const beetrootImg = require('../assets/beetroot.png');
+const bokChoyImg = require('../assets/bokchoy.png');
+const sunflowerImg = require('../assets/sunflowershoots.png');
+const redCabbageImg = require('../assets/redcabbage.png');
+const strawberryBananaImg = require('../assets/strawberry-banana.png');
+const mangoFreshImg = require('../assets/Mango Fresh.png');
 const chocChillImg = require('../assets/choco-chill.jpg');
-const papayaGlowImg = require('../assets/papaya-glow.jpg');
-const mintMelonImg = require('../assets/mint-melon.jpg');
-const carrotLemonJuiceImg = require('../assets/carrot-lemon-juice.webp');
-const cucumberSplashImg = require('../assets/cucumber-splash.jpg');
-const appleSproutImg = require('../assets/apple-sprout.jpg');
-const sweetLimeImg = require('../assets/sweet-lime.webp');
-const watermelonFreshImg = require('../assets/watermelon-fresh.jpg');
+const papayaGlowImg = require('../assets/papaya-glow.png');
+const mintMelonImg = require('../assets/mint-melon.png');
+const carrotLemonJuiceImg = require('../assets/carrot-lemon-juice.png');
+const cucumberSplashImg = require('../assets/cucumber-splash.png');
+const appleSproutImg = require('../assets/apple-sprout.png');
+const sweetLimeImg = require('../assets/sweet-lime.png');
+const watermelonFreshImg = require('../assets/watermelon-fresh.png');
 const mustardImg = require('../assets/mustard.jpeg');
-const fenugreekImg = require('../assets/fenugreek.jpg');
-const broccoliImg = require('../assets/broccoli.jpg');
-const arugulaImg = require('../assets/arugula.webp');
-const turnipImg = require('../assets/turnip.jpg');
-const redAmaranthImg = require('../assets/red-amaranth.jpg');
-const heroBannerImg = require('../assets/banner.png');
+const fenugreekImg = require('../assets/fenugreek.png');
+const broccoliImg = require('../assets/broccoli.png');
+const arugulaImg = require('../assets/arugula.png');
+const turnipImg = require('../assets/turnip.png');
+const redAmaranthImg = require('../assets/red-amaranth.png');
+const heroBannerImg = require('../assets/bannerpic.jpeg');
+
+// Category + editorial imagery
+const smoothieImg = require('../assets/smoothie.jpeg');
+const juiceImg = require('../assets/juice.jpeg');
+const microgreensImg = require('../assets/microgreens.jpeg');
+const bowlsImg = require('../assets/bowls.jpeg');
 
 // SVG placeholder generator - works without network
 function ph(name: string, color: string, w = 400, h = 400): string {
@@ -41,291 +47,8 @@ function bannerPh(title: string): string {
   return `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="600"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="%231B5E20"/><stop offset="100%" stop-color="%234CAF50"/></linearGradient></defs><rect width="1200" height="600" fill="url(#g)"/><rect x="30" y="30" width="1140" height="540" rx="24" fill="rgba(255,255,255,0.08)"/><text x="80" y="300" fill="rgba(255,255,255,0.12)" font-size="200" font-weight="bold" font-family="system-ui">🌿</text><text x="600" y="260" text-anchor="middle" fill="white" font-size="52" font-weight="bold" font-family="system-ui">${t}</text><text x="600" y="340" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="24" font-family="system-ui">Premium wellness, delivered fresh</text></svg>`;
 }
 
-export const categories: Category[] = [
-  { id: 'cat-1', name: 'Smoothies', slug: 'smoothies', description: 'Creamy, nutritious blends made from fresh fruits and natural ingredients', image: mangoFreshImg as any, icon: 'cafe', productCount: 5, color: '#00BFA5' },
-  { id: 'cat-2', name: 'Juices', slug: 'juices', description: 'Cold-pressed fresh juices packed with vitamins and refreshing flavors', image: watermelonFreshImg as any, icon: 'flask', productCount: 5, color: '#FF8F00' },
-  { id: 'cat-3', name: 'Microgreens', slug: 'microgreens', description: 'Fresh, nutrient-packed microgreens grown locally and harvested at peak for maximum flavor and wellness', image: wheatgrassImg as any, icon: 'leaf', productCount: 13, color: '#2E7D32' },
-];
-
-export const products: Product[] = [
-  {
-    id: 'prod-1', name: 'Strawberry Banana Glow', slug: 'strawberry-banana-glow',
-    description: 'A creamy, dreamy blend of ripe strawberries and sweet bananas, whirled into a luscious smoothie. Packed with natural sweetness, potassium, and antioxidants — the perfect glow-up in a glass.',
-    price: 99, categoryId: 'cat-1',
-    images: [strawberryBananaImg],
-    unit: '350ml', weight: '350ml',
-    nutrition: { calories: 210, protein: '4g', carbs: '44g', fat: '2.5g', fiber: '4g', vitamins: ['Vitamin C', 'Potassium', 'Vitamin B6', 'Manganese'] },
-    benefits: ['Rich in antioxidants', 'Boosts skin glow', 'Natural energy source', 'Supports heart health'],
-    storage: 'Refrigerate at 2-4°C. Best consumed within 24 hours.',
-    consumptionTips: ['Enjoy as a breakfast smoothie', 'Perfect post-workout refuel', 'Add a scoop of protein for extra nutrition', 'Serve chilled with a strawberry garnish'],
-    isFeatured: true, isSeasonal: false, isBestSeller: true, rating: 4.7, reviewCount: 156, tags: ['popular', 'creamy', 'fruit-blend'], createdAt: '2024-01-15',
-  },
-  {
-    id: 'prod-2', name: 'Mango Fresh', slug: 'mango-fresh',
-    description: 'Pure sunshine in a bottle. Made with handpicked Alphonso mangoes blended to silky perfection. Every sip is a tropical escape — rich, velvety, and irresistibly refreshing.',
-    price: 110, categoryId: 'cat-1',
-    images: [mangoFreshImg],
-    unit: '350ml', weight: '350ml',
-    nutrition: { calories: 230, protein: '3g', carbs: '50g', fat: '1.5g', fiber: '3g', vitamins: ['Vitamin A', 'Vitamin C', 'Vitamin E', 'Folate'] },
-    benefits: ['Excellent source of Vitamin A', 'Supports eye health', 'Boosts immunity', 'Natural digestive aid'],
-    storage: 'Refrigerate at 2-4°C. Best consumed within 24 hours.',
-    consumptionTips: ['Perfect summer refresher', 'Pair with a light breakfast', 'Add chia seeds for extra fiber', 'Serve with a mint leaf'],
-    isFeatured: true, isSeasonal: false, isBestSeller: true, rating: 4.8, reviewCount: 203, tags: ['tropical', 'mango', 'customer-favorite'], createdAt: '2024-01-20',
-  },
-  {
-    id: 'prod-3', name: 'Choco Chill', slug: 'choco-chill',
-    description: 'For the chocolate lovers who want it healthy. A decadent blend of premium cocoa, banana, and almond milk — creamy, chocolatey, and surprisingly nutritious. Dessert without the guilt.',
-    price: 115, categoryId: 'cat-1',
-    images: [chocChillImg],
-    unit: '350ml', weight: '350ml',
-    nutrition: { calories: 250, protein: '8g', carbs: '38g', fat: '7g', fiber: '5g', vitamins: ['Iron', 'Magnesium', 'Calcium', 'Vitamin B12'] },
-    benefits: ['Rich in antioxidants from cocoa', 'Natural mood booster', 'Good source of protein', 'Satisfies sweet cravings healthily'],
-    storage: 'Refrigerate at 2-4°C. Best consumed within 24 hours.',
-    consumptionTips: ['Perfect as a healthy dessert', 'Great pre-workout energy boost', 'Top with cacao nibs for crunch', 'Enjoy as an afternoon pick-me-up'],
-    isFeatured: true, isSeasonal: false, isBestSeller: true, rating: 4.9, reviewCount: 189, tags: ['chocolate', 'protein-rich', 'indulgent'], createdAt: '2024-02-01',
-  },
-  {
-    id: 'prod-4', name: 'Papaya Glow', slug: 'papaya-glow',
-    description: 'Light, refreshing, and glow-boosting. Fresh papaya blended with a hint of lime creates a smoothie that is as good for your skin as it is for your taste buds. Nature\'s beauty secret.',
-    price: 95, categoryId: 'cat-1',
-    images: [papayaGlowImg],
-    unit: '350ml', weight: '350ml',
-    nutrition: { calories: 160, protein: '2g', carbs: '36g', fat: '1g', fiber: '5g', vitamins: ['Vitamin C', 'Vitamin A', 'Folate', 'Papain Enzyme'] },
-    benefits: ['Contains natural papain enzyme', 'Supports digestion', 'Promotes glowing skin', 'Low calorie & refreshing'],
-    storage: 'Refrigerate at 2-4°C. Best consumed within 24 hours.',
-    consumptionTips: ['Ideal light breakfast', 'Great for skin health routine', 'Add a squeeze of lime', 'Blend with ice for a thicker texture'],
-    isFeatured: false, isSeasonal: false, isBestSeller: false, rating: 4.5, reviewCount: 98, tags: ['light', 'digestion', 'skin-health'], createdAt: '2024-02-15',
-  },
-  {
-    id: 'prod-5', name: 'Mint Melon Smoothie', slug: 'mint-melon-smoothie',
-    description: 'The ultimate summer cooldown. Sweet melon blended with fresh mint leaves creates a crisp, hydrating smoothie that beats the heat like nothing else. Clean, green, and refreshing.',
-    price: 105, categoryId: 'cat-1',
-    images: [mintMelonImg],
-    unit: '350ml', weight: '350ml',
-    nutrition: { calories: 145, protein: '3g', carbs: '32g', fat: '0.5g', fiber: '2g', vitamins: ['Vitamin C', 'Vitamin A', 'Potassium', 'Iron'] },
-    benefits: ['Ultra-hydrating', 'Natural cooling effect', 'Low in calories', 'Rich in electrolytes'],
-    storage: 'Refrigerate at 2-4°C. Best consumed within 24 hours.',
-    consumptionTips: ['Perfect summer cooler', 'Post-yoga refresher', 'Add cucumber for extra hydration', 'Garnish with fresh mint sprig'],
-    isFeatured: true, isSeasonal: true, isBestSeller: false, rating: 4.6, reviewCount: 87, tags: ['refreshing', 'seasonal', 'light'], createdAt: '2024-03-01',
-  },
-  {
-    id: 'prod-6', name: 'Carrot, Lemon & Radish Microgreens Juice', slug: 'carrot-lemon-radish-microgreens-juice',
-    description: 'A powerhouse wellness shot in a bottle. Fresh carrot juice blended with zesty lemon and the peppery kick of radish microgreens — cold-pressed to lock in every nutrient. Bold, bright, and packed with goodness.',
-    price: 85, categoryId: 'cat-2',
-    images: [carrotLemonJuiceImg],
-    unit: '300ml', weight: '300ml',
-    nutrition: { calories: 100, protein: '2.5g', carbs: '22g', fat: '0.5g', fiber: '3g', vitamins: ['Vitamin A', 'Vitamin C', 'Iron', 'Potassium'] },
-    benefits: ['Excellent for eye health', 'Boosts immune system', 'Natural detox support', 'Anti-inflammatory properties'],
-    storage: 'Refrigerate at all times. Consume within 48 hours of opening.',
-    consumptionTips: ['Drink on an empty stomach', 'Shake well before serving', 'Best enjoyed fresh and cold', 'Pair with a light meal'],
-    isFeatured: true, isSeasonal: false, isBestSeller: false, rating: 4.8, reviewCount: 134, tags: ['cold-pressed', 'immune-boost', 'microgreens'], createdAt: '2024-01-25',
-  },
-  {
-    id: 'prod-7', name: 'Cucumber Splash', slug: 'cucumber-splash',
-    description: 'Pure hydration in every sip. Cool cucumber, a hint of lemon, and a whisper of ginger come together in this ultra-refreshing cold-pressed juice. Clean, crisp, and incredibly revitalizing.',
-    price: 90, categoryId: 'cat-2',
-    images: [cucumberSplashImg],
-    unit: '300ml', weight: '300ml',
-    nutrition: { calories: 75, protein: '2g', carbs: '16g', fat: '0.3g', fiber: '1g', vitamins: ['Vitamin K', 'Vitamin C', 'Potassium', 'Magnesium'] },
-    benefits: ['Deep hydration', 'Natural detoxifier', 'Supports skin health', 'Aids digestion'],
-    storage: 'Refrigerate at all times. Consume within 48 hours of opening.',
-    consumptionTips: ['Perfect morning detox drink', 'Enjoy post-meal for digestion', 'Add a pinch of black salt', 'Serve over ice on hot days'],
-    isFeatured: false, isSeasonal: false, isBestSeller: false, rating: 4.4, reviewCount: 76, tags: ['hydrating', 'detox', 'light'], createdAt: '2024-02-10',
-  },
-  {
-    id: 'prod-8', name: 'Apple Sprout', slug: 'apple-sprout',
-    description: 'A crisp, naturally sweet juice that combines the goodness of fresh apples with the nutritional punch of microgreen sprouts. Cold-pressed for maximum flavor and nutrient retention — a delicious way to get your greens.',
-    price: 99, categoryId: 'cat-2',
-    images: [appleSproutImg],
-    unit: '300ml', weight: '300ml',
-    nutrition: { calories: 110, protein: '1.5g', carbs: '26g', fat: '0.3g', fiber: '2g', vitamins: ['Vitamin C', 'Vitamin K', 'Iron', 'Calcium'] },
-    benefits: ['Natural sweetness without added sugar', 'Rich in phytonutrients', 'Supports heart health', 'Gentle energy boost'],
-    storage: 'Refrigerate at all times. Consume within 48 hours of opening.',
-    consumptionTips: ['Great for kids and adults alike', 'Perfect mid-morning refresher', 'Pair with breakfast', 'Serve slightly chilled'],
-    isFeatured: true, isSeasonal: false, isBestSeller: false, rating: 4.6, reviewCount: 112, tags: ['sweet', 'kid-friendly', 'cold-pressed'], createdAt: '2024-03-05',
-  },
-  {
-    id: 'prod-9', name: 'Sweet Lime Spark', slug: 'sweet-lime-spark',
-    description: 'A zesty, citrusy burst of freshness. Made from sweet limes (mosambi) cold-pressed at their peak ripeness, with just a hint of mint. Light, tangy, and utterly refreshing — the classic Indian refresher, elevated.',
-    price: 90, categoryId: 'cat-2',
-    images: [sweetLimeImg],
-    unit: '300ml', weight: '300ml',
-    nutrition: { calories: 85, protein: '1g', carbs: '20g', fat: '0.2g', fiber: '0.5g', vitamins: ['Vitamin C', 'Folate', 'Potassium', 'Flavonoids'] },
-    benefits: ['Excellent source of Vitamin C', 'Natural coolant', 'Aids digestion', 'Boosts immunity'],
-    storage: 'Refrigerate at all times. Consume within 48 hours of opening.',
-    consumptionTips: ['Perfect summer thirst quencher', 'Great with a pinch of black salt', 'Enjoy before meals', 'Serve with crushed ice'],
-    isFeatured: false, isSeasonal: false, isBestSeller: false, rating: 4.5, reviewCount: 94, tags: ['citrus', 'refreshing', 'immunity'], createdAt: '2024-02-20',
-  },
-  {
-    id: 'prod-10', name: 'Watermelon Fresh', slug: 'watermelon-fresh',
-    description: 'Summer in a bottle. Fresh, juicy watermelon cold-pressed with a touch of mint and lime for a crisp, hydrating juice that tastes like pure sunshine. No added sugar — just nature\'s candy at its best.',
-    price: 95, categoryId: 'cat-2',
-    images: [watermelonFreshImg],
-    unit: '300ml', weight: '300ml',
-    nutrition: { calories: 90, protein: '2g', carbs: '20g', fat: '0.2g', fiber: '1g', vitamins: ['Vitamin C', 'Vitamin A', 'Lycopene', 'Potassium'] },
-    benefits: ['Deeply hydrating', 'Rich in lycopene', 'Natural post-workout recovery', 'Heart-healthy'],
-    storage: 'Refrigerate at all times. Consume within 48 hours of opening.',
-    consumptionTips: ['The ultimate summer drink', 'Perfect post-workout hydrator', 'Freeze into ice pops for kids', 'Add a sprig of basil'],
-    isFeatured: false, isSeasonal: true, isBestSeller: true, rating: 4.7, reviewCount: 145, tags: ['hydrating', 'summer', 'popular'], createdAt: '2024-03-10',
-  },
-  // Microgreens
-  {
-    id: 'prod-11', name: 'Pink Radish', slug: 'pink-radish',
-    description: 'Crisp and peppery microgreens packed with antioxidants. Supports digestion and boosts immunity.',
-    price: 120, categoryId: 'cat-3',
-    images: [redRadishImg],
-    unit: '50gm', weight: '50gm',
-    nutrition: { calories: 15, protein: '1.5g', carbs: '2g', fat: '0.5g', fiber: '1g', vitamins: ['Vitamin C', 'Vitamin E', 'Vitamin K', 'Iron'] },
-    benefits: ['Rich in antioxidants', 'Supports digestion', 'Boosts immunity', 'Anti-inflammatory properties'],
-    storage: 'Refrigerate at 2-4°C in a sealed container. Best consumed within 3-4 days.',
-    consumptionTips: ['Add to salads for a peppery kick', 'Garnish soups and sandwiches', 'Blend into green smoothies', 'Top avocado toast for crunch'],
-    isFeatured: false, isSeasonal: false, isBestSeller: true, rating: 4.6, reviewCount: 54, tags: ['microgreens', 'peppery', 'digestion'], createdAt: '2024-04-01',
-  },
-  {
-    id: 'prod-12', name: 'White Radish', slug: 'white-radish',
-    description: 'Mild yet nutrient-dense, rich in vitamins and minerals. Enhances detoxification and gut health.',
-    price: 120, categoryId: 'cat-3',
-    images: [whiteRadishImg],
-    unit: '50gm', weight: '50gm',
-    nutrition: { calories: 12, protein: '1g', carbs: '2.5g', fat: '0.3g', fiber: '1g', vitamins: ['Vitamin C', 'Vitamin B6', 'Potassium', 'Calcium'] },
-    benefits: ['Supports detoxification', 'Promotes gut health', 'Rich in minerals', 'Low calorie & refreshing'],
-    storage: 'Refrigerate at 2-4°C in a sealed container. Best consumed within 3-4 days.',
-    consumptionTips: ['Toss into Asian-style salads', 'Use as a crunchy garnish', 'Pair with citrus dressings', 'Add to spring rolls for texture'],
-    isFeatured: false, isSeasonal: false, isBestSeller: false, rating: 4.3, reviewCount: 28, tags: ['microgreens', 'mild', 'detox'], createdAt: '2024-04-05',
-  },
-  {
-    id: 'prod-13', name: 'Wheatgrass', slug: 'wheatgrass',
-    description: 'A powerhouse of chlorophyll and enzymes. Aids in detox, boosts energy, and supports digestion.',
-    price: 70, categoryId: 'cat-3',
-    images: [wheatgrassImg],
-    unit: '50gm', weight: '50gm',
-    nutrition: { calories: 20, protein: '2g', carbs: '4g', fat: '0.5g', fiber: '2g', vitamins: ['Vitamin A', 'Vitamin C', 'Vitamin E', 'Iron', 'Magnesium'] },
-    benefits: ['Powerful detox support', 'Boosts natural energy', 'Rich in chlorophyll', 'Supports digestion'],
-    storage: 'Refrigerate at 2-4°C in a sealed container. Best consumed within 3-4 days.',
-    consumptionTips: ['Juice with apple and ginger', 'Add to morning smoothies', 'Mix into lemon water for a wellness shot', 'Start with small amounts'],
-    isFeatured: false, isSeasonal: true, isBestSeller: false, rating: 4.8, reviewCount: 72, tags: ['microgreens', 'detox', 'energy'], createdAt: '2024-04-10',
-  },
-  {
-    id: 'prod-14', name: 'Beetroot', slug: 'beetroot',
-    description: 'Earthy and vibrant, loaded with iron and folate. Improves blood circulation and endurance.',
-    price: 199, categoryId: 'cat-3',
-    images: [beetrootImg],
-    unit: '50gm', weight: '50gm',
-    nutrition: { calories: 22, protein: '2g', carbs: '4g', fat: '0.3g', fiber: '1.5g', vitamins: ['Vitamin A', 'Vitamin C', 'Iron', 'Folate'] },
-    benefits: ['Improves blood circulation', 'Rich in iron and folate', 'Supports endurance', 'Natural detoxifier'],
-    storage: 'Refrigerate at 2-4°C in a sealed container. Best consumed within 3-4 days.',
-    consumptionTips: ['Add to smoothies for vibrant color', 'Top grain bowls with a handful', 'Pair with goat cheese in salads', 'Juice with carrot and apple'],
-    isFeatured: true, isSeasonal: false, isBestSeller: false, rating: 4.7, reviewCount: 63, tags: ['microgreens', 'vibrant', 'iron-rich'], createdAt: '2024-04-15',
-  },
-  {
-    id: 'prod-15', name: 'Pak Choi', slug: 'pak-choi',
-    description: 'Tender and mildly sweet, full of vitamins A, C, and K. Supports bone health and immunity.',
-    price: 180, categoryId: 'cat-3',
-    images: [bokChoyImg],
-    unit: '50gm', weight: '50gm',
-    nutrition: { calories: 13, protein: '1.5g', carbs: '2g', fat: '0.3g', fiber: '1g', vitamins: ['Vitamin A', 'Vitamin C', 'Vitamin K', 'Calcium'] },
-    benefits: ['Supports bone health', 'Boosts immunity', 'Mild and versatile', 'Low calorie'],
-    storage: 'Refrigerate at 2-4°C in a sealed container. Best consumed within 3-4 days.',
-    consumptionTips: ['Stir-fry lightly with garlic', 'Add to noodle bowls', 'Use as a microgreen bed for proteins', 'Toss into warm salads'],
-    isFeatured: false, isSeasonal: false, isBestSeller: false, rating: 4.4, reviewCount: 32, tags: ['microgreens', 'mild', 'versatile'], createdAt: '2024-04-20',
-  },
-  {
-    id: 'prod-16', name: 'Sunflower', slug: 'sunflower',
-    description: 'Nutty and crunchy, packed with protein and healthy fats. Promotes muscle recovery and heart health.',
-    price: 170, categoryId: 'cat-3',
-    images: [sunflowerImg],
-    unit: '50gm', weight: '50gm',
-    nutrition: { calories: 25, protein: '3g', carbs: '3g', fat: '1.5g', fiber: '1.5g', vitamins: ['Vitamin E', 'Vitamin B1', 'Vitamin B6', 'Zinc', 'Selenium'] },
-    benefits: ['Promotes muscle recovery', 'Supports heart health', 'High in protein', 'Rich in healthy fats'],
-    storage: 'Refrigerate at 2-4°C in a sealed container. Best consumed within 3-4 days.',
-    consumptionTips: ['Add to sandwiches for crunch', 'Sprinkle over hummus bowls', 'Blend into pesto for a twist', 'Use as a salad topper'],
-    isFeatured: false, isSeasonal: true, isBestSeller: false, rating: 4.6, reviewCount: 48, tags: ['microgreens', 'nutty', 'protein-rich'], createdAt: '2024-05-01',
-  },
-  {
-    id: 'prod-17', name: 'Mustard', slug: 'mustard',
-    description: 'Spicy and bold, rich in glucosinolates. Aids metabolism and strengthens immunity.',
-    price: 110, categoryId: 'cat-3',
-    images: [mustardImg],
-    unit: '50gm', weight: '50gm',
-    nutrition: { calories: 15, protein: '1.5g', carbs: '2g', fat: '0.5g', fiber: '1g', vitamins: ['Vitamin A', 'Vitamin C', 'Vitamin K', 'Calcium'] },
-    benefits: ['Aids metabolism', 'Strengthens immunity', 'Bold, spicy flavor', 'Rich in glucosinolates'],
-    storage: 'Refrigerate at 2-4°C in a sealed container. Best consumed within 3-4 days.',
-    consumptionTips: ['Use as a spicy garnish for curries', 'Add to rice bowls for a kick', 'Pair with eggs for breakfast', 'Mix into cream cheese spreads'],
-    isFeatured: false, isSeasonal: false, isBestSeller: true, rating: 4.5, reviewCount: 41, tags: ['microgreens', 'spicy', 'immunity'], createdAt: '2024-05-05',
-  },
-  {
-    id: 'prod-18', name: 'Fenugreek', slug: 'fenugreek',
-    description: 'Mildly bitter with a hint of maple, supports digestion and blood sugar balance.',
-    price: 110, categoryId: 'cat-3',
-    images: [fenugreekImg],
-    unit: '50gm', weight: '50gm',
-    nutrition: { calories: 18, protein: '2g', carbs: '3g', fat: '0.5g', fiber: '2g', vitamins: ['Vitamin A', 'Vitamin C', 'Vitamin K', 'Iron'] },
-    benefits: ['Supports blood sugar balance', 'Aids digestion', 'Promotes lactation', 'Anti-inflammatory'],
-    storage: 'Refrigerate at 2-4°C in a sealed container. Best consumed within 3-4 days.',
-    consumptionTips: ['Sauté lightly with ghee', 'Add to lentil soups', 'Blend into green smoothies', 'Pair with sweet potatoes'],
-    isFeatured: false, isSeasonal: false, isBestSeller: true, rating: 4.5, reviewCount: 37, tags: ['microgreens', 'digestion', 'blood-sugar'], createdAt: '2024-05-10',
-  },
-  {
-    id: 'prod-19', name: 'Broccoli', slug: 'broccoli',
-    description: 'Mild and nutrient-dense, packed with sulforaphane. Supports detoxification and cellular health.',
-    price: 220, categoryId: 'cat-3',
-    images: [broccoliImg],
-    unit: '50gm', weight: '50gm',
-    nutrition: { calories: 17, protein: '2g', carbs: '2.5g', fat: '0.4g', fiber: '1.5g', vitamins: ['Vitamin A', 'Vitamin C', 'Vitamin K', 'Sulforaphane'] },
-    benefits: ['Packed with sulforaphane', 'Supports detoxification', 'Promotes cellular health', 'Premium superfood'],
-    storage: 'Refrigerate at 2-4°C in a sealed container. Best consumed within 3-4 days.',
-    consumptionTips: ['Add to wraps and sandwiches', 'Sprinkle over roasted vegetables', 'Blend into pesto', 'Use as a garnish for any savory dish'],
-    isFeatured: true, isSeasonal: false, isBestSeller: false, rating: 4.9, reviewCount: 81, tags: ['microgreens', 'superfood', 'detox'], createdAt: '2024-05-15',
-  },
-  {
-    id: 'prod-20', name: 'Arugula', slug: 'arugula',
-    description: 'Peppery and aromatic, high in antioxidants and nitrates. Boosts heart health and digestion.',
-    price: 220, categoryId: 'cat-3',
-    images: [arugulaImg],
-    unit: '50gm', weight: '50gm',
-    nutrition: { calories: 14, protein: '1.5g', carbs: '2g', fat: '0.4g', fiber: '1g', vitamins: ['Vitamin A', 'Vitamin C', 'Vitamin K', 'Calcium'] },
-    benefits: ['Boosts heart health', 'Supports digestion', 'High in antioxidants', 'Peppery aromatic flavor'],
-    storage: 'Refrigerate at 2-4°C in a sealed container. Best consumed within 3-4 days.',
-    consumptionTips: ['Perfect for peppery salads', 'Top pizzas after baking', 'Pair with lemon vinaigrette', 'Layer into gourmet sandwiches'],
-    isFeatured: true, isSeasonal: false, isBestSeller: false, rating: 4.7, reviewCount: 59, tags: ['microgreens', 'peppery', 'heart-health'], createdAt: '2024-05-20',
-  },
-  {
-    id: 'prod-21', name: 'Turnip', slug: 'turnip',
-    description: 'Mild and slightly sweet, rich in fiber and vitamin C. Supports gut health and immunity.',
-    price: 99, categoryId: 'cat-3',
-    images: [turnipImg],
-    unit: '50gm', weight: '50gm',
-    nutrition: { calories: 12, protein: '1g', carbs: '2.5g', fat: '0.3g', fiber: '1g', vitamins: ['Vitamin C', 'Vitamin B6', 'Calcium', 'Fiber'] },
-    benefits: ['Supports gut health', 'Rich in vitamin C', 'Boosts immunity', 'Mild and versatile'],
-    storage: 'Refrigerate at 2-4°C in a sealed container. Best consumed within 3-4 days.',
-    consumptionTips: ['Add to fresh spring salads', 'Use as a garnish for soups', 'Mix into coleslaw for crunch', 'Pair with creamy dressings'],
-    isFeatured: false, isSeasonal: false, isBestSeller: false, rating: 4.2, reviewCount: 22, tags: ['microgreens', 'mild', 'budget-friendly'], createdAt: '2024-05-25',
-  },
-  {
-    id: 'prod-22', name: 'Red Amaranth', slug: 'red-amaranth',
-    description: 'Vibrant and earthy, packed with iron and amino acids. Promotes blood health and muscle recovery.',
-    price: 199, categoryId: 'cat-3',
-    images: [redAmaranthImg],
-    unit: '50gm', weight: '50gm',
-    nutrition: { calories: 20, protein: '2.5g', carbs: '3g', fat: '0.5g', fiber: '1.5g', vitamins: ['Vitamin A', 'Vitamin C', 'Iron', 'Calcium'] },
-    benefits: ['Promotes blood health', 'Supports muscle recovery', 'Packed with iron', 'Vibrant color and flavor'],
-    storage: 'Refrigerate at 2-4°C in a sealed container. Best consumed within 3-4 days.',
-    consumptionTips: ['Use as a colorful garnish', 'Add to grain bowls', 'Toss into warm stir-fries', 'Blend into fruit smoothies'],
-    isFeatured: false, isSeasonal: false, isBestSeller: false, rating: 4.5, reviewCount: 35, tags: ['microgreens', 'vibrant', 'iron-rich'], createdAt: '2024-06-01',
-  },
-  {
-    id: 'prod-23', name: 'Red Cabbage', slug: 'red-cabbage',
-    description: 'Mild and slightly sweet, loaded with anthocyanins. Supports brain function and reduces inflammation.',
-    price: 220, categoryId: 'cat-3',
-    images: [redCabbageImg],
-    unit: '50gm', weight: '50gm',
-    nutrition: { calories: 16, protein: '1.5g', carbs: '3g', fat: '0.3g', fiber: '1.5g', vitamins: ['Vitamin C', 'Vitamin K', 'Anthocyanins', 'Fiber'] },
-    benefits: ['Supports brain function', 'Reduces inflammation', 'Loaded with anthocyanins', 'Rich in fiber'],
-    storage: 'Refrigerate at 2-4°C in a sealed container. Best consumed within 3-4 days.',
-    consumptionTips: ['Add to crunchy slaws', 'Use as a vibrant garnish', 'Pair with tangy dressings', 'Layer into tacos and wraps'],
-    isFeatured: false, isSeasonal: false, isBestSeller: false, rating: 4.4, reviewCount: 26, tags: ['microgreens', 'anti-inflammatory', 'brain-health'], createdAt: '2024-06-10',
-  },
-];
+// NOTE: `categories` and `products` now come from Supabase via `src/services/catalog.ts`
+// (TASK_PLAN.md T1). The remaining exports below are still mock-only (T11 covers them).
 
 export const banners: Banner[] = [
   { id: 'banner-1', title: '', subtitle: '', image: heroBannerImg as any, cta: 'Shop Now', ctaLink: '/explore', textColor: '#FFFFFF', gradientStart: '#1B5E20', gradientEnd: '#2E7D32' },
@@ -334,10 +57,79 @@ export const banners: Banner[] = [
 ];
 
 export const lifestyleArticles: LifestyleArticle[] = [
-  { id: 'article-1', title: 'Why Cold-Pressed Juice is Worth It', excerpt: 'Discover how our cold-press process preserves nutrients and flavor better than traditional juicing.', image: ph('Cold Pressed', '#FF8F00'), category: 'Wellness', readTime: '5 min' },
-  { id: 'article-2', title: 'Smoothies vs Juices: Which Is Right for You?', excerpt: 'Understanding the difference so you can pick what your body needs.', image: ph('Smoothie vs Juice', '#00BFA5'), category: 'Nutrition', readTime: '4 min' },
-  { id: 'article-3', title: 'Morning Rituals for a Healthier You', excerpt: 'Simple routines that transform your energy and focus — starting with the right breakfast drink.', image: ph('Morning Rituals', '#2E7D32'), category: 'Lifestyle', readTime: '6 min' },
-  { id: 'article-4', title: 'Sustainable Sipping: Good for You, Good for Earth', excerpt: 'How choosing fresh, local ingredients helps the planet while nourishing your body.', image: ph('Sustainable', '#4CAF50'), category: 'Sustainability', readTime: '3 min' },
+  {
+    id: 'article-1',
+    slug: 'why-cold-pressed-juice-is-a-game-changer',
+    title: 'Why Cold-Pressed Juice is a Game Changer',
+    excerpt: 'Discover how our cold-press process preserves nutrients and flavor better than traditional juicing.',
+    image: heroBannerImg as any,
+    category: 'Wellness',
+    readTime: '5 min',
+    author: 'Dr. Anjali Rao',
+    publishedAt: '2026-08-12',
+    content: [
+      { body: 'Most supermarket juice is made with a centrifugal juicer — a fast-spinning blade that shreds produce and flings the juice out through a mesh. It is quick and cheap, but that speed comes at a cost: the blade generates heat and whips air into the juice, and both heat and oxygen break down the delicate enzymes and vitamins you are drinking juice for in the first place.' },
+      { heading: 'How cold-pressing is different', body: 'A hydraulic cold-press works in two slow stages. First the fruit and vegetables are ground into a fine pulp. Then thousands of pounds of pressure squeeze that pulp against a filter cloth, extracting the juice without ever spinning it or heating it. No blade, almost no oxidation, no added heat.' },
+      { heading: 'What that means for you', body: 'Cold-pressed juice holds on to noticeably more vitamin C, folate and plant enzymes, and because it is not aerated it separates less and tastes brighter. Independent lab comparisons routinely show cold-pressed juice retaining 3 to 5 times more of certain micronutrients than centrifugal juice pressed from the same produce.' },
+      { heading: 'The trade-off', body: 'Cold-pressing is slower, wastes less but costs more per bottle, and the juice has a short shelf life — it is a fresh food, not a shelf-stable product. That is why we press in small batches every morning and deliver the same day. Keep it refrigerated and drink it within 48 hours for the full benefit.' },
+      { heading: 'Bottom line', body: 'If you are buying juice for nutrition rather than just sugar and flavour, the extraction method matters more than the fruit on the label. Cold-pressed is the closest you can get to eating the produce itself.' },
+    ],
+  },
+  {
+    id: 'article-2',
+    slug: 'smoothies-vs-juices-which-is-better',
+    title: 'Smoothies vs Juices: Which is Better?',
+    excerpt: 'Understanding the difference so you can pick what your body needs.',
+    image: bowlsImg as any,
+    category: 'Nutrition',
+    readTime: '4 min',
+    author: 'Meera Nair',
+    publishedAt: '2026-08-05',
+    content: [
+      { body: 'People use "juice" and "smoothie" almost interchangeably, but nutritionally they are very different drinks that suit different goals.' },
+      { heading: 'Juice: concentrated nutrition, no fibre', body: 'Juicing removes the insoluble fibre and leaves you with water, sugars, vitamins and minerals in a form the body absorbs almost instantly. That makes juice a great fast delivery of micronutrients — a "wellness shot" — but the lack of fibre means the natural sugars hit your bloodstream quickly. Best on an empty stomach, in modest amounts.' },
+      { heading: 'Smoothies: whole food in a glass', body: 'A smoothie blends the entire fruit or vegetable, fibre included. That fibre slows sugar absorption, keeps you full for hours, and feeds your gut bacteria. Add protein or healthy fat and a smoothie becomes a genuine meal replacement.' },
+      { heading: 'Which should you choose?', body: 'Reach for a juice when you want a light, nutrient-dense pick-me-up between meals. Reach for a smoothie when you want something filling — breakfast, a post-workout refuel, or a meal you can drink on a busy day.' },
+      { body: 'Neither is "healthier" in the abstract. The right choice depends on whether you need fuel or a nutrient top-up in that moment.' },
+    ],
+  },
+  {
+    id: 'article-3',
+    slug: 'morning-rituals-for-a-healthier-you',
+    title: 'Morning Rituals for a Healthier You',
+    excerpt: 'Simple routines that transform your energy and focus — starting with the right breakfast drink.',
+    image: juiceImg as any,
+    category: 'Lifestyle',
+    readTime: '6 min',
+    author: 'Kabir Menon',
+    publishedAt: '2026-07-28',
+    content: [
+      { body: 'How you spend the first thirty minutes after waking sets the tone for the whole day. You do not need an elaborate routine — just a few small, repeatable habits.' },
+      { heading: 'Hydrate before caffeine', body: 'You wake up mildly dehydrated after 7 to 8 hours without water. A large glass of water — or a light, low-sugar juice like sweet lime or cucumber — rehydrates you and gently wakes the digestive system before coffee does.' },
+      { heading: 'Get light on your face', body: 'Ten minutes of daylight within an hour of waking anchors your circadian rhythm, which improves both daytime alertness and that night\'s sleep. Step onto a balcony with your drink instead of scrolling in bed.' },
+      { heading: 'Eat protein early', body: 'A protein-forward breakfast — a smoothie with nuts or yoghurt, for example — blunts mid-morning cravings and keeps energy steady. Sugary breakfasts spike and crash.' },
+      { heading: 'Move for five minutes', body: 'Not a workout — just light movement. A short walk or a few stretches raises your core temperature and circulation, which sharpens focus far more reliably than a second coffee.' },
+      { body: 'Pick one of these and do it every day for two weeks before adding the next. Consistency beats intensity.' },
+    ],
+  },
+  {
+    id: 'article-4',
+    slug: 'sustainable-sipping-good-for-you-good-for-earth',
+    title: 'Sustainable Sipping: Good for You, Good for Earth',
+    excerpt: 'How choosing fresh, local ingredients helps the planet while nourishing your body.',
+    image: microgreensImg as any,
+    category: 'Sustainability',
+    readTime: '3 min',
+    author: 'Tara Iyer',
+    publishedAt: '2026-07-15',
+    content: [
+      { body: 'The environmental footprint of a drink is decided long before it reaches your glass — in how the produce was grown, how far it travelled, and what it is served in.' },
+      { heading: 'Local and seasonal cuts transport emissions', body: 'Produce that is grown nearby and in season needs no long-haul refrigerated freight and no energy-intensive cold storage for months. Buying what is in season is one of the simplest ways to lower the carbon cost of what you eat and drink.' },
+      { heading: 'Microgreens are remarkably efficient', body: 'Because they are harvested in 7 to 14 days, microgreens use a fraction of the water, land and fertiliser of mature vegetables while delivering a higher concentration of nutrients per gram.' },
+      { heading: 'Packaging is the easy win', body: 'We deliver in recyclable glass and compostable trays and take the glass back to reuse it. Choosing refill and return over single-use plastic removes the part of a drink\'s footprint that lingers longest.' },
+      { body: 'Small, repeated choices — seasonal produce, reusable packaging, minimal waste — add up faster than any single grand gesture.' },
+    ],
+  },
 ];
 
 export const testimonials: Testimonial[] = [
@@ -410,6 +202,6 @@ export const onboardingSlides = [
 export const whyChooseUs = [
   { id: 'why-1', title: 'Made Fresh Daily', description: 'Every smoothie and juice is prepared fresh each morning and delivered same-day for peak flavor and nutrition.', icon: 'sunny' },
   { id: 'why-2', title: '100% Natural', description: 'No added sugar, no preservatives, no artificial flavors. Just real fruits and vegetables in every sip.', icon: 'leaf' },
-  { id: 'why-3', title: 'Cold-Pressed Juices', description: 'Our hydraulic cold-press preserves enzymes and nutrients that traditional juicing destroys.', icon: 'thermometer' },
-  { id: 'why-4', title: 'Eco-Friendly Packing', description: '100% recyclable glass bottles. Because loving your body should also mean loving the planet.', icon: 'recycle' },
+  { id: 'why-3', title: 'Cold-Pressed Goodness', description: 'Our hydraulic cold-press process preserves maximum nutrients and natural taste.', icon: 'thermometer' },
+  { id: 'why-4', title: 'Sustainable Packaging', description: '100% recyclable glass bottles. Because loving your health should never cost the planet.', icon: 'sync' },
 ];

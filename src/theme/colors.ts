@@ -1,6 +1,6 @@
 export const colors = {
   // ── Brand green (accent) ────────────────────────────────────────────────
-  primary: '#34D399',      // mint-green accent: CTAs, active states, links, price highlights
+  primary: '#789849',      // olive-green accent: CTAs, active states, links, price highlights
   primaryLight: '#6EE7B7',
   primaryDark: '#10B981',  // deeper green: emphasis text + icons (must stay readable on dark)
   primaryBg: '#0F241B',    // dark green tint: icon chips, pill backgrounds

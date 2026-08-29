@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Image, StyleSheet, Pressable } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, {
   useSharedValue,
@@ -17,7 +18,7 @@ import { useCartStore } from '../../store/useCartStore';
 interface ProductCardProps {
   product: Product;
   onPress: () => void;
-  variant?: 'default' | 'horizontal' | 'compact';
+  variant?: 'default' | 'horizontal' | 'compact' | 'seasonal';
   index?: number;
   style?: object;
 }
@@ -99,7 +100,7 @@ export function ProductCard({ product, onPress, variant = 'default', index = 0, 
           onPressIn={onPressIn}
           onPressOut={onPressOut}
         >
-          <Image source={resolveImageSource(product.images[0])} style={styles.horizontalImage} />
+          <Image source={resolveImageSource(product.images[0])} style={styles.horizontalImage} resizeMode="cover" />
           <View style={styles.horizontalContent}>
             <Typography variant="caption" color={colors.primary} weight="medium" uppercase>
               {product.unit}
@@ -124,6 +125,79 @@ export function ProductCard({ product, onPress, variant = 'default', index = 0, 
               )}
               <View style={{ flex: 1 }} />
               <CartStepper slug={product.slug} compact />
+            </View>
+          </View>
+        </Pressable>
+      </Animated.View>
+    );
+  }
+
+  // ─── Seasonal variant — default card + "Add to cart" button ───────────────
+
+  if (variant === 'seasonal') {
+    return (
+      <Animated.View
+        entering={FadeInUp.delay(index * 70).springify().damping(31)}
+        style={[styles.seasonalCard, animStyle, style]}
+      >
+        <Pressable onPress={handlePress} onPressIn={onPressIn} onPressOut={onPressOut} style={styles.seasonalInner}>
+          {/* Full-bleed image that fades out from ~50% down into the card */}
+          <Image
+            source={resolveImageSource(product.images[0])}
+            style={[StyleSheet.absoluteFill, { width: '100%', height: '100%' }]}
+            resizeMode="cover"
+          />
+          <LinearGradient
+            colors={['rgba(20,20,20,0)', 'rgba(20,20,20,0.6)', 'rgba(20,20,20,1)']}
+            locations={[0.35, 0.58, 0.88]}
+            style={StyleSheet.absoluteFill}
+            pointerEvents="none"
+          />
+
+          {product.isBestSeller && (
+            <View style={styles.bestsellerBadge}>
+              <Ionicons name="star" size={9} color="#06130D" />
+              <Typography style={styles.badgeText} color="#06130D">BESTSELLER</Typography>
+            </View>
+          )}
+
+          <Pressable style={styles.favouriteBtn} onPress={toggleFavorite} hitSlop={8}>
+            <Ionicons
+              name={favorited ? 'heart' : 'heart-outline'}
+              size={15}
+              color={favorited ? colors.error : colors.textInverse}
+            />
+          </Pressable>
+
+          <View style={styles.unitBadgeStandalone}>
+            <Typography style={styles.unitBadgeText} color="#06130D">{product.unit}</Typography>
+          </View>
+
+          <View style={styles.seasonalOverlayBody}>
+            <Typography variant="body" weight="bold" color={colors.textInverse} numberOfLines={1}>
+              {product.name}
+            </Typography>
+            <Typography variant="caption" color="rgba(255,255,255,0.75)" numberOfLines={2} style={styles.description}>
+              {product.description}
+            </Typography>
+
+            <View style={styles.seasonalBottom}>
+              <View>
+                <Typography variant="caption" color="rgba(255,255,255,0.55)">Price</Typography>
+                <Typography variant="h4" weight="bold" color={colors.textInverse}>
+                  ₹{product.price.toFixed(0)}
+                </Typography>
+              </View>
+              <Pressable
+                style={styles.addToCartBtn}
+                onPress={() => {
+                  Haptics.selectionAsync();
+                  useCartStore.getState().addItemBySlug(product.slug, 1);
+                }}
+              >
+                <Typography weight="bold" color={colors.primary} style={styles.addToCartText}>Add To Cart</Typography>
+                <Ionicons name="cart-outline" size={12} color={colors.primary} style={{ marginLeft: 4 }} />
+              </Pressable>
             </View>
           </View>
         </Pressable>
@@ -157,7 +231,7 @@ export function ProductCard({ product, onPress, variant = 'default', index = 0, 
     );
   }
 
-  // ─── Default variant — dark card, image on top, content below ─────────────
+  // ─── Default variant — full-bleed image that fades from ~50% down ─────────
 
   return (
     <Animated.View
@@ -165,42 +239,46 @@ export function ProductCard({ product, onPress, variant = 'default', index = 0, 
       style={[styles.card, animStyle, style]}
     >
       <Pressable onPress={handlePress} onPressIn={onPressIn} onPressOut={onPressOut} style={styles.cardInner}>
-        <View style={styles.imageWrap}>
-          <Image
-            source={resolveImageSource(product.images[0])}
-            style={styles.image}
-            resizeMode="cover"
-          />
+        <Image
+          source={resolveImageSource(product.images[0])}
+          style={[StyleSheet.absoluteFill, { width: '100%', height: '100%' }]}
+          resizeMode="cover"
+        />
+        <LinearGradient
+          colors={['rgba(20,20,20,0)', 'rgba(20,20,20,0.6)', 'rgba(20,20,20,1)']}
+          locations={[0.32, 0.56, 0.86]}
+          style={StyleSheet.absoluteFill}
+          pointerEvents="none"
+        />
 
-          {product.isBestSeller && (
-            <View style={styles.bestsellerBadge}>
-              <Ionicons name="star" size={9} color="#06130D" />
-              <Typography style={styles.badgeText} color="#06130D">BESTSELLER</Typography>
-            </View>
-          )}
-
-          <Pressable style={styles.favouriteBtn} onPress={toggleFavorite} hitSlop={8}>
-            <Ionicons
-              name={favorited ? 'heart' : 'heart-outline'}
-              size={15}
-              color={favorited ? colors.error : colors.textInverse}
-            />
-          </Pressable>
-
-          <View style={[styles.unitBadge, { backgroundColor: accent }]}>
-            <Typography style={styles.unitBadgeText} color="#06130D">
-              {product.unit}
-            </Typography>
+        {product.isBestSeller && (
+          <View style={styles.bestsellerBadge}>
+            <Ionicons name="star" size={9} color="#06130D" />
+            <Typography style={styles.badgeText} color="#06130D">BESTSELLER</Typography>
           </View>
+        )}
+
+        <Pressable style={styles.favouriteBtn} onPress={toggleFavorite} hitSlop={8}>
+          <Ionicons
+            name={favorited ? 'heart' : 'heart-outline'}
+            size={15}
+            color={favorited ? colors.error : colors.textInverse}
+          />
+        </Pressable>
+
+        <View style={[styles.unitBadgeStandalone, { backgroundColor: accent }]}>
+          <Typography style={styles.unitBadgeText} color="#06130D">
+            {product.unit}
+          </Typography>
         </View>
 
-        <View style={styles.body}>
-          <Typography variant="body" weight="bold" color={colors.text} numberOfLines={1}>
+        <View style={styles.defaultOverlayBody}>
+          <Typography variant="body" weight="bold" color={colors.textInverse} numberOfLines={1}>
             {product.name}
           </Typography>
           <Typography
             variant="caption"
-            color={colors.textSecondary}
+            color="rgba(255,255,255,0.75)"
             numberOfLines={2}
             style={styles.description}
           >
@@ -222,7 +300,8 @@ export function ProductCard({ product, onPress, variant = 'default', index = 0, 
 const styles = StyleSheet.create({
   // ── Default card ──────────────────────────────────────────────────────────
   card: {
-    width: 200,
+    width: 230,
+    height: 300,
     borderRadius: borderRadius['2xl'],
     marginRight: spacing.md,
     backgroundColor: colors.surface,
@@ -232,6 +311,13 @@ const styles = StyleSheet.create({
   },
   cardInner: {
     flex: 1,
+  },
+  defaultOverlayBody: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    padding: spacing.md,
   },
   imageWrap: {
     height: 150,
@@ -279,6 +365,58 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
     borderRadius: borderRadius.sm,
+  },
+  unitBadgeGreen: {
+    backgroundColor: colors.primary,
+  },
+  // ── Seasonal variant ─────────────────────────────────────────────────────
+  seasonalCard: {
+    flex: 1,
+    height: 320,
+    borderRadius: borderRadius['2xl'],
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    overflow: 'hidden',
+  },
+  seasonalInner: {
+    flex: 1,
+  },
+  unitBadgeStandalone: {
+    position: 'absolute',
+    top: 150,
+    left: spacing.sm,
+    alignSelf: 'flex-start',
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: borderRadius.sm,
+  },
+  seasonalOverlayBody: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    padding: spacing.md,
+  },
+  seasonalBottom: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: spacing.md,
+  },
+  addToCartBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderRadius: borderRadius.full,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+  },
+  addToCartText: {
+    fontSize: 10,
+    letterSpacing: 0.2,
   },
   unitBadgeText: {
     fontSize: 9,
@@ -355,6 +493,9 @@ const styles = StyleSheet.create({
   // ── Horizontal variant ────────────────────────────────────────────────────
   horizontalCard: {
     flexDirection: 'row',
+    alignItems: 'stretch',
+    height: 116,
+    padding: spacing.sm,
     backgroundColor: colors.surface,
     borderRadius: borderRadius.xl,
     marginBottom: spacing.md,
@@ -363,13 +504,14 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   horizontalImage: {
-    width: 110,
-    height: 110,
+    width: 100,
+    height: '100%',
+    borderRadius: borderRadius.lg,
     backgroundColor: colors.surfaceVariant,
   },
   horizontalContent: {
     flex: 1,
-    padding: spacing.md,
+    paddingLeft: spacing.md,
     justifyContent: 'center',
   },
 

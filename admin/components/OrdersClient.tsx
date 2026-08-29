@@ -284,6 +284,16 @@ export default function OrdersClient({ orders }: { orders: OrderRow[] }) {
                   <p className="text-xs text-slate-400">Delivery fee</p>
                   <p className="text-xs text-slate-500">₹{selectedOrder.delivery_fee.toFixed(0)}</p>
                 </div>
+                {selectedOrder.discount_amount > 0 && (
+                  <div className="flex items-center justify-between pt-2">
+                    <p className="text-xs text-slate-400">
+                      Discount{selectedOrder.discount_code ? ` · ${selectedOrder.discount_code}` : ""}
+                    </p>
+                    <p className="text-xs font-medium text-[#3D7A52]">
+                      −₹{selectedOrder.discount_amount.toFixed(0)}
+                    </p>
+                  </div>
+                )}
                 <div className="flex items-center justify-between pt-2">
                   <p className="text-sm font-bold text-[#0A2416]">Total</p>
                   <p className="text-sm font-bold text-[#0A2416]">₹{selectedOrder.total.toFixed(0)}</p>

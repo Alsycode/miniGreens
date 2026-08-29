@@ -23,7 +23,9 @@ import { Typography } from '../../components/ui/Typography';
 import { SearchBar } from '../../components/ui/SearchBar';
 import { ProductCard } from '../../components/product/ProductCard';
 import { EmptyState } from '../../components/ui/EmptyState';
-import { products, categories } from '../../mock';
+import { Loading } from '../../components/ui/Loading';
+import { ErrorNotice } from '../../components/ui/ErrorNotice';
+import { useProducts, useCategories } from '../../services/catalog';
 
 // ─── Animated Filter Chip ─────────────────────────────────────────────────────
 
@@ -121,6 +123,9 @@ export default function ExploreScreen() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'popular' | 'newest' | 'price-low' | 'price-high'>('popular');
 
+  const { products, isLoading, isError, error, refetch } = useProducts();
+  const { categories } = useCategories();
+
   const filteredProducts = selectedCategory
     ? products.filter((p) => p.categoryId === selectedCategory)
     : products;
@@ -204,6 +209,17 @@ export default function ExploreScreen() {
           ))}
         </ScrollView>
 
+        {isError && (
+          <View style={{ paddingHorizontal: spacing.lg }}>
+            <ErrorNotice
+              message={(error as Error)?.message ?? 'Could not load products.'}
+              onDismiss={() => refetch()}
+            />
+          </View>
+        )}
+
+        {isLoading && <Loading message="Loading products..." />}
+
         {/* Product Grid */}
         <View style={styles.productGrid}>
           {sortedProducts.map((product, i) => (
@@ -216,12 +232,13 @@ export default function ExploreScreen() {
                 product={product}
                 index={i}
                 onPress={() => handleProductPress(product.slug)}
+                style={styles.gridCard}
               />
             </Animated.View>
           ))}
         </View>
 
-        {sortedProducts.length === 0 && (
+        {!isLoading && !isError && sortedProducts.length === 0 && (
           <View style={styles.emptyState}>
             <EmptyState
               icon="search-outline"
@@ -264,6 +281,11 @@ const styles = StyleSheet.create({
   productWrapper: {
     width: '48%',
     marginBottom: spacing.md,
+  },
+  gridCard: {
+    width: '100%',
+    height: 280,
+    marginRight: 0,
   },
   emptyState: {
     height: 360,

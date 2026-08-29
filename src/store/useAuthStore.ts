@@ -16,6 +16,7 @@ interface AuthState {
     email: string,
     password: string,
     fullName: string,
+    dateOfBirth?: string | null,
   ) => Promise<{ error: string | null; needsConfirmation: boolean }>;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
@@ -50,13 +51,27 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     syncPushTokenForUser(userId).catch(() => {});
   },
 
-  signUp: async (email, password, fullName) => {
+  signUp: async (email, password, fullName, dateOfBirth) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: fullName } },
+      options: {
+        data: {
+          full_name: fullName,
+          ...(dateOfBirth ? { date_of_birth: dateOfBirth } : {}),
+        },
+      },
     });
     if (error) return { error: error.message, needsConfirmation: false };
+    // If a session exists immediately (email confirmation disabled), the profile row
+    // is already created by the on_auth_user_created trigger — persist DOB directly in
+    // case this project's trigger predates the raw_user_meta_data copy.
+    if (data.session && dateOfBirth) {
+      await supabase
+        .from('profiles')
+        .update({ date_of_birth: dateOfBirth })
+        .eq('id', data.session.user.id);
+    }
     return { error: null, needsConfirmation: !data.session };
   },
 

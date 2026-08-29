@@ -9,8 +9,8 @@ import { Typography } from '../../components/ui/Typography';
 const TABS: { name: string; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { name: 'index',         label: 'Home',    icon: 'home' },
   { name: 'explore',       label: 'Search',  icon: 'search' },
-  { name: 'subscriptions', label: 'Plans',    icon: 'calendar' },
   { name: 'orders',        label: 'Orders',   icon: 'receipt' },
+  { name: 'subscriptions', label: 'Rewards',  icon: 'gift' },
   { name: 'profile',       label: 'Profile',  icon: 'person' },
 ];
 
@@ -55,8 +55,8 @@ export default function TabLayout() {
     <Tabs tabBar={(props) => <BottomTabBar {...props} />} screenOptions={{ headerShown: false }}>
       <Tabs.Screen name="index"         options={{ title: 'Home' }} />
       <Tabs.Screen name="explore"       options={{ title: 'Explore' }} />
-      <Tabs.Screen name="subscriptions" options={{ title: 'Plans' }} />
       <Tabs.Screen name="orders"        options={{ title: 'Orders' }} />
+      <Tabs.Screen name="subscriptions" options={{ title: 'Rewards' }} />
       <Tabs.Screen name="profile"       options={{ title: 'Profile' }} />
     </Tabs>
   );

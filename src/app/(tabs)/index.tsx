@@ -28,19 +28,20 @@ import { Button } from '../../components/ui/Button';
 import { SearchBar } from '../../components/ui/SearchBar';
 import { Card } from '../../components/ui/Card';
 import { ProductCard } from '../../components/product/ProductCard';
-import { HeroBanner } from '../../components/home/HeroBanner';
 import { CategoryCard } from '../../components/home/CategoryCard';
 import {
-  products,
-  categories,
   banners,
   lifestyleArticles,
   testimonials,
   whyChooseUs,
 } from '../../mock';
+import { useQuery } from '@tanstack/react-query';
+import { useProducts, useCategories } from '../../services/catalog';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useCartStore } from '../../store/useCartStore';
+import { supabase } from '../../lib/supabase';
 import { resolveImageSource } from '../../utils/placeholders';
+import { isBirthdayToday } from '../../utils/date';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -66,21 +67,80 @@ function useStaggeredEntry(delay: number) {
   }));
 }
 
+function BirthdayBanner() {
+  const profile = useAuthStore((s) => s.profile);
+  const [dismissed, setDismissed] = useState(false);
+  const isBirthday = isBirthdayToday(profile?.date_of_birth);
+
+  const { data: offer } = useQuery({
+    queryKey: ['birthday-discount'],
+    enabled: isBirthday,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('discounts')
+        .select('code, description')
+        .eq('is_birthday_offer', true)
+        .eq('is_active', true)
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+  });
+
+  if (!isBirthday || dismissed) return null;
+
+  return (
+    <View style={styles.birthdayBanner}>
+      <View style={styles.birthdayIcon}>
+        <Ionicons name="gift" size={20} color={colors.primaryDark} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Typography variant="bodySmall" weight="bold" color={colors.textInverse}>
+          Happy Birthday! 🎉
+        </Typography>
+        <Typography variant="caption" color="rgba(255,255,255,0.75)">
+          {offer?.code
+            ? `Use code ${offer.code} for your birthday treat.`
+            : offer?.description || 'Enjoy a little something from us today.'}
+        </Typography>
+      </View>
+      <TouchableOpacity onPress={() => setDismissed(true)} hitSlop={10}>
+        <Ionicons name="close" size={18} color="rgba(255,255,255,0.6)" />
+      </TouchableOpacity>
+    </View>
+  );
+}
+
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const [searchFocused, setSearchFocused] = useState(false);
   const profile = useAuthStore((s) => s.profile);
   const cartCount = useCartStore((s) => s.items.reduce((n, i) => n + i.quantity, 0));
   const firstName = (profile?.full_name || 'there').split(' ')[0];
+  const { products } = useProducts();
+  const { categories } = useCategories();
+  const { data: unreadCount = 0 } = useQuery({
+    queryKey: ['notifications-unread', profile?.id],
+    enabled: !!profile?.id,
+    staleTime: 0,
+    refetchOnMount: 'always',
+    queryFn: async () => {
+      const { count } = await supabase
+        .from('notifications')
+        .select('id', { count: 'exact', head: true })
+        .eq('profile_id', profile!.id)
+        .is('read_at', null);
+      return count ?? 0;
+    },
+  });
   const featuredProducts = products.filter((p) => p.isFeatured);
   const seasonalProducts = products.filter((p) => p.isSeasonal);
   const bestSellers = products.filter((p) => p.isBestSeller);
-  const [activeCat, setActiveCat] = useState(categories[0]?.id);
+  const [activeCat, setActiveCat] = useState<string | undefined>(undefined);
 
   const headerStyle   = useStaggeredEntry(0);
   const searchStyle   = useStaggeredEntry(80);
-  const heroStyle     = useStaggeredEntry(140);
-  const section1Style = useStaggeredEntry(200);
+  const section1Style = useStaggeredEntry(160);
   const section2Style = useStaggeredEntry(250);
   const section3Style = useStaggeredEntry(300);
 
@@ -129,10 +189,13 @@ export default function HomeScreen() {
           <View style={styles.headerActions}>
             <TouchableOpacity
               style={styles.iconButton}
-              onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                router.push('/notifications');
+              }}
             >
               <Ionicons name="notifications-outline" size={20} color={colors.text} />
-              <View style={styles.bellDot} />
+              {unreadCount > 0 && <View style={styles.bellDot} />}
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.iconButton}
@@ -153,6 +216,8 @@ export default function HomeScreen() {
           </View>
         </Animated.View>
 
+        <BirthdayBanner />
+
         {/* Search */}
         <Animated.View style={[styles.searchContainer, searchStyle, searchAnimStyle]}>
           <TouchableOpacity
@@ -170,25 +235,8 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </Animated.View>
 
-        {/* Hero Banner */}
-        <Animated.View style={heroStyle}>
-          <HeroBanner banner={banners[0]} onPress={() => router.push('/(tabs)/explore')} />
-        </Animated.View>
-
-        {/* Featured Categories */}
-        <Animated.View style={[styles.section, section1Style]}>
-          <View style={styles.sectionHeader}>
-            <View>
-              <Typography variant="h4" color={colors.text}>Categories</Typography>
-              <Typography variant="caption" color={colors.textTertiary} style={styles.sectionSub}>
-                Pick your fresh fix
-              </Typography>
-            </View>
-            <TouchableOpacity style={styles.viewAll} onPress={() => router.push('/(tabs)/explore')}>
-              <Typography variant="bodySmall" color={colors.primary} weight="semibold">View all</Typography>
-              <Ionicons name="arrow-forward" size={14} color={colors.primary} />
-            </TouchableOpacity>
-          </View>
+        {/* Featured Categories — chips directly under search, no header */}
+        <Animated.View style={[styles.categoriesRow, section1Style]}>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -240,19 +288,15 @@ export default function HomeScreen() {
         <Animated.View style={[section3Style, styles.section]}>
           <View style={styles.promoCard}>
             <Image
-              source={resolveImageSource(
-                (seasonalProducts[0]?.images?.[0]) ??
-                products.find((p) => p.slug === 'mint-melon-smoothie')?.images?.[0] ??
-                banners[0].image
-              )}
-              style={StyleSheet.absoluteFill}
+              source={resolveImageSource(banners[0].image)}
+              style={[StyleSheet.absoluteFill, { width: '100%', height: '100%' }]}
               resizeMode="cover"
             />
             <LinearGradient
-              colors={['rgba(8,19,13,0.98)', 'rgba(8,19,13,0.9)', 'rgba(8,19,13,0.45)']}
-              locations={[0, 0.5, 1]}
+              colors={['rgba(8,19,13,0.96)', 'rgba(8,19,13,0.7)', 'rgba(8,19,13,0)']}
+              locations={[0, 0.45, 0.9]}
               start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
+              end={{ x: 0.95, y: 0 }}
               style={StyleSheet.absoluteFill}
             />
             <View style={styles.promoText}>
@@ -287,21 +331,22 @@ export default function HomeScreen() {
           >
             <View style={styles.sectionHeader}>
               <Typography variant="h4" color={colors.text}>Seasonal Picks</Typography>
+              <TouchableOpacity style={styles.viewAll} onPress={() => router.push('/(tabs)/explore')}>
+                <Typography variant="bodySmall" color={colors.primary} weight="semibold">View all</Typography>
+                <Ionicons name="arrow-forward" size={14} color={colors.primary} />
+              </TouchableOpacity>
             </View>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.horizontalScroll}
-            >
-              {seasonalProducts.map((product, i) => (
+            <View style={styles.seasonalGrid}>
+              {seasonalProducts.slice(0, 2).map((product, i) => (
                 <ProductCard
                   key={product.id}
                   product={product}
+                  variant="seasonal"
                   index={i}
                   onPress={() => handleProductPress(product.slug)}
                 />
               ))}
-            </ScrollView>
+            </View>
           </Animated.View>
         )}
 
@@ -388,42 +433,46 @@ export default function HomeScreen() {
         >
           <View style={styles.sectionHeader}>
             <Typography variant="h4" color={colors.text}>Healthy Living</Typography>
+            <TouchableOpacity style={styles.viewAll} onPress={() => router.push('/articles')}>
+              <Typography variant="bodySmall" color={colors.primary} weight="semibold">View all</Typography>
+              <Ionicons name="arrow-forward" size={14} color={colors.primary} />
+            </TouchableOpacity>
           </View>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.horizontalScroll}
-          >
-            {lifestyleArticles.map((article, i) => (
-              <TouchableOpacity key={article.id} style={styles.articleCard} activeOpacity={0.85}>
+          <View style={styles.articleGrid}>
+            {lifestyleArticles.slice(0, 2).map((article) => (
+              <TouchableOpacity
+                key={article.id}
+                style={styles.articleCard}
+                activeOpacity={0.85}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  router.push(`/article/${article.id}`);
+                }}
+              >
                 <View style={styles.articleImageContainer}>
-                  <LinearGradient
-                    colors={[colors.surfaceDarkMid, colors.surfaceDark]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.articleImagePlaceholder}
-                  />
-                  <Ionicons
-                    name="reader-outline"
-                    size={30}
-                    color="rgba(52,211,153,0.35)"
-                    style={styles.articleImageIcon}
+                  <Image
+                    source={resolveImageSource(article.image)}
+                    style={styles.articleImage}
+                    resizeMode="cover"
                   />
                   <View style={styles.articleCategoryPill}>
-                    <Typography variant="caption" color="#06130D" weight="bold" style={{ fontSize: 9, letterSpacing: 1 }}>
+                    <Typography variant="caption" color={colors.secondary} weight="bold" style={{ fontSize: 9, letterSpacing: 1 }}>
                       {article.category.toUpperCase()}
                     </Typography>
                   </View>
                 </View>
-                <Typography variant="bodySmall" weight="semibold" numberOfLines={2} style={styles.articleTitle}>
+                <Typography variant="bodySmall" weight="bold" numberOfLines={2} style={styles.articleTitle}>
                   {article.title}
                 </Typography>
-                <Typography variant="caption" color={colors.textTertiary} style={{ marginTop: 4 }}>
-                  {article.readTime} read
-                </Typography>
+                <View style={styles.articleMeta}>
+                  <Typography variant="caption" color={colors.textTertiary}>
+                    {article.readTime} read
+                  </Typography>
+                  <Ionicons name="arrow-forward" size={13} color={colors.primary} style={{ marginLeft: 6 }} />
+                </View>
               </TouchableOpacity>
             ))}
-          </ScrollView>
+          </View>
         </Animated.View>
 
         {/* Testimonials */}
@@ -637,6 +686,14 @@ const styles = StyleSheet.create({
     marginTop: spacing['2xl'],
     paddingHorizontal: spacing.lg,
   },
+  categoriesRow: {
+    marginTop: spacing.xl,
+    paddingLeft: spacing.lg,
+  },
+  seasonalGrid: {
+    flexDirection: 'row',
+    gap: spacing.md,
+  },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -736,37 +793,41 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
   },
   // Articles
+  articleGrid: {
+    flexDirection: 'row',
+    gap: spacing.md,
+  },
   articleCard: {
-    width: 190,
-    marginRight: spacing.md,
+    flex: 1,
   },
   articleImageContainer: {
     position: 'relative',
     marginBottom: spacing.sm,
   },
-  articleImagePlaceholder: {
-    width: 190,
-    height: 130,
+  articleImage: {
+    width: '100%',
+    height: 140,
     borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  articleImageIcon: {
-    position: 'absolute',
-    right: spacing.md,
-    bottom: spacing.md,
+    backgroundColor: colors.surfaceVariant,
   },
   articleCategoryPill: {
     position: 'absolute',
     top: spacing.sm,
     left: spacing.sm,
-    backgroundColor: colors.primary,
+    backgroundColor: 'rgba(6,19,13,0.75)',
+    borderWidth: 1,
+    borderColor: 'rgba(202,239,97,0.35)',
     paddingHorizontal: spacing.sm,
     paddingVertical: 4,
-    borderRadius: borderRadius.sm,
+    borderRadius: borderRadius.full,
   },
   articleTitle: {
     lineHeight: 20,
+  },
+  articleMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: spacing.xs,
   },
   // Testimonials
   testimonialCard: {
@@ -837,5 +898,25 @@ const styles = StyleSheet.create({
     paddingVertical: spacing['2xl'],
     paddingHorizontal: spacing.lg,
     alignItems: 'center',
+  },
+  birthdayBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.lg,
+    padding: spacing.md,
+    borderRadius: borderRadius.xl,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  birthdayIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: colors.secondary,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

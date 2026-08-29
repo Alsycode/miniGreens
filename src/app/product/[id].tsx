@@ -26,14 +26,16 @@ import { Typography } from '../../components/ui/Typography';
 import { Button } from '../../components/ui/Button';
 import { Chip } from '../../components/ui/Chip';
 import { ProductCard } from '../../components/product/ProductCard';
-import { products } from '../../mock';
+import { Loading } from '../../components/ui/Loading';
+import { useProduct, useProducts } from '../../services/catalog';
 import { resolveImageSource } from '../../utils/placeholders';
 import { useCartStore } from '../../store/useCartStore';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function ProductDetailScreen() {
-  const { id } = useLocalSearchParams();
+  const params = useLocalSearchParams();
+  const id = Array.isArray(params.id) ? params.id[0] : params.id;
   const insets = useSafeAreaInsets();
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
@@ -45,10 +47,19 @@ export default function ProductDetailScreen() {
     transform: [{ scale: quantityScale.value }],
   }));
 
-  const product = products.find((p) => p.slug === id);
-  const relatedProducts = products.filter(
+  const { data: product, isLoading } = useProduct(id);
+  const { products: allProducts } = useProducts();
+  const relatedProducts = allProducts.filter(
     (p) => p.categoryId === product?.categoryId && p.id !== product?.id
   );
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, { paddingTop: insets.top }]}>
+        <Loading fullScreen message="Loading product..." />
+      </View>
+    );
+  }
 
   if (!product) {
     return (

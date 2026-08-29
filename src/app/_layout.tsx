@@ -19,6 +19,7 @@ import {
 } from '@expo-google-fonts/plus-jakarta-sans';
 import { colors } from '../theme';
 import { useAuthStore } from '../store/useAuthStore';
+import { addNotificationResponseListener } from '../lib/notifications';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -47,7 +48,11 @@ export default function RootLayout() {
 
   useEffect(() => {
     const unsubscribe = useAuthStore.getState().initialize();
-    return unsubscribe;
+    const unsubscribeNotifications = addNotificationResponseListener();
+    return () => {
+      unsubscribe();
+      unsubscribeNotifications();
+    };
   }, []);
 
   useEffect(() => {
@@ -80,6 +85,10 @@ export default function RootLayout() {
           <Stack.Screen name="product/[id]" options={{ animation: 'slide_from_right' }} />
           <Stack.Screen name="category/[slug]" options={{ animation: 'slide_from_right' }} />
           <Stack.Screen name="search" options={{ animation: 'slide_from_bottom' }} />
+          <Stack.Screen name="articles" options={{ animation: 'slide_from_right' }} />
+          <Stack.Screen name="offers" options={{ animation: 'slide_from_right' }} />
+          <Stack.Screen name="notifications" options={{ animation: 'slide_from_right' }} />
+          <Stack.Screen name="article/[id]" options={{ animation: 'slide_from_right' }} />
           <Stack.Screen name="cart" options={{ animation: 'slide_from_right' }} />
           <Stack.Screen name="checkout/index" options={{ animation: 'slide_from_right' }} />
           <Stack.Screen name="checkout/pay" options={{ animation: 'slide_from_bottom' }} />

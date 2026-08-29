@@ -19,18 +19,22 @@ import * as Haptics from 'expo-haptics';
 import { colors, spacing, borderRadius, shadows } from '../../theme';
 import { Typography } from '../../components/ui/Typography';
 import { Button } from '../../components/ui/Button';
-import { profile } from '../../mock';
+import { ErrorNotice } from '../../components/ui/ErrorNotice';
+import { useAuthStore } from '../../store/useAuthStore';
+import { supabase } from '../../lib/supabase';
+import { formatDobDisplay, maskDobInput, parseDobInput } from '../../utils/date';
 
 interface FieldProps {
   label: string;
   value: string;
   onChangeText: (t: string) => void;
   placeholder?: string;
-  keyboardType?: 'default' | 'email-address' | 'phone-pad';
+  keyboardType?: 'default' | 'email-address' | 'phone-pad' | 'number-pad';
+  maxLength?: number;
   delay: number;
 }
 
-function Field({ label, value, onChangeText, placeholder, keyboardType = 'default', delay }: FieldProps) {
+function Field({ label, value, onChangeText, placeholder, keyboardType = 'default', maxLength, delay }: FieldProps) {
   const [focused, setFocused] = useState(false);
 
   return (
@@ -46,6 +50,7 @@ function Field({ label, value, onChangeText, placeholder, keyboardType = 'defaul
           placeholder={placeholder ?? label}
           placeholderTextColor={colors.textTertiary}
           keyboardType={keyboardType}
+          maxLength={maxLength}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
         />
@@ -56,10 +61,46 @@ function Field({ label, value, onChangeText, placeholder, keyboardType = 'defaul
 
 export default function EditProfileScreen() {
   const insets = useSafeAreaInsets();
-  const [fullName, setFullName] = useState(profile.fullName);
-  const [email, setEmail] = useState(profile.email);
-  const [phone, setPhone] = useState(profile.phone ?? '');
+  const profile = useAuthStore((s) => s.profile);
+  const fetchProfile = useAuthStore((s) => s.fetchProfile);
+
+  const [fullName, setFullName] = useState(profile?.full_name ?? '');
+  const [email, setEmail] = useState(profile?.email ?? '');
+  const [phone, setPhone] = useState(profile?.phone ?? '');
+  const [dob, setDob] = useState(formatDobDisplay(profile?.date_of_birth));
   const [bio, setBio] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSave = async () => {
+    if (!profile) return;
+    let dobIso: string | null = null;
+    if (dob.trim()) {
+      dobIso = parseDobInput(dob);
+      if (!dobIso) {
+        setError('Enter your date of birth as DD/MM/YYYY.');
+        return;
+      }
+    }
+    setError(null);
+    setSaving(true);
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({
+        full_name: fullName.trim(),
+        phone: phone.trim() || null,
+        date_of_birth: dobIso,
+      })
+      .eq('id', profile.id);
+    setSaving(false);
+    if (updateError) {
+      setError(updateError.message);
+      return;
+    }
+    await fetchProfile(profile.id);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    router.back();
+  };
 
   return (
     <KeyboardAvoidingView
@@ -105,6 +146,21 @@ export default function EditProfileScreen() {
         <Field label="Full Name" value={fullName} onChangeText={setFullName} delay={120} />
         <Field label="Email" value={email} onChangeText={setEmail} keyboardType="email-address" delay={180} />
         <Field label="Phone" value={phone} onChangeText={setPhone} keyboardType="phone-pad" delay={240} />
+        <Field
+          label="Date of Birth"
+          value={dob}
+          onChangeText={(t) => setDob(maskDobInput(t))}
+          placeholder="DD/MM/YYYY"
+          keyboardType="number-pad"
+          maxLength={10}
+          delay={270}
+        />
+
+        {error && (
+          <Animated.View entering={FadeInUp.springify().damping(31)} style={styles.fieldWrapper}>
+            <ErrorNotice message={error} onDismiss={() => setError(null)} />
+          </Animated.View>
+        )}
 
         {/* Bio */}
         <Animated.View entering={FadeInUp.delay(300).springify().damping(31)} style={styles.fieldWrapper}>
@@ -130,10 +186,8 @@ export default function EditProfileScreen() {
             variant="primary"
             size="lg"
             fullWidth
-            onPress={() => {
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-              router.back();
-            }}
+            loading={saving}
+            onPress={handleSave}
           />
         </Animated.View>
       </ScrollView>

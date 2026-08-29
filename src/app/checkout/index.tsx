@@ -157,9 +157,24 @@ export default function CheckoutScreen() {
   const [placing, setPlacing] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
 
+  const [couponInput, setCouponInput] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; amount: number } | null>(null);
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [couponChecking, setCouponChecking] = useState(false);
+
   const subtotal = cartSubtotal(items);
-  const total = subtotal + DELIVERY_FEE;
+  const discountAmount = appliedCoupon ? Math.min(appliedCoupon.amount, subtotal) : 0;
+  const total = Math.max(subtotal - discountAmount + DELIVERY_FEE, 0);
   const activeIndex = STEP_INDEX[step];
+
+  const summaryRows: { label: string; value: string; bold?: boolean; accent?: boolean }[] = [
+    { label: 'Subtotal', value: `₹${subtotal.toFixed(2)}` },
+    ...(discountAmount > 0 && appliedCoupon
+      ? [{ label: `Discount · ${appliedCoupon.code}`, value: `−₹${discountAmount.toFixed(2)}`, accent: true }]
+      : []),
+    { label: 'Delivery Fee', value: `₹${DELIVERY_FEE.toFixed(2)}` },
+    { label: 'Total', value: `₹${total.toFixed(2)}`, bold: true },
+  ];
 
   useFocusEffect(
     useCallback(() => {
@@ -181,6 +196,38 @@ export default function CheckoutScreen() {
   function goTo(next: CheckoutStep) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setStep(next);
+  }
+
+  async function handleApplyCoupon() {
+    const code = couponInput.trim();
+    if (!code) return;
+    setCouponError(null);
+    setCouponChecking(true);
+    const { data, error } = await supabase.rpc('validate_discount', {
+      p_code: code,
+      p_subtotal: subtotal,
+    });
+    setCouponChecking(false);
+    if (error) {
+      setAppliedCoupon(null);
+      setCouponError(error.message);
+      return;
+    }
+    if (!data || !data.valid) {
+      setAppliedCoupon(null);
+      setCouponError(data?.reason ?? 'That coupon can’t be applied.');
+      return;
+    }
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    setAppliedCoupon({ code: data.code ?? code.toUpperCase(), amount: data.discount_amount ?? 0 });
+    setCouponError(null);
+  }
+
+  function handleRemoveCoupon() {
+    Haptics.selectionAsync();
+    setAppliedCoupon(null);
+    setCouponInput('');
+    setCouponError(null);
   }
 
   async function handlePlaceOrder() {
@@ -209,6 +256,8 @@ export default function CheckoutScreen() {
         order_type: 'standard',
         business_name: null,
         contact_person: null,
+        discount_code: appliedCoupon?.code ?? null,
+        discount_amount: discountAmount,
       })
       .select()
       .single();
@@ -274,18 +323,61 @@ export default function CheckoutScreen() {
               </Animated.View>
             ))}
 
+            <View style={styles.couponBox}>
+              <Typography variant="body" weight="semibold" style={styles.summaryTitle}>Coupon code</Typography>
+              {appliedCoupon ? (
+                <View style={styles.couponApplied}>
+                  <View style={styles.couponAppliedLeft}>
+                    <Ionicons name="pricetag" size={16} color={colors.primary} />
+                    <Typography variant="bodySmall" weight="semibold" color={colors.primary} style={{ marginLeft: spacing.sm }}>
+                      {appliedCoupon.code} applied
+                    </Typography>
+                  </View>
+                  <Pressable onPress={handleRemoveCoupon} hitSlop={8}>
+                    <Typography variant="bodySmall" weight="semibold" color={colors.error}>Remove</Typography>
+                  </Pressable>
+                </View>
+              ) : (
+                <View style={styles.couponRow}>
+                  <View style={styles.couponField}>
+                    <TextField
+                      placeholder="Enter code"
+                      value={couponInput}
+                      onChangeText={(t) => setCouponInput(t.toUpperCase())}
+                      autoCapitalize="characters"
+                      autoCorrect={false}
+                      leftIcon="pricetag-outline"
+                    />
+                  </View>
+                  <Button
+                    title="Apply"
+                    variant="outline"
+                    onPress={handleApplyCoupon}
+                    disabled={couponChecking || !couponInput.trim()}
+                    loading={couponChecking}
+                    style={styles.couponApplyBtn}
+                  />
+                </View>
+              )}
+              {couponError && (
+                <Typography variant="caption" color={colors.error} style={{ marginTop: spacing.xs }}>
+                  {couponError}
+                </Typography>
+              )}
+            </View>
+
             <View style={styles.orderSummary}>
               <Typography variant="body" weight="semibold" style={styles.summaryTitle}>Order Summary</Typography>
-              {[
-                { label: 'Subtotal', value: `₹${subtotal.toFixed(2)}` },
-                { label: 'Delivery Fee', value: `₹${DELIVERY_FEE.toFixed(2)}` },
-                { label: 'Total', value: `₹${total.toFixed(2)}`, bold: true },
-              ].map((item, i) => (
+              {summaryRows.map((item, i) => (
                 <View key={i} style={[styles.summaryRow, item.bold && styles.summaryRowTotal]}>
                   <Typography variant="bodySmall" color={item.bold ? colors.text : colors.textSecondary} weight={item.bold ? 'semibold' : 'regular'}>
                     {item.label}
                   </Typography>
-                  <Typography variant="bodySmall" color={item.bold ? colors.primary : colors.textSecondary} weight={item.bold ? 'bold' : 'regular'}>
+                  <Typography
+                    variant="bodySmall"
+                    color={item.bold || item.accent ? colors.primary : colors.textSecondary}
+                    weight={item.bold ? 'bold' : item.accent ? 'semibold' : 'regular'}
+                  >
                     {item.value}
                   </Typography>
                 </View>
@@ -524,6 +616,26 @@ const styles = StyleSheet.create({
     ...shadows.sm,
   },
   summaryTitle: { marginBottom: spacing.md },
+  couponBox: {
+    marginTop: spacing.md,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+    ...shadows.sm,
+  },
+  couponRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
+  couponField: { flex: 1 },
+  couponApplyBtn: { marginTop: 0 },
+  couponApplied: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.primaryBg,
+    borderRadius: borderRadius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+  },
+  couponAppliedLeft: { flexDirection: 'row', alignItems: 'center' },
   summaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',

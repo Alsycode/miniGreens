@@ -16,12 +16,15 @@ import { Typography } from '../components/ui/Typography';
 import { SearchBar } from '../components/ui/SearchBar';
 import { ProductCard } from '../components/product/ProductCard';
 import { EmptyState } from '../components/ui/EmptyState';
-import { products, searchSuggestions } from '../mock';
+import { Loading } from '../components/ui/Loading';
+import { searchSuggestions } from '../mock';
+import { useProducts } from '../services/catalog';
 
 export default function SearchScreen() {
   const insets = useSafeAreaInsets();
   const [query, setQuery] = useState('');
   const [recentSearches] = useState(['mango fresh', 'choco chill', 'watermelon fresh']);
+  const { products, isLoading } = useProducts();
 
   const headerScale = useSharedValue(1);
   const headerAnimStyle = useAnimatedStyle(() => ({
@@ -139,6 +142,8 @@ export default function SearchScreen() {
             </View>
           </Animated.View>
         </ScrollView>
+      ) : isLoading ? (
+        <Loading message="Searching..." />
       ) : searchResults.length > 0 ? (
         <ScrollView contentContainerStyle={styles.resultsContainer}>
           <Animated.View entering={FadeInUp.springify().damping(31)}>
@@ -157,6 +162,7 @@ export default function SearchScreen() {
                   product={product}
                   index={i}
                   onPress={() => handleProductPress(product.slug)}
+                  style={styles.gridCard}
                 />
               </Animated.View>
             ))}
@@ -247,5 +253,10 @@ const styles = StyleSheet.create({
   productWrapper: {
     width: '48%',
     marginBottom: spacing.md,
+  },
+  gridCard: {
+    width: '100%',
+    height: 280,
+    marginRight: 0,
   },
 });

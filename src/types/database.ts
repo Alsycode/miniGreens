@@ -212,15 +212,19 @@ export interface Database {
           razorpay_payment_id: string | null;
           razorpay_signature: string | null;
           payment_status: PaymentStatus;
+          discount_code: string | null;
+          discount_amount: number;
           created_at: string;
           updated_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['orders']['Row'], 'id' | 'created_at' | 'updated_at' | 'razorpay_order_id' | 'razorpay_payment_id' | 'razorpay_signature' | 'payment_status'> & {
+        Insert: Omit<Database['public']['Tables']['orders']['Row'], 'id' | 'created_at' | 'updated_at' | 'razorpay_order_id' | 'razorpay_payment_id' | 'razorpay_signature' | 'payment_status' | 'discount_code' | 'discount_amount'> & {
           id?: string;
           razorpay_order_id?: string | null;
           razorpay_payment_id?: string | null;
           razorpay_signature?: string | null;
           payment_status?: PaymentStatus;
+          discount_code?: string | null;
+          discount_amount?: number;
         };
         Update: Partial<Database['public']['Tables']['orders']['Insert']>;
         Relationships: [
@@ -340,6 +344,34 @@ export interface Database {
         Update: Partial<Database['public']['Tables']['discounts']['Insert']>;
         Relationships: [];
       };
+      notifications: {
+        Row: {
+          id: string;
+          profile_id: string;
+          type: string;
+          title: string;
+          body: string;
+          data: Record<string, unknown>;
+          read_at: string | null;
+          created_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['notifications']['Row'], 'id' | 'data' | 'read_at' | 'created_at'> & {
+          id?: string;
+          data?: Record<string, unknown>;
+          read_at?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['notifications']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'notifications_profile_id_fkey';
+            columns: ['profile_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -350,6 +382,20 @@ export interface Database {
           p_razorpay_signature: string;
         };
         Returns: boolean;
+      };
+      validate_discount: {
+        Args: {
+          p_code: string;
+          p_subtotal: number;
+        };
+        Returns: {
+          valid: boolean;
+          reason: string | null;
+          code?: string;
+          discount_type?: DiscountType;
+          discount_value?: number;
+          discount_amount?: number;
+        };
       };
     };
     Enums: {

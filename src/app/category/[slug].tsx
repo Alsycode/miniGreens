@@ -14,14 +14,30 @@ import { resolveImageSource } from '../../utils/placeholders';
 import { Typography } from '../../components/ui/Typography';
 import { ProductCard } from '../../components/product/ProductCard';
 import { EmptyState } from '../../components/ui/EmptyState';
-import { categories, products } from '../../mock';
+import { Loading } from '../../components/ui/Loading';
+import { useCategory, useProducts } from '../../services/catalog';
 
 export default function CategoryScreen() {
-  const { slug } = useLocalSearchParams();
+  const params = useLocalSearchParams();
+  const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
   const insets = useSafeAreaInsets();
 
-  const category = categories.find((c) => c.slug === slug);
+  const { category, isLoading: categoryLoading } = useCategory(slug);
+  const { products, isLoading: productsLoading } = useProducts();
   const categoryProducts = products.filter((p) => p.categoryId === category?.id);
+
+  if (categoryLoading || productsLoading) {
+    return (
+      <View style={[styles.container, { paddingTop: insets.top }]}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
+          </TouchableOpacity>
+        </View>
+        <Loading fullScreen message="Loading category..." />
+      </View>
+    );
+  }
 
   if (!category) {
     return (
@@ -104,6 +120,7 @@ export default function CategoryScreen() {
                 product={product}
                 index={i}
                 onPress={() => router.push(`/product/${product.slug}`)}
+                style={styles.gridCard}
               />
             </Animated.View>
           ))}
@@ -178,5 +195,10 @@ const styles = StyleSheet.create({
   productWrapper: {
     width: '48%',
     marginBottom: spacing.md,
+  },
+  gridCard: {
+    width: '100%',
+    height: 280,
+    marginRight: 0,
   },
 });
