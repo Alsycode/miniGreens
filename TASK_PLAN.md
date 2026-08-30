@@ -568,6 +568,40 @@ editable by Admin instead of hard-coded.
 
 ## 🧾 SESSION LOG (append-only — newest at top)
 
+### 2026-08-30 — T2/T3 also verified in the running app (mobile web)
+
+Started this session's own Expo web server on **port 8091** (added a
+`"MiniGreens Mobile Web 8091"` entry to `.claude/launch.json` — 8090 was held by
+another chat). User logged in with a real test account (`razoralf67@gmail.com`);
+Claude drove the rest. All screenshotted:
+
+**T2**
+- Profile → **My Offers** renders the live `WELCOME15` discount (15% OFF pill,
+  description, "Expires Sep 29, 2026", code box, "Tap to copy" — clipboard write fired).
+- Checkout **Review** step shows the new "Coupon code" card. Applying `WELCOME15` →
+  "WELCOME15 applied" + Remove, and the summary gained `Discount · WELCOME15  −₹25.50`
+  (exactly 15% of ₹170), Total dropped ₹205.49 → **₹179.99** (170 − 25.50 + 35.49). ✓ math.
+- Removing it, then applying `FAKECODE99` → inline red "That code doesn't exist." (the
+  RPC's `reason`), total back to ₹205.49. ✓
+
+**T3**
+- Home bell → `/notifications`. Empty state ("You're all caught up"), mark-all button
+  disabled at 0 unread.
+- After inserting one test row: list shows it with unread tint + green dot; mark-all
+  enabled. Tapping the row cleared the unread styling (read_at written, query refetched).
+- Reset the row to unread + reloaded → Home bell shows the green dot. (Note: the bell
+  badge only re-queries on Home **mount** — a notification arriving while Home is already
+  foregrounded won't light it until next mount / app reopen. No realtime channel in v1;
+  acceptable, but flag if "instant badge" is wanted → add a `supabase.channel` sub or
+  invalidate on push-received.)
+
+Disposable data (`WELCOME15` discount, the test notification) to be removed by the user
+with the cleanup SQL Claude provided. No order rows were created (walkthrough stopped at
+the Review step). Dev server stopped.
+
+Screens still not exercised anywhere: birthday banner (needs a profile whose DOB month =
+now + an active `is_birthday_offer` discount), and the register→profile DOB round-trip.
+
 ### 2026-08-30 — Migrations pushed + T5/T2/T3 verified live → all DONE
 
 User ran `npx supabase db push --db-url '<session pooler>'` (had to use `npx --yes` so the
