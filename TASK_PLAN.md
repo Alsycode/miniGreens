@@ -43,7 +43,7 @@
 | T4 | Pre-order flow (mobile) + pre-orders reach Admin | Mobile + DB + Admin | P1 | CODE DONE (2026-08-30) — migration `20260830160000` pending user push |
 | T5 | Capture DOB (register + profile edit) + surface birthday reward | Mobile | P2 | DONE (2026-08-30) — migration pushed + DB-verified |
 | T6 | Partner payouts (earnings → payout tracking, both sides) | Mobile + Admin + DB | P2 | TODO |
-| T7 | Admin: Customers screen | Admin | P2 | TODO |
+| T7 | Admin: Customers screen | Admin | P2 | CODE DONE (2026-08-30) — admin `tsc` clean; live check pending |
 | T8 | Admin: wire Overview dashboard + Delivery Queue off real data | Admin | P2 | TODO |
 | T9 | Admin: Reports export as PDF + Excel (CSV already done) | Admin | P3 | TODO |
 | T10 | Partner KYC document upload | Mobile + Admin + Storage | P3 | TODO |
@@ -514,7 +514,29 @@ Both apps typecheck.
 and a working detail drawer against live data (verify in the admin preview — see `BUILD_PLAN.md` for
 the admin login/verify recipe).
 
-**Resume notes:** _(none yet)_
+**Resume notes:** CODE COMPLETE 2026-08-30 (no migration — admin-only). Remaining: confirm
+`cd admin && npx tsc --noEmit` clean, then live-check in the admin preview (list renders,
+drawer opens with orders/addresses/subs/birthday). Flip Status Board row to DONE after.
+
+**What was built:**
+- `admin/components/Sidebar.tsx`: "Customers" moved from `comingSoon` into the live nav
+  (`/dashboard/customers`, `Users` icon); the now-empty "Coming Soon" section is hidden.
+- `admin/app/dashboard/(protected)/customers/page.tsx` (new server component): parallel-fetches
+  `profiles` (role='customer'), all `orders`, `subscriptions` (+plan embed), `addresses`; joins
+  in JS into a `Customer[]` with `orderCount`, `totalSpent`, `hasActiveSubscription`, and nested
+  `orders` / `subscriptions` / `addresses`. Same server-fetch → client-component shape as
+  `orders/page.tsx`. Reads via the cookie-scoped admin client (RLS `is_admin()` covers all four
+  tables).
+- `admin/components/CustomersClient.tsx` (new): 3 summary tiles (total / active subscribers /
+  birthdays this month), search (name/email/phone), sort (recent / top spenders / most orders /
+  name), table (Customer · Orders · Total Spent · Subscription · Birthday · Joined — birthday
+  cell shows "· in Nd" when ≤30 days away). Row → slide-over drawer (same pattern as
+  `OrdersClient`) with profile grid, addresses, full order history (with PRE-ORDER tag), and
+  subscription history.
+- **This also closes the T5 admin gap** — DOB / upcoming birthdays are now visible to admins.
+
+**Note:** no server actions — this screen is read-only (matches the task). Editing a customer
+(e.g. correcting a DOB) still happens only on the mobile side.
 
 ---
 
@@ -609,6 +631,22 @@ editable by Admin instead of hard-coded.
 ---
 
 ## 🧾 SESSION LOG (append-only — newest at top)
+
+### 2026-08-30 — T7 code complete (Admin Customers screen)
+
+Admin-only, no migration. `admin/components/Sidebar.tsx`: "Customers" moved from
+`comingSoon` into live nav; empty Coming-Soon section now hidden. New
+`admin/app/dashboard/(protected)/customers/page.tsx` (server component) parallel-fetches
+`profiles` (role='customer') + all `orders` + `subscriptions` (plan embed) + `addresses`,
+joins in JS → `Customer[]` with orderCount / totalSpent / hasActiveSubscription / nested
+history. New `admin/components/CustomersClient.tsx`: 3 stat tiles, search, sort, table with
+a Birthday column ("· in Nd" when ≤30 days), row → slide-over drawer (profile grid,
+addresses, order history w/ PRE-ORDER tag, subscription history). Read-only (no server
+actions). **Closes the T5 admin gap** — admins can now see DOB / upcoming birthdays.
+
+`cd admin && npx tsc --noEmit` clean (exit 0). Live check in the admin preview still
+pending (needs admin login creds from the user) — pattern is copied verbatim from the
+working `orders` / `subscriptions` pages so risk is low.
 
 ### 2026-08-30 — T4 code complete (pre-order flow)
 

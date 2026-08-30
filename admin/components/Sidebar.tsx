@@ -27,13 +27,12 @@ const navLinks = [
   { href: "/dashboard/partners", label: "Partners", icon: Handshake, active: true },
   { href: "/dashboard/products", label: "Products", icon: Package, active: true },
   { href: "/dashboard/discounts", label: "Discounts", icon: Tag, active: true },
+  { href: "/dashboard/customers", label: "Customers", icon: Users, active: true },
   { href: "/dashboard/subscriptions", label: "Subscriptions", icon: CreditCard, active: true },
   { href: "/dashboard/reports", label: "Reports", icon: ChartBar, active: true },
 ];
 
-const comingSoon = [
-  { label: "Customers", icon: Users },
-];
+const comingSoon: { label: string; icon: typeof Users }[] = [];
 
 export default function Sidebar({ email }: { email: string }) {
   const pathname = usePathname();
@@ -83,20 +82,22 @@ export default function Sidebar({ email }: { email: string }) {
           );
         })}
 
-        <div className="pt-4">
-          <p className="px-3 pb-2 text-[10px] font-semibold tracking-widest uppercase text-slate-400">
-            Coming Soon
-          </p>
-          {comingSoon.map(({ label, icon: Icon }) => (
-            <div
-              key={label}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 pointer-events-none opacity-40 select-none"
-            >
-              <Icon size={18} />
-              {label}
-            </div>
-          ))}
-        </div>
+        {comingSoon.length > 0 && (
+          <div className="pt-4">
+            <p className="px-3 pb-2 text-[10px] font-semibold tracking-widest uppercase text-slate-400">
+              Coming Soon
+            </p>
+            {comingSoon.map(({ label, icon: Icon }) => (
+              <div
+                key={label}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 pointer-events-none opacity-40 select-none"
+              >
+                <Icon size={18} />
+                {label}
+              </div>
+            ))}
+          </div>
+        )}
       </nav>
 
       {/* Admin avatar */}
