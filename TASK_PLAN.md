@@ -44,7 +44,7 @@
 | T5 | Capture DOB (register + profile edit) + surface birthday reward | Mobile | P2 | DONE (2026-08-30) — migration pushed + DB-verified |
 | T6 | Partner payouts (earnings → payout tracking, both sides) | Mobile + Admin + DB | P2 | TODO |
 | T7 | Admin: Customers screen | Admin | P2 | CODE DONE (2026-08-30) — admin `tsc` clean; live check pending |
-| T8 | Admin: wire Overview dashboard + Delivery Queue off real data | Admin | P2 | TODO |
+| T8 | Admin: wire Overview dashboard + Delivery Queue off real data | Admin | P2 | DONE (already complete — plan gap-analysis was stale) |
 | T9 | Admin: Reports export as PDF + Excel (CSV already done) | Admin | P3 | TODO |
 | T10 | Partner KYC document upload | Mobile + Admin + Storage | P3 | TODO |
 | T11 | (Optional) Testimonials / Why-Choose / Blog → DB + admin CMS | Full-stack | P4 | TODO |
@@ -562,7 +562,15 @@ The Delivery Queue's "Mark Delivered" toggle is client-state only and resets on 
 **Definition of done:** both pages show real numbers; "Mark Delivered" persists (confirm with a
 direct query that `orders.status` flipped). Admin typechecks clean.
 
-**Resume notes:** _(none yet)_
+**Resume notes:** DONE — found **already complete** on 2026-08-30 (the gap-analysis note above
+was stale). `admin/app/dashboard/(protected)/page.tsx` server-fetches today's orders, monthly
+revenue, active subscriptions, pending deliveries, a real 7-day revenue chart
+(`RevenueChartWrapper` takes a `data` prop), top sellers from `order_items`, and a recent-orders
+table — no hardcoded arrays. `admin/app/dashboard/(protected)/delivery/page.tsx` fetches
+`orders` for today's `delivery_date` grouped by `delivery_time`; `delivery/actions.ts`
+`markOrderDelivered()` does a real `update … status='delivered'` + `revalidatePath`, and
+`DeliveryQueueClient` calls it via `startTransition` (optimistic local update, then persists).
+No code change needed.
 
 ---
 
