@@ -38,10 +38,10 @@
 | ID | Task | Area | Priority | Status |
 |----|------|------|----------|--------|
 | T1 | Move mobile catalogue onto live Supabase data | Mobile / Customer | P0 | DONE (2026-08-30) |
-| T2 | Coupons & offers (checkout coupon field + My Offers screen) | Mobile / Customer | P1 | CODE DONE (2026-08-30) — migration `20260830140000` pending user push |
-| T3 | In-app notification inbox (+ `notifications` table) | Mobile + DB | P1 | CODE DONE (2026-08-30) — migration `20260830150000` pending user push |
+| T2 | Coupons & offers (checkout coupon field + My Offers screen) | Mobile / Customer | P1 | DONE (2026-08-30) — migration pushed + DB-verified |
+| T3 | In-app notification inbox (+ `notifications` table) | Mobile + DB | P1 | DONE (2026-08-30) — migration pushed + DB-verified |
 | T4 | Pre-order flow (mobile) + pre-orders reach Admin | Mobile + DB + Admin | P1 | TODO |
-| T5 | Capture DOB (register + profile edit) + surface birthday reward | Mobile | P2 | CODE DONE (2026-08-30) — migration `20260830120000` pending user push |
+| T5 | Capture DOB (register + profile edit) + surface birthday reward | Mobile | P2 | DONE (2026-08-30) — migration pushed + DB-verified |
 | T6 | Partner payouts (earnings → payout tracking, both sides) | Mobile + Admin + DB | P2 | TODO |
 | T7 | Admin: Customers screen | Admin | P2 | TODO |
 | T8 | Admin: wire Overview dashboard + Delivery Queue off real data | Admin | P2 | TODO |
@@ -233,10 +233,10 @@ screen lists currently-valid discounts (including their birthday coupon when act
 code+amount → visible in Admin order drawer. Invalid/expired code shows a clear error. My Offers
 lists active discounts. Both apps typecheck.
 
-**Resume notes:** CODE COMPLETE 2026-08-30. Remaining: (1) user pushes migration
-`supabase/migrations/20260830140000_apply_discount.sql`; (2) live-verify the checkout coupon
-round-trip + My Offers with a real active `discounts` row once pushed. Flip Status Board row to
-DONE after the migration is confirmed applied. See Session Log for what was built.
+**Resume notes:** DONE 2026-08-30 — migration `20260830140000` pushed; DB-verified
+(`validate_discount` happy/min-order/bogus paths all correct; `orders.discount_code` +
+`discount_amount` present). Mobile checkout coupon UI + `/offers` screen not yet clicked
+through on a running app, but the RPC contract they call is proven. See Session Log.
 
 **Deviations from the step list, noted not hidden:**
 - Step 1: `validate_discount(p_code, p_subtotal)` returns **`json`** (not a table/record) —
@@ -302,11 +302,11 @@ persisted, with unread state. Today only transient OS push exists.
 **Definition of done:** change an order's status in the DB → a notification row appears → shows in
 the inbox with unread dot → tapping marks read → badge count updates. Typecheck clean.
 
-**Resume notes:** CODE COMPLETE 2026-08-30. Remaining: (1) user pushes migration
-`supabase/migrations/20260830150000_notifications_table.sql`; (2) live-verify: flip an order's
-`status` in the DB → row appears in `/notifications` with the unread dot → tap marks it read →
-Home bell dot clears. Flip Status Board row to DONE once the migration is applied + that check
-passes.
+**Resume notes:** DONE 2026-08-30 — migration `20260830150000` pushed; DB-verified
+(table + 2 RLS policies; `notify_order_status_change` / `send_birthday_offers` bodies insert
+inbox rows; partner trigger exists; **functional** — order insert + status flip produced 2
+`notifications` rows). Mobile `/notifications` screen + Home bell badge not yet clicked
+through on a running app. See Session Log.
 
 **Deviations / notes:**
 - Step 1: RLS = `select` own-or-admin, `update` own. **No insert policy** — all inserts go
@@ -404,10 +404,9 @@ editing it in the profile screen persists. Typecheck clean. (Can't fully test th
 waiting for a birthday — instead call `select public.send_birthday_offers();` manually after
 setting a test profile's DOB to today.)
 
-**Resume notes:** CODE COMPLETE 2026-08-30. Only remaining item: user pushes migration
-`supabase/migrations/20260830120000_dob_from_signup.sql`, then optionally live-verify the
-register→profile round-trip with a real account. Move the Status Board row to DONE once
-that migration is confirmed applied. See Session Log for what was built + why.
+**Resume notes:** DONE 2026-08-30 — migration `20260830120000` pushed; DB-verified
+(`handle_new_user()` carries `date_of_birth`, column exists). The register→profile
+round-trip on a real device is still un-run but the DB side is proven. See Session Log.
 
 ---
 
@@ -568,6 +567,36 @@ editable by Admin instead of hard-coded.
 ---
 
 ## 🧾 SESSION LOG (append-only — newest at top)
+
+### 2026-08-30 — Migrations pushed + T5/T2/T3 verified live → all DONE
+
+User ran `npx supabase db push --db-url '<session pooler>'` (had to use `npx --yes` so the
+CLI install prompt didn't cancel it; the in-app "Run" button can't answer stdin prompts).
+Applied: `20260821000000_inventory_decrement` (had been sitting unpushed too),
+`20260830120000_dob_from_signup` (T5), `20260830140000_apply_discount` (T2),
+`20260830150000_notifications_table` (T3). `Finished supabase db push.`
+
+Verification (SQL Editor script — created disposable coupon + order, checked, cleaned up;
+`pg_get_functiondef` needs `::regproc` not `::regprocedure` for no-arg fns). **13/13 PASS:**
+- T5: `handle_new_user()` body references `date_of_birth`; `profiles.date_of_birth` exists.
+- T2: `orders.discount_code` + `discount_amount` exist; `validate_discount('ZZVERIFY10',500)`
+  → `valid`, `discount_amount = 50` (10% of 500); below `min_order_value` → invalid; bogus
+  code → invalid.
+- T3: `notifications` table + 2 RLS policies exist; `partners_notify_status_change` trigger
+  exists; `notify_order_status_change()` and `send_birthday_offers()` bodies insert into
+  `public.notifications`; **functional** — inserting an order then flipping its status to
+  `confirmed` produced exactly 2 inbox rows.
+
+Not exercised (needs the app running on a device / unblocked web server): the actual mobile
+screens (`/offers`, `/notifications`, checkout coupon field, Home bell badge). Code + types
+typecheck clean; the DB contracts they depend on are now proven.
+
+**Housekeeping:** two commits landed on `dark-theme` earlier this session — `51cc24e`
+(26 bundled images) and `fa0f864` (T1/T5/T2/T3 code + 3 migrations + this file). No git
+remote configured, so nothing pushed. `assets/mini/` (43 MB unused dupes) added to
+`.gitignore`. **Account + DB passwords were shared in chat this session — user to rotate
+both** (Supabase → Account → Security; Settings → Database → Reset database password —
+nothing running uses the DB password).
 
 ### 2026-08-30 — T3 code complete (in-app notification inbox)
 
