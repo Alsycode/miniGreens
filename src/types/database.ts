@@ -19,6 +19,7 @@ export type OrderType = 'standard' | 'business' | 'preorder';
 export type DiscountType = 'percentage' | 'flat';
 export type DiscountTarget = 'all' | 'category' | 'product' | 'subscription_plan' | 'partner' | 'wholesale';
 export type PaymentStatus = 'pending' | 'paid' | 'failed';
+export type PayoutStatus = 'pending' | 'processing' | 'paid' | 'rejected';
 
 export interface Database {
   public: {
@@ -346,6 +347,35 @@ export interface Database {
         Update: Partial<Database['public']['Tables']['discounts']['Insert']>;
         Relationships: [];
       };
+      payouts: {
+        Row: {
+          id: string;
+          partner_id: string;
+          amount: number;
+          status: PayoutStatus;
+          period_start: string | null;
+          period_end: string | null;
+          note: string | null;
+          requested_at: string;
+          paid_at: string | null;
+        };
+        Insert: Omit<Database['public']['Tables']['payouts']['Row'], 'id' | 'status' | 'requested_at' | 'paid_at'> & {
+          id?: string;
+          status?: PayoutStatus;
+          requested_at?: string;
+          paid_at?: string | null;
+        };
+        Update: Partial<Database['public']['Tables']['payouts']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'payouts_partner_id_fkey';
+            columns: ['partner_id'];
+            isOneToOne: false;
+            referencedRelation: 'partners';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       notifications: {
         Row: {
           id: string;
@@ -397,6 +427,28 @@ export interface Database {
           discount_type?: DiscountType;
           discount_value?: number;
           discount_amount?: number;
+        };
+      };
+      partner_earnings_summary: {
+        Args: { p_partner_id: string };
+        Returns: {
+          error?: string;
+          gross?: number;
+          fee_percent?: number;
+          fee?: number;
+          net?: number;
+          paid_out?: number;
+          pending?: number;
+          available?: number;
+        };
+      };
+      request_payout: {
+        Args: { p_partner_id: string };
+        Returns: {
+          ok?: boolean;
+          payout_id?: string;
+          amount?: number;
+          error?: string;
         };
       };
     };

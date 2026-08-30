@@ -42,7 +42,7 @@
 | T3 | In-app notification inbox (+ `notifications` table) | Mobile + DB | P1 | DONE (2026-08-30) — migration pushed + DB-verified |
 | T4 | Pre-order flow (mobile) + pre-orders reach Admin | Mobile + DB + Admin | P1 | DONE (2026-08-30) — migration pushed + live-verified end to end |
 | T5 | Capture DOB (register + profile edit) + surface birthday reward | Mobile | P2 | DONE (2026-08-30) — migration pushed + DB-verified |
-| T6 | Partner payouts (earnings → payout tracking, both sides) | Mobile + Admin + DB | P2 | TODO |
+| T6 | Partner payouts (earnings → payout tracking, both sides) | Mobile + Admin + DB | P2 | IN PROGRESS — DB layer done (committed), mobile + admin UI TODO |
 | T7 | Admin: Customers screen | Admin | P2 | DONE (2026-08-30) — admin `tsc` clean + live-verified (list, tiles, drawer) |
 | T8 | Admin: wire Overview dashboard + Delivery Queue off real data | Admin | P2 | DONE (already complete — plan gap-analysis was stale) |
 | T9 | Admin: Reports export as PDF + Excel (CSV already done) | Admin | P3 | TODO |
@@ -485,7 +485,62 @@ there is no payout record or request flow.
 a correct earnings breakdown, "Request payout" creates a row, and Admin can move it to `paid`.
 Both apps typecheck.
 
-**Resume notes:** _(none yet)_
+**Resume notes (2026-08-30 — DB layer done, UI not started):**
+
+DONE + committed (commit right after `4db6d0e`):
+- **Migration `supabase/migrations/20260830170000_payouts.sql`** — **NOT PUSHED yet.**
+  - `public.payouts` (id, partner_id fk→partners cascade, amount `check > 0`, status
+    `check in ('pending','processing','paid','rejected')` default 'pending', period_start/end,
+    note, requested_at, paid_at). Indexes on `(partner_id, requested_at desc)` and `status`.
+  - RLS: `payouts_select_own_or_admin`, `payouts_insert_own` (ownership only), `payouts_update_admin`.
+  - `partner_earnings_summary(p_partner_id uuid) returns json` — SECURITY DEFINER, ownership/admin
+    guarded. gross = non-cancelled `order_type='business'` orders by the partner's profile; fee =
+    gross × `platform_fee_percent`/100; net = gross − fee; `paid_out` = Σ paid payouts; `pending` =
+    Σ pending+processing payouts; `available = max(net − paid_out − pending, 0)`. Returns
+    `{gross, fee_percent, fee, net, paid_out, pending, available}` (or `{error}`).
+  - `request_payout(p_partner_id uuid) returns json` — SECURITY DEFINER; recomputes `available`,
+    refuses if `< 1`, else inserts a `payouts` row (`status='pending'`, `amount=available`).
+    Returns `{ok, payout_id, amount}` or `{error}`.
+  - grants: both fns `to authenticated`.
+- **`src/types/database.ts`** — `PayoutStatus` type; `payouts` table Row/Insert/Update/Relationships;
+  `Functions.partner_earnings_summary` + `Functions.request_payout`. Mobile `tsc` clean.
+
+**DECISION taken (was implicit):** modelled as **option (a) style** — no separate earnings ledger;
+`partner_earnings_summary` derives everything live from `orders` + `payouts`. "Earned" = all
+non-cancelled business orders (matches what `partner/dashboard.tsx` already shows as "Total Sales");
+did NOT gate on `payment_status='paid'` because partner business orders don't currently go through
+Razorpay. Revisit if business orders start taking payment.
+
+TODO — pick up here:
+1. **Push the migration** (tell the user):
+   `npx --yes supabase db push --db-url '<session pooler url>'` → applies `20260830170000_payouts.sql`.
+2. **Mobile `src/app/partner/dashboard.tsx`** — currently computes `totalSales`/`netEarnings`
+   inline from `orders`. Add: on `load()`, also `supabase.rpc('partner_earnings_summary', { p_partner_id: partner.id })`
+   and `supabase.from('payouts').select('*').eq('partner_id', partner.id).order('requested_at', {ascending:false})`.
+   Replace/augment the stats row with an **Earnings card**: Gross / Fee (X%) / Net / Paid out /
+   Available. Add a **"Request payout"** button (disabled when `available < 1`) →
+   `supabase.rpc('request_payout', { p_partner_id: partner.id })` → on `data.ok` reload; show
+   `data.error` via `ErrorNotice`. Add a **payout history list** below (amount, status badge,
+   `requested_at`, `paid_at` when set). Status badge colours: pending=warning, processing=info,
+   paid=success, rejected=error.
+3. **Admin** `admin/app/dashboard/(protected)/partners/`:
+   - `actions.ts`: add `updatePayoutStatus(payoutId: string, status: PayoutStatus)` — `update payouts
+     set status, paid_at = (status==='paid' ? now() : null)`; `revalidatePath('/dashboard/partners')`.
+   - `page.tsx`: also fetch `payouts` joined to partner business_name (or fetch payouts + partners
+     separately and join in JS). Pass `payouts` to `PartnersClient`.
+   - `PartnersClient.tsx`: add a `"payouts"` tab key. When active, render a payouts table instead of
+     the applications table — columns: Business, Amount, Status, Requested, actions. Row actions by
+     status: pending → [Approve→processing] [Reject]; processing → [Mark paid→paid] [Reject];
+     paid/rejected → none. Reuse `startTransition`.
+4. **Admin Reports** `admin/app/dashboard/(protected)/reports/` — the "Partner Payouts" tab already
+   shows *theoretical* net (gross×fee). Add real columns from the `payouts` table: `Paid Out`,
+   `Pending`. Fetch `payouts` in `reports/page.tsx`, aggregate by `partner_id`, extend `PartnerRow`
+   in `ReportsClient.tsx` + its CSV header/rows.
+5. `npx tsc --noEmit` (root) + `cd admin && npx tsc --noEmit` both clean.
+6. Live-verify: needs a test partner (approved) with ≥1 business order. `partner_earnings_summary`
+   returns a correct breakdown → "Request payout" creates a `pending` row → admin approves →
+   processing → paid (sets `paid_at`) → mobile shows it moved to Paid and `available` dropped.
+   Clean up test rows after.
 
 ---
 
@@ -636,6 +691,23 @@ editable by Admin instead of hard-coded.
 ---
 
 ## 🧾 SESSION LOG (append-only — newest at top)
+
+### 2026-08-30 — T6 started (DB layer only), then paused for a new chat
+
+Wrote + committed the T6 database layer: migration `20260830170000_payouts.sql`
+(`payouts` table + RLS + `partner_earnings_summary()` + `request_payout()` RPCs) and the
+matching `src/types/database.ts` entries. Mobile `tsc` clean. **Migration NOT pushed.**
+Mobile Partner Dashboard UI, admin Payouts section, and Reports wiring are **not started** —
+full step list is in the T6 "Resume notes" above. Next chat picks up at "push the migration".
+
+Also this session (all committed on branch `dark-theme`, no git remote configured):
+T1/T5/T2/T3 (`fa0f864`), T4 (`19e05ec`, migration pushed + live-verified), T7 (`cef83cc`,
+live-verified), T8 (found already done), plus verification/plan commits. Migrations
+`20260830120000` / `140000` / `150000` / `160000` are all pushed & live.
+**Not yet pushed: `20260830170000_payouts.sql`.**
+
+Build note: user's installed APK predates Phase 3 (no push notifications) → OTA won't reach
+it; they'll do a fresh `eas build --profile preview` after the remaining tasks + testing.
 
 ### 2026-08-30 — T4 + T7 live-verified end to end → both DONE
 
