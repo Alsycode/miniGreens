@@ -45,7 +45,7 @@
 | T6 | Partner payouts (earnings → payout tracking, both sides) | Mobile + Admin + DB | P2 | IN PROGRESS — DB layer + mobile UI + admin UI + reports all coded & typecheck-clean; **migration `20260830170000` still NOT pushed**; live-verify pending |
 | T7 | Admin: Customers screen | Admin | P2 | DONE (2026-08-30) — admin `tsc` clean + live-verified (list, tiles, drawer) |
 | T8 | Admin: wire Overview dashboard + Delivery Queue off real data | Admin | P2 | DONE (already complete — plan gap-analysis was stale) |
-| T9 | Admin: Reports export as PDF + Excel (CSV already done) | Admin | P3 | TODO |
+| T9 | Admin: Reports export as PDF + Excel (CSV already done) | Admin | P3 | IN PROGRESS — coded (Export ▾ menu: CSV/Excel/PDF), typecheck-clean; live download check pending |
 | T10 | Partner KYC document upload | Mobile + Admin + Storage | P3 | TODO |
 | T11 | (Optional) Testimonials / Why-Choose / Blog → DB + admin CMS | Full-stack | P4 | TODO |
 | — | ~~WhatsApp-to-Admin new-order alert~~ | — | — | **BLOCKED** — no WhatsApp BSP account. Out of scope until credentials exist. |
@@ -653,7 +653,28 @@ No code change needed.
 **Definition of done:** each report downloads a valid `.xlsx` and `.pdf` with the same data as its
 CSV. Admin typechecks clean.
 
-**Resume notes:** _(none yet)_
+**Resume notes (2026-08-30 — coded, not yet download-tested live):**
+
+- **Deps added to `admin/`:** `jspdf` + `jspdf-autotable` (PDF), `write-excel-file` (Excel).
+  **Did NOT use SheetJS `xlsx`** — the npm-registry build (`0.18.5`) carries 8 unfixable
+  high-sev advisories (prototype-pollution / ReDoS, both in the *parser* we wouldn't use).
+  `write-excel-file` is write-only, clean audit, purpose-built for JSON→xlsx. Deviation from
+  the step list's "add `xlsx`", noted here.
+- **`admin/components/ReportsClient.tsx` rewritten around a `tables` descriptor:** a
+  `useMemo<Record<Section, ReportTable>>` where `ReportTable = { slug, title, headers, rows }`.
+  The old per-section `ExportButton` + `toCsv`/`downloadCsv` are gone; one `<ExportMenu table={tables[section]} />`
+  renders an "Export ▾" dropdown (click-outside to close) with **CSV / Excel / PDF** items.
+  - `exportCsv` — same escaping as before, `downloadBlob`.
+  - `exportExcel` — `await import("write-excel-file/browser")`, bold header row, numeric cells
+    typed `Number`, `.toFile("<slug>.xlsx")`, sheet name = report title (≤31 chars).
+  - `exportPdf` — `await import("jspdf")` + `jspdf-autotable`; title + timestamp heading,
+    `autoTable` with dark-green header fill.
+  All three lazily dynamic-import so the libs stay out of the main bundle.
+- CSV output is byte-identical to before (Partner Payouts still has the T6 Paid Out / Pending
+  columns). Admin `npx tsc --noEmit` clean.
+- **Left to do:** run the admin preview, open Reports, click Export → Excel and Export → PDF on
+  at least the Sales and Partner Payouts tabs, confirm the files open and match the CSV. Then
+  flip Status Board T9 → DONE.
 
 ---
 

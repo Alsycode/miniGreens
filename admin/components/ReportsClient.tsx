@@ -1,7 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { DownloadSimple, CurrencyInr, ShoppingBag, Users, Handshake, Repeat, Tag } from "@phosphor-icons/react";
+import { useMemo, useState, useEffect, useRef } from "react";
+import { DownloadSimple, CurrencyInr, ShoppingBag, Users, Handshake, Repeat, Tag, CaretDown } from "@phosphor-icons/react";
+
+type Cell = string | number;
 
 export interface SalesRow {
   orderNumber: string;
@@ -56,16 +58,16 @@ const SECTIONS: { key: Section; label: string }[] = [
   { key: "discounts", label: "Discounts" },
 ];
 
-function toCsv(headers: string[], rows: (string | number)[][]): string {
-  const escape = (v: string | number) => {
-    const s = String(v);
-    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-  };
-  return [headers, ...rows].map((row) => row.map(escape).join(",")).join("\n");
+interface ReportTable {
+  /** filename stem, no extension */
+  slug: string;
+  /** human title, used as the PDF heading + Excel sheet name */
+  title: string;
+  headers: string[];
+  rows: Cell[][];
 }
 
-function downloadCsv(filename: string, csv: string) {
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+function downloadBlob(filename: string, blob: Blob) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -76,15 +78,98 @@ function downloadCsv(filename: string, csv: string) {
   URL.revokeObjectURL(url);
 }
 
-function ExportButton({ onClick }: { onClick: () => void }) {
+function exportCsv({ slug, headers, rows }: ReportTable) {
+  const escape = (v: Cell) => {
+    const s = String(v);
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const csv = [headers, ...rows].map((row) => row.map(escape).join(",")).join("\n");
+  downloadBlob(`${slug}.csv`, new Blob([csv], { type: "text/csv;charset=utf-8;" }));
+}
+
+async function exportExcel({ slug, title, headers, rows }: ReportTable) {
+  const { default: writeXlsxFile } = await import("write-excel-file/browser");
+  const data = [
+    headers.map((h) => ({ value: h, fontWeight: "bold" as const })),
+    ...rows.map((row) =>
+      row.map((c) =>
+        typeof c === "number"
+          ? { value: c, type: Number }
+          : { value: String(c), type: String },
+      ),
+    ),
+  ];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await writeXlsxFile(data as any, { sheet: title.slice(0, 31) }).toFile(`${slug}.xlsx`);
+}
+
+async function exportPdf({ slug, title, headers, rows }: ReportTable) {
+  const { jsPDF } = await import("jspdf");
+  const { default: autoTable } = await import("jspdf-autotable");
+  const doc = new jsPDF();
+  doc.setFontSize?.(14);
+  doc.text(title, 14, 16);
+  doc.setFontSize?.(10);
+  doc.text(new Date().toLocaleString("en-IN"), 14, 22);
+  autoTable(doc, {
+    head: [headers],
+    body: rows.map((r) => r.map((c) => String(c))),
+    startY: 28,
+    styles: { fontSize: 8 },
+    headStyles: { fillColor: [10, 36, 22] },
+  });
+  doc.save(`${slug}.pdf`);
+}
+
+function ExportMenu({ table }: { table: ReportTable }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [open]);
+
+  const run = (fn: (t: ReportTable) => void | Promise<void>) => {
+    setOpen(false);
+    Promise.resolve(fn(table)).catch((err) => {
+      console.error("Report export failed", err);
+      alert("Export failed — see console for details.");
+    });
+  };
+
   return (
-    <button
-      onClick={onClick}
-      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all active:scale-[0.97]"
-    >
-      <DownloadSimple size={14} />
-      Export CSV
-    </button>
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all active:scale-[0.97]"
+      >
+        <DownloadSimple size={14} />
+        Export
+        <CaretDown size={12} />
+      </button>
+      {open && (
+        <div className="absolute right-0 mt-1 w-32 bg-white border border-slate-200 rounded-xl shadow-lg py-1 z-20">
+          {[
+            { label: "CSV", fn: exportCsv },
+            { label: "Excel", fn: exportExcel },
+            { label: "PDF", fn: exportPdf },
+          ].map(({ label, fn }) => (
+            <button
+              key={label}
+              onClick={() => run(fn)}
+              className="w-full text-left px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -115,6 +200,50 @@ export default function ReportsClient({
       { icon: Tag, label: "Discount Redemptions", value: String(summary.discountRedemptions), bg: "#FDF2F8", color: "#DB2777" },
     ],
     [summary],
+  );
+
+  const tables = useMemo<Record<Section, ReportTable>>(
+    () => ({
+      sales: {
+        slug: "sales-report",
+        title: "Sales Report",
+        headers: ["Order #", "Customer", "Total", "Status", "Date"],
+        rows: salesRows.map((r) => [r.orderNumber, r.customer, r.total, r.status, r.date]),
+      },
+      products: {
+        slug: "products-report",
+        title: "Products Report",
+        headers: ["Product", "Units Sold", "Revenue"],
+        rows: productRows.map((r) => [r.name, r.units, r.revenue]),
+      },
+      partners: {
+        slug: "partner-payouts",
+        title: "Partner Payouts",
+        headers: ["Business", "Orders", "Gross", "Fee %", "Net Payout", "Paid Out", "Pending"],
+        rows: partnerRows.map((r) => [
+          r.businessName,
+          r.orderCount,
+          Number(r.gross.toFixed(2)),
+          r.feePercent,
+          Number(r.net.toFixed(2)),
+          Number(r.paidOut.toFixed(2)),
+          Number(r.pendingPayout.toFixed(2)),
+        ]),
+      },
+      subscriptions: {
+        slug: "subscriptions-report",
+        title: "Subscriptions Report",
+        headers: ["Plan", "Active Count", "Revenue / Cycle"],
+        rows: subscriptionRows.map((r) => [r.plan, r.activeCount, r.revenue]),
+      },
+      discounts: {
+        slug: "discounts-report",
+        title: "Discounts Report",
+        headers: ["Code", "Type", "Value", "Used Count", "Active"],
+        rows: discountRows.map((r) => [r.code, r.type, r.value, r.usedCount, r.isActive ? "Yes" : "No"]),
+      },
+    }),
+    [salesRows, productRows, partnerRows, subscriptionRows, discountRows],
   );
 
   return (
@@ -149,79 +278,7 @@ export default function ReportsClient({
             ))}
           </div>
           <div className="mr-4">
-            {section === "sales" && (
-              <ExportButton
-                onClick={() =>
-                  downloadCsv(
-                    "sales-report.csv",
-                    toCsv(
-                      ["Order #", "Customer", "Total", "Status", "Date"],
-                      salesRows.map((r) => [r.orderNumber, r.customer, r.total, r.status, r.date]),
-                    ),
-                  )
-                }
-              />
-            )}
-            {section === "products" && (
-              <ExportButton
-                onClick={() =>
-                  downloadCsv(
-                    "products-report.csv",
-                    toCsv(
-                      ["Product", "Units Sold", "Revenue"],
-                      productRows.map((r) => [r.name, r.units, r.revenue]),
-                    ),
-                  )
-                }
-              />
-            )}
-            {section === "partners" && (
-              <ExportButton
-                onClick={() =>
-                  downloadCsv(
-                    "partner-payouts.csv",
-                    toCsv(
-                      ["Business", "Orders", "Gross", "Fee %", "Net Payout", "Paid Out", "Pending"],
-                      partnerRows.map((r) => [
-                        r.businessName,
-                        r.orderCount,
-                        r.gross,
-                        r.feePercent,
-                        r.net.toFixed(2),
-                        r.paidOut.toFixed(2),
-                        r.pendingPayout.toFixed(2),
-                      ]),
-                    ),
-                  )
-                }
-              />
-            )}
-            {section === "subscriptions" && (
-              <ExportButton
-                onClick={() =>
-                  downloadCsv(
-                    "subscriptions-report.csv",
-                    toCsv(
-                      ["Plan", "Active Count", "Revenue / Cycle"],
-                      subscriptionRows.map((r) => [r.plan, r.activeCount, r.revenue]),
-                    ),
-                  )
-                }
-              />
-            )}
-            {section === "discounts" && (
-              <ExportButton
-                onClick={() =>
-                  downloadCsv(
-                    "discounts-report.csv",
-                    toCsv(
-                      ["Code", "Type", "Value", "Used Count", "Active"],
-                      discountRows.map((r) => [r.code, r.type, r.value, r.usedCount, r.isActive ? "Yes" : "No"]),
-                    ),
-                  )
-                }
-              />
-            )}
+            <ExportMenu table={tables[section]} />
           </div>
         </div>
 
