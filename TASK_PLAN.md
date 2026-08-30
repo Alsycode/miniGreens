@@ -40,10 +40,10 @@
 | T1 | Move mobile catalogue onto live Supabase data | Mobile / Customer | P0 | DONE (2026-08-30) |
 | T2 | Coupons & offers (checkout coupon field + My Offers screen) | Mobile / Customer | P1 | DONE (2026-08-30) — migration pushed + DB-verified |
 | T3 | In-app notification inbox (+ `notifications` table) | Mobile + DB | P1 | DONE (2026-08-30) — migration pushed + DB-verified |
-| T4 | Pre-order flow (mobile) + pre-orders reach Admin | Mobile + DB + Admin | P1 | CODE DONE (2026-08-30) — migration `20260830160000` pending user push |
+| T4 | Pre-order flow (mobile) + pre-orders reach Admin | Mobile + DB + Admin | P1 | DONE (2026-08-30) — migration pushed + live-verified end to end |
 | T5 | Capture DOB (register + profile edit) + surface birthday reward | Mobile | P2 | DONE (2026-08-30) — migration pushed + DB-verified |
 | T6 | Partner payouts (earnings → payout tracking, both sides) | Mobile + Admin + DB | P2 | TODO |
-| T7 | Admin: Customers screen | Admin | P2 | CODE DONE (2026-08-30) — admin `tsc` clean; live check pending |
+| T7 | Admin: Customers screen | Admin | P2 | DONE (2026-08-30) — admin `tsc` clean + live-verified (list, tiles, drawer) |
 | T8 | Admin: wire Overview dashboard + Delivery Queue off real data | Admin | P2 | DONE (already complete — plan gap-analysis was stale) |
 | T9 | Admin: Reports export as PDF + Excel (CSV already done) | Admin | P3 | TODO |
 | T10 | Partner KYC document upload | Mobile + Admin + Storage | P3 | TODO |
@@ -373,12 +373,9 @@ Default to (a) if unanswered. Steps below assume (a).
 `order_type='preorder'` → appears under Admin Orders' Pre-orders filter → admin can set an ETA and
 convert it. Typechecks clean.
 
-**Resume notes:** CODE COMPLETE 2026-08-30 (option (a) — `order_type='preorder'`, no upfront
-payment). Remaining: (1) user pushes `supabase/migrations/20260830160000_preorders.sql`;
-(2) flag a product `is_preorder=true` (Admin Products page or SQL) and walk: product detail →
-"Pre-order" → `/preorder/[slug]` → Place Pre-order → `orders` row `order_type='preorder'` →
-Orders tab shows PRE-ORDER pill → Admin Orders "Pre-orders" tab → set ETA + Convert. Flip Status
-Board row to DONE after.
+**Resume notes:** DONE 2026-08-30 — migration `20260830160000` pushed; full flow live-verified
+(mobile pre-order placement → order detail → Orders pill; admin Pre-orders tab → ETA save
+persists → Convert to standard drops it from the tab). See Session Log.
 
 **What was built:**
 - Migration `20260830160000`: drop+re-add `orders_order_type_check` to allow `'preorder'`;
@@ -639,6 +636,40 @@ editable by Admin instead of hard-coded.
 ---
 
 ## 🧾 SESSION LOG (append-only — newest at top)
+
+### 2026-08-30 — T4 + T7 live-verified end to end → both DONE
+
+Migration `20260830160000_preorders.sql` pushed (`Finished supabase db push.`). Ran both
+dev servers (mobile web 8091, admin 4001); user logged into each with a real account
+(`razoralf67@gmail.com`, temporarily promoted to `role='admin'` for the admin pass, since
+the real admin creds were unavailable — reverted after).
+
+**T4 walkthrough (screenshotted):**
+- Flagged `products.is_preorder=true` for `wheatgrass`. Product detail → bottom CTA showed
+  **"Pre-order"** (not "Add to Cart").
+- `/preorder/wheatgrass` rendered: qty stepper, "you won't be charged now" banner,
+  pre-selected default address, notes. "Place Pre-order" → `/order/<id>` with order number
+  **PRE75517189**, Status Pending, **Type: Pre-order**, **Expected availability: To be
+  confirmed**, and **no** Complete-Payment button.
+- Orders tab: the row shows the green **PRE-ORDER** pill.
+- Admin Orders: new **"Pre-orders"** tab (count 1). Drawer showed the Pre-order badge +
+  Expected-availability date input + "Convert to standard order". Set ETA 2026-09-15 → Save
+  → **persisted across a full reload**. Clicked "Convert to standard order" → Pre-order
+  badge + controls vanished, and the **Pre-orders tab count dropped to 0**.
+
+**T7 walkthrough (screenshotted):**
+- "Customers" now in the live sidebar nav. Page renders: 3 summary tiles (Total Customers /
+  Active Subscribers / Birthdays This Month), search, "Recently joined" sort, table
+  (Customer · Orders · Total Spent · Subscription · Birthday · Joined).
+- Only 1 customer listed — correct: `razoralf67` was temporarily `role='admin'` so the
+  `role='customer'` filter excluded it. Row → drawer opened with all sections rendering
+  (profile grid incl. "Birthday: Not set", Addresses (0), Order History (0), Subscriptions
+  (0)). Populated-drawer case not shown live but it's the same read-only pattern as
+  `OrdersClient`.
+
+Servers stopped. **Cleanup pending (user):** delete order `PRE75517189` + its items/
+notification, `products.is_preorder=false` for wheatgrass, and revert
+`razoralf67@gmail.com` to `role='customer'`.
 
 ### 2026-08-30 — T7 code complete (Admin Customers screen)
 
