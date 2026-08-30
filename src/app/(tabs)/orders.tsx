@@ -64,9 +64,18 @@ function OrderCard({ order, index }: { order: OrderWithItems; index: number }) {
       >
         <Card style={styles.orderCard} padding="lg">
           <View style={styles.orderHeader}>
-            <Typography variant="bodySmall" weight="semibold" color={colors.text}>
-              {order.order_number}
-            </Typography>
+            <View style={styles.orderNumberRow}>
+              <Typography variant="bodySmall" weight="semibold" color={colors.text}>
+                {order.order_number}
+              </Typography>
+              {order.order_type === 'preorder' && (
+                <View style={styles.preorderPill}>
+                  <Typography variant="caption" weight="bold" color={colors.primary} style={{ fontSize: 9, letterSpacing: 0.5 }}>
+                    PRE-ORDER
+                  </Typography>
+                </View>
+              )}
+            </View>
             <View style={styles.badgeRow}>
               <Animated.View
                 entering={ZoomIn.delay(index * 80 + 100).springify().damping(17)}
@@ -115,7 +124,9 @@ function OrderCard({ order, index }: { order: OrderWithItems; index: number }) {
 
           <View style={styles.orderFooter}>
             <Typography variant="bodySmall" color={colors.textTertiary}>
-              {formatDate(order.created_at)}
+              {order.order_type === 'preorder' && order.expected_availability_date
+                ? `Expected ${formatDate(order.expected_availability_date)}`
+                : formatDate(order.created_at)}
             </Typography>
             <Typography variant="body" weight="bold" color={colors.primaryDark}>
               ₹{order.total.toFixed(2)}
@@ -229,6 +240,19 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: spacing.md,
+  },
+  orderNumberRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  preorderPill: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.primaryBg,
+    borderWidth: 1,
+    borderColor: colors.primary,
   },
   badgeRow: {
     flexDirection: 'row',

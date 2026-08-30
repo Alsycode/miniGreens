@@ -15,7 +15,7 @@ export type PartnerBusinessType =
   | 'fitness_wellness'
   | 'community';
 export type PartnerStatus = 'pending' | 'approved' | 'rejected';
-export type OrderType = 'standard' | 'business';
+export type OrderType = 'standard' | 'business' | 'preorder';
 export type DiscountType = 'percentage' | 'flat';
 export type DiscountTarget = 'all' | 'category' | 'product' | 'subscription_plan' | 'partner' | 'wholesale';
 export type PaymentStatus = 'pending' | 'paid' | 'failed';
@@ -214,10 +214,11 @@ export interface Database {
           payment_status: PaymentStatus;
           discount_code: string | null;
           discount_amount: number;
+          expected_availability_date: string | null;
           created_at: string;
           updated_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['orders']['Row'], 'id' | 'created_at' | 'updated_at' | 'razorpay_order_id' | 'razorpay_payment_id' | 'razorpay_signature' | 'payment_status' | 'discount_code' | 'discount_amount'> & {
+        Insert: Omit<Database['public']['Tables']['orders']['Row'], 'id' | 'created_at' | 'updated_at' | 'razorpay_order_id' | 'razorpay_payment_id' | 'razorpay_signature' | 'payment_status' | 'discount_code' | 'discount_amount' | 'expected_availability_date'> & {
           id?: string;
           razorpay_order_id?: string | null;
           razorpay_payment_id?: string | null;
@@ -225,6 +226,7 @@ export interface Database {
           payment_status?: PaymentStatus;
           discount_code?: string | null;
           discount_amount?: number;
+          expected_availability_date?: string | null;
         };
         Update: Partial<Database['public']['Tables']['orders']['Insert']>;
         Relationships: [

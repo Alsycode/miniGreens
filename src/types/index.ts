@@ -18,6 +18,7 @@ export interface Product {
   isFeatured: boolean;
   isSeasonal: boolean;
   isBestSeller: boolean;
+  isPreorder: boolean;
   rating: number;
   reviewCount: number;
   tags: string[];
@@ -147,15 +148,6 @@ export interface Profile {
   avatar: string;
   dateOfBirth: string;
   preferences: string[];
-}
-
-export interface Preorder {
-  productId: string;
-  quantity: number;
-  deliveryDate: string;
-  deliveryTime: string;
-  addressId: string;
-  notes?: string;
 }
 
 export interface SearchSuggestion {

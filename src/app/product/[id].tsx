@@ -178,6 +178,15 @@ export default function ProductDetailScreen() {
             )}
           </Animated.View>
 
+          {product.isPreorder && (
+            <Animated.View entering={FadeInUp.delay(230).springify().damping(31)} style={styles.preorderNote}>
+              <Ionicons name="time-outline" size={15} color={colors.primary} />
+              <Typography variant="caption" color={colors.primary} weight="semibold" style={{ marginLeft: spacing.xs }}>
+                Available for pre-order — reserve yours now
+              </Typography>
+            </Animated.View>
+          )}
+
           {/* Rating */}
           <Animated.View entering={FadeInUp.delay(260).springify().damping(31)} style={styles.ratingRow}>
             <View style={styles.stars}>
@@ -365,23 +374,35 @@ export default function ProductDetailScreen() {
             ₹{(product.price * quantity).toFixed(2)}
           </Typography>
         </View>
-        <Button
-          title="Add to Cart"
-          variant="primary"
-          size="lg"
-          disabled={adding}
-          onPress={async () => {
-            setAdding(true);
-            const ok = await useCartStore.getState().addItemBySlug(product.slug, quantity);
-            setAdding(false);
-            if (ok) {
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-              router.push('/cart');
-            } else {
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-            }
-          }}
-        />
+        {product.isPreorder ? (
+          <Button
+            title="Pre-order"
+            variant="primary"
+            size="lg"
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              router.push(`/preorder/${product.slug}?qty=${quantity}`);
+            }}
+          />
+        ) : (
+          <Button
+            title="Add to Cart"
+            variant="primary"
+            size="lg"
+            disabled={adding}
+            onPress={async () => {
+              setAdding(true);
+              const ok = await useCartStore.getState().addItemBySlug(product.slug, quantity);
+              setAdding(false);
+              if (ok) {
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                router.push('/cart');
+              } else {
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+              }
+            }}
+          />
+        )}
       </Animated.View>
     </View>
   );
@@ -490,6 +511,16 @@ const styles = StyleSheet.create({
   },
   originalPrice: {
     textDecorationLine: 'line-through',
+  },
+  preorderNote: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: spacing.md,
+    alignSelf: 'flex-start',
+    backgroundColor: colors.primaryBg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.full,
   },
   ratingRow: {
     flexDirection: 'row',

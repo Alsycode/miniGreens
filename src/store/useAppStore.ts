@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Address, Profile, Preorder } from '../types';
+import { Address, Profile } from '../types';
 
 interface AppState {
   // Onboarding
@@ -16,11 +16,6 @@ interface AppState {
   addAddress: (address: Address) => void;
   removeAddress: (id: string) => void;
   updateAddress: (address: Address) => void;
-
-  // Preorder
-  preorder: Partial<Preorder> | null;
-  setPreorder: (preorder: Partial<Preorder>) => void;
-  clearPreorder: () => void;
 
   // Search
   searchHistory: string[];
@@ -42,10 +37,6 @@ export const useAppStore = create<AppState>((set) => ({
   updateAddress: (address) => set((state) => ({
     addresses: state.addresses.map((a) => (a.id === address.id ? address : a)),
   })),
-
-  preorder: null,
-  setPreorder: (preorder) => set({ preorder }),
-  clearPreorder: () => set({ preorder: null }),
 
   searchHistory: [],
   addSearchHistory: (query) => set((state) => ({

@@ -40,7 +40,7 @@
 | T1 | Move mobile catalogue onto live Supabase data | Mobile / Customer | P0 | DONE (2026-08-30) |
 | T2 | Coupons & offers (checkout coupon field + My Offers screen) | Mobile / Customer | P1 | DONE (2026-08-30) — migration pushed + DB-verified |
 | T3 | In-app notification inbox (+ `notifications` table) | Mobile + DB | P1 | DONE (2026-08-30) — migration pushed + DB-verified |
-| T4 | Pre-order flow (mobile) + pre-orders reach Admin | Mobile + DB + Admin | P1 | TODO |
+| T4 | Pre-order flow (mobile) + pre-orders reach Admin | Mobile + DB + Admin | P1 | CODE DONE (2026-08-30) — migration `20260830160000` pending user push |
 | T5 | Capture DOB (register + profile edit) + surface birthday reward | Mobile | P2 | DONE (2026-08-30) — migration pushed + DB-verified |
 | T6 | Partner payouts (earnings → payout tracking, both sides) | Mobile + Admin + DB | P2 | TODO |
 | T7 | Admin: Customers screen | Admin | P2 | TODO |
@@ -373,7 +373,49 @@ Default to (a) if unanswered. Steps below assume (a).
 `order_type='preorder'` → appears under Admin Orders' Pre-orders filter → admin can set an ETA and
 convert it. Typechecks clean.
 
-**Resume notes:** _(none yet)_
+**Resume notes:** CODE COMPLETE 2026-08-30 (option (a) — `order_type='preorder'`, no upfront
+payment). Remaining: (1) user pushes `supabase/migrations/20260830160000_preorders.sql`;
+(2) flag a product `is_preorder=true` (Admin Products page or SQL) and walk: product detail →
+"Pre-order" → `/preorder/[slug]` → Place Pre-order → `orders` row `order_type='preorder'` →
+Orders tab shows PRE-ORDER pill → Admin Orders "Pre-orders" tab → set ETA + Convert. Flip Status
+Board row to DONE after.
+
+**What was built:**
+- Migration `20260830160000`: drop+re-add `orders_order_type_check` to allow `'preorder'`;
+  `orders.expected_availability_date date` (nullable).
+- `src/types/database.ts`: `OrderType` gains `'preorder'`; `orders` Row/Insert gain
+  `expected_availability_date`.
+- `src/types/index.ts`: `Product` gains `isPreorder`; **deleted** the dead `Preorder` interface.
+  `src/store/useAppStore.ts`: **removed** the stale `preorder` slice + import.
+- `src/services/catalog.ts`: `dbProductToUi` maps `isPreorder: row.is_preorder`.
+- `src/app/product/[id].tsx`: when `product.isPreorder` — a "Available for pre-order" pill under
+  the price and the bottom CTA becomes **"Pre-order"** → `router.push('/preorder/<slug>?qty=<n>')`
+  (the "Add to Cart" branch is otherwise unchanged).
+- **New `src/app/preorder/[slug].tsx`** (route registered): product + qty stepper, "you won't be
+  charged now" banner, address picker (same pattern as checkout — `addresses` fetch, radio
+  select, "Add New Address" link), notes field. "Place Pre-order" inserts one `orders` row
+  (`order_type='preorder'`, `status='pending'`, `delivery_fee: 0`, `total = price*qty`, no
+  razorpay) + one `order_items` row, then `router.replace('/order/<id>')`. The existing
+  `orders_notify_status_change` trigger fires on insert → "Order placed" push + inbox row (T3).
+- `src/app/(tabs)/orders.tsx`: `OrderCard` shows a **PRE-ORDER** pill next to the order number
+  for `order_type==='preorder'`, and the footer shows `Expected <date>` when
+  `expected_availability_date` is set.
+- `src/app/order/[id].tsx`: header card adds **Type: Pre-order** + **Expected availability**
+  rows; the "Complete Payment"/"Retry Payment" button is now suppressed for pre-orders
+  (`&& order.order_type !== 'preorder'`).
+- **Admin** `admin/app/dashboard/(protected)/orders/actions.ts`: `updatePreorderEta(id, eta)` +
+  `convertPreorderToStandard(id)`. `admin/components/OrdersClient.tsx`: new **"Pre-orders"**
+  filter tab (by `order_type`), a "Pre-order" badge in the drawer, a date input + Save for the
+  ETA, and a "Convert to standard order" button.
+
+**Notes / deviations:**
+- Pre-orders carry `delivery_fee: 0` / `total = subtotal` — no delivery is scheduled at
+  pre-order time. Add the fee when converting/at final checkout if that matters.
+- `fetchProducts` still filters `is_available=true`; a pre-order product must be `is_available`
+  to show in the catalogue. If admins mark out-of-stock items `is_available=false` they'd vanish
+  — revisit with an `.or('is_available.eq.true,is_preorder.eq.true')` if that becomes an issue.
+- No cart involvement — pre-order is a direct single-product flow (cleaner than branching the
+  3-step cart checkout).
 
 ---
 
@@ -567,6 +609,30 @@ editable by Admin instead of hard-coded.
 ---
 
 ## 🧾 SESSION LOG (append-only — newest at top)
+
+### 2026-08-30 — T4 code complete (pre-order flow)
+
+Modelled as `orders.order_type='preorder'` (option a), no upfront payment — both defaults
+per the task's "decision needed" note.
+
+**Migration `20260830160000_preorders.sql`** — NOT PUSHED: widen `orders_order_type_check`
+to include `'preorder'`; add `orders.expected_availability_date date`.
+
+**Mobile:** `Product` UI type gains `isPreorder`; catalog mapper sets it. Product detail
+swaps the bottom CTA to "Pre-order" (+ a pill under the price) → new
+`src/app/preorder/[slug].tsx` (qty stepper, no-charge banner, address picker, notes) which
+inserts an `orders` row (`order_type='preorder'`, `delivery_fee 0`) + one `order_items` row
+and routes to `/order/<id>`. Orders list shows a PRE-ORDER pill + "Expected <date>";
+order detail adds Type / Expected-availability rows and hides the payment CTA for
+pre-orders. Dead `Preorder` type + `useAppStore.preorder` slice removed.
+
+**Admin:** new "Pre-orders" filter tab in Orders; drawer gets a Pre-order badge, an
+`expected_availability_date` date input + Save, and a "Convert to standard order" button.
+New server actions `updatePreorderEta` / `convertPreorderToStandard`.
+
+**Verification:** mobile `npx tsc --noEmit` clean (exit 0). Admin
+`cd admin && npx tsc --noEmit` clean (exit 0). No live check yet — migration unpushed,
+and no product is flagged `is_preorder` in the DB.
 
 ### 2026-08-30 — T2/T3 also verified in the running app (mobile web)
 

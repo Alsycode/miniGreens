@@ -103,6 +103,7 @@ export function dbProductToUi(row: ProductRow): Product {
     isFeatured: row.is_featured,
     isSeasonal: row.is_seasonal,
     isBestSeller: row.is_best_seller,
+    isPreorder: row.is_preorder,
     rating: Number(row.rating),
     reviewCount: row.review_count,
     tags: row.tags ?? [],

@@ -233,10 +233,24 @@ export default function OrderDetailScreen() {
                 </Typography>
               </Animated.View>
             </View>
+            {order.order_type === 'preorder' && (
+              <View style={styles.orderInfoRow}>
+                <Typography variant="bodySmall" color={colors.textTertiary}>Type</Typography>
+                <Typography variant="bodySmall" weight="semibold" color={colors.primary}>Pre-order</Typography>
+              </View>
+            )}
+            {order.order_type === 'preorder' && (
+              <View style={styles.orderInfoRow}>
+                <Typography variant="bodySmall" color={colors.textTertiary}>Expected availability</Typography>
+                <Typography variant="bodySmall" weight="semibold">
+                  {order.expected_availability_date ? formatDate(order.expected_availability_date) : 'To be confirmed'}
+                </Typography>
+              </View>
+            )}
           </Card>
         </Animated.View>
 
-        {order.payment_status !== 'paid' && (
+        {order.payment_status !== 'paid' && order.order_type !== 'preorder' && (
           <Animated.View entering={FadeInUp.delay(100).springify().damping(31)}>
             <Button
               title={order.payment_status === 'failed' ? 'Retry Payment' : 'Complete Payment'}

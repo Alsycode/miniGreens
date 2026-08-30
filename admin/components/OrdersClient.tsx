@@ -3,7 +3,11 @@
 import { useState, useMemo, useTransition } from "react";
 import { MagnifyingGlass, X } from "@phosphor-icons/react";
 import type { Database } from "@mobile/database";
-import { updateOrderStatus } from "@/app/dashboard/(protected)/orders/actions";
+import {
+  updateOrderStatus,
+  updatePreorderEta,
+  convertPreorderToStandard,
+} from "@/app/dashboard/(protected)/orders/actions";
 
 type OrderRow = Database["public"]["Tables"]["orders"]["Row"] & {
   order_items: Database["public"]["Tables"]["order_items"]["Row"][];
@@ -28,8 +32,11 @@ const PAYMENT_BADGE: Record<PaymentStatus, { label: string; classes: string }> =
   failed: { label: "Payment Failed", classes: "bg-red-50 text-red-700 border-red-200" },
 };
 
-const TABS: { key: "all" | OrderStatus; label: string }[] = [
+type TabKey = "all" | "preorders" | OrderStatus;
+
+const TABS: { key: TabKey; label: string }[] = [
   { key: "all", label: "All" },
+  { key: "preorders", label: "Pre-orders" },
   { key: "pending", label: "Pending" },
   { key: "processing", label: "Processing" },
   { key: "shipped", label: "Shipped" },
@@ -37,17 +44,28 @@ const TABS: { key: "all" | OrderStatus; label: string }[] = [
   { key: "cancelled", label: "Cancelled" },
 ];
 
-type TabKey = "all" | OrderStatus;
+const tabCount = (orders: OrderRow[], key: TabKey) =>
+  key === "all"
+    ? orders.length
+    : key === "preorders"
+      ? orders.filter((o) => o.order_type === "preorder").length
+      : orders.filter((o) => o.status === key).length;
 
 export default function OrdersClient({ orders }: { orders: OrderRow[] }) {
   const [tab, setTab] = useState<TabKey>("all");
   const [search, setSearch] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<OrderRow | null>(null);
   const [drawerStatus, setDrawerStatus] = useState<OrderStatus | "">("");
+  const [drawerEta, setDrawerEta] = useState<string>("");
   const [isPending, startTransition] = useTransition();
 
   const filtered = useMemo(() => {
-    let result = tab === "all" ? orders : orders.filter((o) => o.status === tab);
+    let result =
+      tab === "all"
+        ? orders
+        : tab === "preorders"
+          ? orders.filter((o) => o.order_type === "preorder")
+          : orders.filter((o) => o.status === tab);
     if (search.trim()) {
       const q = search.toLowerCase();
       result = result.filter(
@@ -62,11 +80,29 @@ export default function OrdersClient({ orders }: { orders: OrderRow[] }) {
   function openDrawer(order: OrderRow) {
     setSelectedOrder(order);
     setDrawerStatus(order.status);
+    setDrawerEta(order.expected_availability_date ?? "");
   }
 
   function closeDrawer() {
     setSelectedOrder(null);
     setDrawerStatus("");
+    setDrawerEta("");
+  }
+
+  function saveEta() {
+    if (!selectedOrder) return;
+    startTransition(async () => {
+      await updatePreorderEta(selectedOrder.id, drawerEta || null);
+      setSelectedOrder({ ...selectedOrder, expected_availability_date: drawerEta || null });
+    });
+  }
+
+  function convertToStandard() {
+    if (!selectedOrder) return;
+    startTransition(async () => {
+      await convertPreorderToStandard(selectedOrder.id);
+      setSelectedOrder({ ...selectedOrder, order_type: "standard" });
+    });
   }
 
   function saveStatus() {
@@ -94,7 +130,7 @@ export default function OrdersClient({ orders }: { orders: OrderRow[] }) {
             {label}
             <span className={`ml-2 text-xs px-1.5 py-0.5 rounded-full
               ${tab === key ? "bg-emerald-100 text-[#3D7A52]" : "bg-slate-100 text-slate-400"}`}>
-              {key === "all" ? orders.length : orders.filter((o) => o.status === key).length}
+              {tabCount(orders, key)}
             </span>
           </button>
         ))}
@@ -222,11 +258,53 @@ export default function OrdersClient({ orders }: { orders: OrderRow[] }) {
 
             <div className="px-6 py-5 space-y-6">
               {/* Payment status */}
-              <div>
+              <div className="flex items-center gap-2">
                 <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${PAYMENT_BADGE[selectedOrder.payment_status].classes}`}>
                   {PAYMENT_BADGE[selectedOrder.payment_status].label}
                 </span>
+                {selectedOrder.order_type === "preorder" && (
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border bg-[#3D7A52]/10 text-[#3D7A52] border-[#3D7A52]/30">
+                    Pre-order
+                  </span>
+                )}
               </div>
+
+              {/* Pre-order controls */}
+              {selectedOrder.order_type === "preorder" && (
+                <div className="rounded-xl border border-[#3D7A52]/25 bg-emerald-50/40 p-4 space-y-3">
+                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    Expected availability
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="date"
+                      value={drawerEta}
+                      onChange={(e) => setDrawerEta(e.target.value)}
+                      className="flex-1 px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white
+                        focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-[#3D7A52]"
+                    />
+                    <button
+                      onClick={saveEta}
+                      disabled={isPending || (drawerEta || "") === (selectedOrder.expected_availability_date ?? "")}
+                      className="px-3 py-2 text-sm font-semibold rounded-lg border border-[#3D7A52] text-[#3D7A52]
+                        hover:bg-[#3D7A52]/10 transition-colors disabled:opacity-40"
+                    >
+                      Save
+                    </button>
+                  </div>
+                  <button
+                    onClick={convertToStandard}
+                    disabled={isPending}
+                    className="w-full py-2 text-sm font-semibold rounded-lg transition-all active:scale-[0.98] disabled:opacity-50"
+                    style={{ backgroundColor: "#CAEF61", color: "#0A2416" }}
+                  >
+                    Convert to standard order
+                  </button>
+                  <p className="text-xs text-slate-500">
+                    Converting moves this into the normal fulfilment queue once stock has landed.
+                  </p>
+                </div>
+              )}
 
               {/* Status update */}
               <div>
