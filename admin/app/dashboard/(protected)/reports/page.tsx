@@ -18,6 +18,7 @@ export default async function ReportsPage() {
     { data: subscriptions },
     { data: subscriptionPlans },
     { data: discounts },
+    { data: payouts },
   ] = await Promise.all([
     supabase.from("orders").select("*").order("created_at", { ascending: false }),
     supabase.from("order_items").select("*"),
@@ -26,6 +27,7 @@ export default async function ReportsPage() {
     supabase.from("subscriptions").select("*"),
     supabase.from("subscription_plans").select("*"),
     supabase.from("discounts").select("*").order("used_count", { ascending: false }),
+    supabase.from("payouts").select("*"),
   ]);
 
   const profileById = new Map((profiles ?? []).map((p) => [p.id, p]));
@@ -54,6 +56,15 @@ export default async function ReportsPage() {
     .sort((a, b) => b.revenue - a.revenue);
 
   // ── Partners (payouts) ──
+  const paidByPartner = new Map<string, number>();
+  const pendingByPartner = new Map<string, number>();
+  for (const po of payouts ?? []) {
+    if (po.status === "paid") {
+      paidByPartner.set(po.partner_id, (paidByPartner.get(po.partner_id) ?? 0) + Number(po.amount));
+    } else if (po.status === "pending" || po.status === "processing") {
+      pendingByPartner.set(po.partner_id, (pendingByPartner.get(po.partner_id) ?? 0) + Number(po.amount));
+    }
+  }
   const partnerRows: PartnerRow[] = (partners ?? [])
     .filter((p) => p.status === "approved")
     .map((p) => {
@@ -67,6 +78,8 @@ export default async function ReportsPage() {
         gross,
         feePercent,
         net: gross * (1 - feePercent / 100),
+        paidOut: paidByPartner.get(p.id) ?? 0,
+        pendingPayout: pendingByPartner.get(p.id) ?? 0,
       };
     })
     .sort((a, b) => b.gross - a.gross);

@@ -21,6 +21,8 @@ export interface PartnerRow {
   gross: number;
   feePercent: number;
   net: number;
+  paidOut: number;
+  pendingPayout: number;
 }
 export interface SubscriptionRow {
   plan: string;
@@ -179,8 +181,16 @@ export default function ReportsClient({
                   downloadCsv(
                     "partner-payouts.csv",
                     toCsv(
-                      ["Business", "Orders", "Gross", "Fee %", "Net Payout"],
-                      partnerRows.map((r) => [r.businessName, r.orderCount, r.gross, r.feePercent, r.net.toFixed(2)]),
+                      ["Business", "Orders", "Gross", "Fee %", "Net Payout", "Paid Out", "Pending"],
+                      partnerRows.map((r) => [
+                        r.businessName,
+                        r.orderCount,
+                        r.gross,
+                        r.feePercent,
+                        r.net.toFixed(2),
+                        r.paidOut.toFixed(2),
+                        r.pendingPayout.toFixed(2),
+                      ]),
                     ),
                   )
                 }
@@ -272,14 +282,14 @@ export default function ReportsClient({
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-100">
-                  {["Business", "Orders", "Gross", "Fee %", "Net Payout"].map((h) => (
+                  {["Business", "Orders", "Gross", "Fee %", "Net Payout", "Paid Out", "Pending"].map((h) => (
                     <th key={h} className="px-6 py-3 text-left text-xs font-semibold tracking-wide text-slate-400 uppercase">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {partnerRows.length === 0 && (
-                  <tr><td colSpan={5} className="px-6 py-16 text-center text-slate-400 text-sm">No approved partners yet.</td></tr>
+                  <tr><td colSpan={7} className="px-6 py-16 text-center text-slate-400 text-sm">No approved partners yet.</td></tr>
                 )}
                 {partnerRows.map((r) => (
                   <tr key={r.businessName} className="hover:bg-emerald-50/40 transition-colors duration-150">
@@ -288,6 +298,8 @@ export default function ReportsClient({
                     <td className="px-6 py-4 text-slate-600">₹{r.gross.toFixed(0)}</td>
                     <td className="px-6 py-4 text-slate-500 text-xs">{r.feePercent}%</td>
                     <td className="px-6 py-4 font-semibold text-slate-800">₹{r.net.toFixed(0)}</td>
+                    <td className="px-6 py-4 text-slate-600">₹{r.paidOut.toFixed(0)}</td>
+                    <td className="px-6 py-4 text-slate-600">₹{r.pendingPayout.toFixed(0)}</td>
                   </tr>
                 ))}
               </tbody>

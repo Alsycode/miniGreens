@@ -42,7 +42,7 @@
 | T3 | In-app notification inbox (+ `notifications` table) | Mobile + DB | P1 | DONE (2026-08-30) — migration pushed + DB-verified |
 | T4 | Pre-order flow (mobile) + pre-orders reach Admin | Mobile + DB + Admin | P1 | DONE (2026-08-30) — migration pushed + live-verified end to end |
 | T5 | Capture DOB (register + profile edit) + surface birthday reward | Mobile | P2 | DONE (2026-08-30) — migration pushed + DB-verified |
-| T6 | Partner payouts (earnings → payout tracking, both sides) | Mobile + Admin + DB | P2 | IN PROGRESS — DB layer done (committed), mobile + admin UI TODO |
+| T6 | Partner payouts (earnings → payout tracking, both sides) | Mobile + Admin + DB | P2 | IN PROGRESS — DB layer + mobile UI + admin UI + reports all coded & typecheck-clean; **migration `20260830170000` still NOT pushed**; live-verify pending |
 | T7 | Admin: Customers screen | Admin | P2 | DONE (2026-08-30) — admin `tsc` clean + live-verified (list, tiles, drawer) |
 | T8 | Admin: wire Overview dashboard + Delivery Queue off real data | Admin | P2 | DONE (already complete — plan gap-analysis was stale) |
 | T9 | Admin: Reports export as PDF + Excel (CSV already done) | Admin | P3 | TODO |
@@ -511,6 +511,15 @@ non-cancelled business orders (matches what `partner/dashboard.tsx` already show
 did NOT gate on `payment_status='paid'` because partner business orders don't currently go through
 Razorpay. Revisit if business orders start taking payment.
 
+**UI now built (2026-08-30, session resuming T6) — steps 2–5 done, typecheck-clean:**
+- **Mobile `src/app/partner/dashboard.tsx`** — `load()` now also `supabase.rpc('partner_earnings_summary', { p_partner_id: partner.id })` + `supabase.from('payouts').select('*').eq('partner_id', partner.id).order('requested_at', desc)`, run in a `Promise.all` with the existing orders fetch. New **Earnings card** (Gross / Platform fee (X%) / Net earned / Paid out / Pending requests / **Available to withdraw**) + **"Request Payout"** button (disabled when `available < 1` or in-flight) → `supabase.rpc('request_payout', …)` → on success `load()`, on `data.error`/`error` shows `<ErrorNotice>`. New **Payout History** list below it (amount, status dot+label, requested/paid dates). Status colours: pending=warning, processing=info, paid=success, rejected=error. Kept the existing 3 stat cards (Total Sales / Net Earnings / Orders) untouched above.
+- **Admin `partners/actions.ts`** — `updatePayoutStatus(payoutId, 'processing'|'paid'|'rejected')` → `update payouts set status, paid_at = (status==='paid' ? now() : null)` + `revalidatePath('/dashboard/partners')`.
+- **Admin `partners/page.tsx`** — now `Promise.all`s a `payouts` fetch alongside partners, joins `business_name` in JS → `payoutRows`, passes `payouts={payoutRows}` to `PartnersClient`.
+- **Admin `PartnersClient.tsx`** — new **"Payouts"** tab (count badge = `payouts.length`). When active, renders a payouts table (Business · Amount · Status · Requested · Paid · Actions) instead of the applications table; the applications table + drawer are gated `tab !== "payouts"`. Row actions by status: pending → [Approve→processing] [Reject]; processing → [Mark paid→paid] [Reject]; paid/rejected → none. Uses the existing `startTransition`.
+- **Admin `reports/page.tsx` + `ReportsClient.tsx`** — `payouts` added to the `Promise.all`; aggregated by `partner_id` into paid / pending+processing maps; `PartnerRow` gains `paidOut` + `pendingPayout`; the "Partner Payouts" table + CSV export gain **Paid Out** and **Pending** columns.
+
+Mobile `npx tsc --noEmit` clean; `cd admin && npx tsc --noEmit` clean.
+
 TODO — pick up here:
 1. **Push the migration** (tell the user):
    `npx --yes supabase db push --db-url '<session pooler url>'` → applies `20260830170000_payouts.sql`.
@@ -691,6 +700,24 @@ editable by Admin instead of hard-coded.
 ---
 
 ## 🧾 SESSION LOG (append-only — newest at top)
+
+### 2026-08-30 — T6 UI built (mobile + admin + reports), migration still unpushed
+
+Resumed T6 from "DB layer done". Built all the remaining UI (full detail in the T6
+"UI now built" block above):
+- Mobile Partner Dashboard: Earnings card + Request Payout button (calls
+  `request_payout` RPC) + Payout History list; earnings from `partner_earnings_summary`.
+- Admin Partners: new "Payouts" tab with per-status row actions
+  (Approve→processing / Mark paid→paid / Reject), backed by a new `updatePayoutStatus`
+  server action.
+- Admin Reports: "Partner Payouts" tab + CSV gain real **Paid Out** / **Pending**
+  columns from the `payouts` table.
+
+Both apps `tsc --noEmit` clean. **Migration `20260830170000_payouts.sql` still NOT
+pushed** — nothing touching `payouts` will work at runtime until the user runs
+`npx --yes supabase db push --db-url '<session pooler url>'`. Live-verification
+(needs an approved test partner with ≥1 business order) is the only remaining step
+before T6 → DONE.
 
 ### 2026-08-30 — T6 started (DB layer only), then paused for a new chat
 

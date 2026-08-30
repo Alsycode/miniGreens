@@ -3,10 +3,16 @@ import PartnersClient from "@/components/PartnersClient";
 
 export default async function PartnersPage() {
   const supabase = await createSupabaseServerClient();
-  const { data: partners } = await supabase
-    .from("partners")
-    .select("*")
-    .order("applied_at", { ascending: false });
+  const [{ data: partners }, { data: payouts }] = await Promise.all([
+    supabase.from("partners").select("*").order("applied_at", { ascending: false }),
+    supabase.from("payouts").select("*").order("requested_at", { ascending: false }),
+  ]);
+
+  const businessById = new Map((partners ?? []).map((p) => [p.id, p.business_name]));
+  const payoutRows = (payouts ?? []).map((p) => ({
+    ...p,
+    businessName: businessById.get(p.partner_id) ?? "Unknown partner",
+  }));
 
   return (
     <div className="px-6 py-8 md:px-10 max-w-[1400px]">
@@ -18,7 +24,7 @@ export default async function PartnersPage() {
       </div>
 
       <div className="bg-white rounded-2xl border border-slate-200/50 shadow-sm overflow-hidden">
-        <PartnersClient partners={partners ?? []} />
+        <PartnersClient partners={partners ?? []} payouts={payoutRows} />
       </div>
     </div>
   );

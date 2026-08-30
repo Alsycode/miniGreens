@@ -9,12 +9,32 @@ import { Typography } from '../../components/ui/Typography';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Loading } from '../../components/ui/Loading';
+import { ErrorNotice } from '../../components/ui/ErrorNotice';
 import { useAuthStore } from '../../store/useAuthStore';
 import { supabase } from '../../lib/supabase';
 import type { Database } from '../../types/database';
 
 type PartnerRow = Database['public']['Tables']['partners']['Row'];
 type OrderRow = Database['public']['Tables']['orders']['Row'];
+type PayoutRow = Database['public']['Tables']['payouts']['Row'];
+type EarningsSummary = Database['public']['Functions']['partner_earnings_summary']['Returns'];
+
+const PAYOUT_STATUS_COLORS: Record<PayoutRow['status'], string> = {
+  pending: colors.warning,
+  processing: colors.info,
+  paid: colors.success,
+  rejected: colors.error,
+};
+
+const PAYOUT_STATUS_LABELS: Record<PayoutRow['status'], string> = {
+  pending: 'Pending',
+  processing: 'Processing',
+  paid: 'Paid',
+  rejected: 'Rejected',
+};
+
+const formatDate = (iso: string) =>
+  new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 
 const BUSINESS_TYPE_LABELS: Record<string, string> = {
   individual: 'Individual Partner',
@@ -38,8 +58,12 @@ export default function PartnerDashboardScreen() {
 
   const [partner, setPartner] = useState<PartnerRow | null>(null);
   const [orders, setOrders] = useState<OrderRow[]>([]);
+  const [earnings, setEarnings] = useState<EarningsSummary | null>(null);
+  const [payouts, setPayouts] = useState<PayoutRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [requesting, setRequesting] = useState(false);
+  const [requestError, setRequestError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!session) return;
@@ -51,17 +75,44 @@ export default function PartnerDashboardScreen() {
     setPartner(partnerData ?? null);
 
     if (partnerData?.status === 'approved') {
-      const { data: orderData } = await supabase
-        .from('orders')
-        .select('*')
-        .eq('profile_id', session.user.id)
-        .eq('order_type', 'business')
-        .order('created_at', { ascending: false });
+      const [{ data: orderData }, { data: earningsData }, { data: payoutData }] = await Promise.all([
+        supabase
+          .from('orders')
+          .select('*')
+          .eq('profile_id', session.user.id)
+          .eq('order_type', 'business')
+          .order('created_at', { ascending: false }),
+        supabase.rpc('partner_earnings_summary', { p_partner_id: partnerData.id }),
+        supabase
+          .from('payouts')
+          .select('*')
+          .eq('partner_id', partnerData.id)
+          .order('requested_at', { ascending: false }),
+      ]);
       setOrders(orderData ?? []);
+      setEarnings((earningsData as EarningsSummary | null) ?? null);
+      setPayouts(payoutData ?? []);
     }
     setLoading(false);
     setRefreshing(false);
   }, [session]);
+
+  const handleRequestPayout = useCallback(async () => {
+    if (!partner) return;
+    setRequesting(true);
+    setRequestError(null);
+    const { data, error } = await supabase.rpc('request_payout', { p_partner_id: partner.id });
+    setRequesting(false);
+    if (error) {
+      setRequestError(error.message);
+      return;
+    }
+    if (data?.error) {
+      setRequestError(data.error);
+      return;
+    }
+    load();
+  }, [partner, load]);
 
   useFocusEffect(
     useCallback(() => {
@@ -159,6 +210,82 @@ export default function PartnerDashboardScreen() {
               />
             </Animated.View>
 
+            {earnings && !earnings.error && (
+              <Animated.View entering={FadeInUp.delay(210).springify().damping(31)}>
+                <Card variant="outlined" padding="lg" style={styles.earningsCard}>
+                  <Typography variant="body" weight="semibold" style={styles.earningsTitle}>
+                    Earnings
+                  </Typography>
+                  <View style={styles.earningsRow}>
+                    <Typography variant="bodySmall" color={colors.textSecondary}>Gross sales</Typography>
+                    <Typography variant="bodySmall" weight="semibold">₹{Number(earnings.gross ?? 0).toFixed(2)}</Typography>
+                  </View>
+                  <View style={styles.earningsRow}>
+                    <Typography variant="bodySmall" color={colors.textSecondary}>
+                      Platform fee ({Number(earnings.fee_percent ?? 0)}%)
+                    </Typography>
+                    <Typography variant="bodySmall" weight="semibold">−₹{Number(earnings.fee ?? 0).toFixed(2)}</Typography>
+                  </View>
+                  <View style={styles.earningsRow}>
+                    <Typography variant="bodySmall" color={colors.textSecondary}>Net earned</Typography>
+                    <Typography variant="bodySmall" weight="semibold">₹{Number(earnings.net ?? 0).toFixed(2)}</Typography>
+                  </View>
+                  <View style={styles.earningsRow}>
+                    <Typography variant="bodySmall" color={colors.textSecondary}>Paid out</Typography>
+                    <Typography variant="bodySmall" weight="semibold">₹{Number(earnings.paid_out ?? 0).toFixed(2)}</Typography>
+                  </View>
+                  <View style={styles.earningsRow}>
+                    <Typography variant="bodySmall" color={colors.textSecondary}>Pending requests</Typography>
+                    <Typography variant="bodySmall" weight="semibold">₹{Number(earnings.pending ?? 0).toFixed(2)}</Typography>
+                  </View>
+                  <View style={[styles.earningsRow, styles.earningsAvailableRow]}>
+                    <Typography variant="body" weight="bold">Available to withdraw</Typography>
+                    <Typography variant="body" weight="bold" color={colors.primaryDark}>
+                      ₹{Number(earnings.available ?? 0).toFixed(2)}
+                    </Typography>
+                  </View>
+
+                  <ErrorNotice message={requestError} onDismiss={() => setRequestError(null)} style={styles.requestError} />
+
+                  <Button
+                    title="Request Payout"
+                    onPress={handleRequestPayout}
+                    fullWidth
+                    loading={requesting}
+                    disabled={requesting || Number(earnings.available ?? 0) < 1}
+                    style={styles.requestButton}
+                  />
+                </Card>
+              </Animated.View>
+            )}
+
+            {payouts.length > 0 && (
+              <Animated.View entering={FadeInUp.delay(230).springify().damping(31)}>
+                <Typography variant="body" weight="semibold" style={styles.sectionTitle}>
+                  Payout History
+                </Typography>
+                {payouts.map((payout) => (
+                  <Card key={payout.id} variant="outlined" padding="md" style={styles.orderCard}>
+                    <View style={styles.orderRow}>
+                      <Typography variant="bodySmall" color={colors.primaryDark} weight="bold">
+                        ₹{Number(payout.amount).toFixed(2)}
+                      </Typography>
+                      <View style={styles.payoutBadge}>
+                        <View style={[styles.statusDot, { backgroundColor: PAYOUT_STATUS_COLORS[payout.status] }]} />
+                        <Typography variant="caption" color={colors.textSecondary}>
+                          {PAYOUT_STATUS_LABELS[payout.status]}
+                        </Typography>
+                      </View>
+                    </View>
+                    <Typography variant="caption" color={colors.textTertiary}>
+                      Requested {formatDate(payout.requested_at)}
+                      {payout.paid_at ? ` · Paid ${formatDate(payout.paid_at)}` : ''}
+                    </Typography>
+                  </Card>
+                ))}
+              </Animated.View>
+            )}
+
             <Animated.View entering={FadeInUp.delay(240).springify().damping(31)}>
               <Typography variant="body" weight="semibold" style={styles.sectionTitle}>
                 Order History
@@ -241,6 +368,36 @@ const styles = StyleSheet.create({
   },
   placeOrderButton: {
     marginBottom: spacing['2xl'],
+  },
+  earningsCard: {
+    marginBottom: spacing['2xl'],
+  },
+  earningsTitle: {
+    marginBottom: spacing.md,
+  },
+  earningsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: spacing.xs,
+  },
+  earningsAvailableRow: {
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    marginTop: spacing.xs,
+    paddingTop: spacing.sm,
+  },
+  requestError: {
+    marginTop: spacing.md,
+    marginBottom: 0,
+  },
+  requestButton: {
+    marginTop: spacing.lg,
+  },
+  payoutBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
   },
   sectionTitle: {
     marginBottom: spacing.md,

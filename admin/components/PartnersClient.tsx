@@ -3,10 +3,23 @@
 import { useState, useMemo, useTransition } from "react";
 import { X } from "@phosphor-icons/react";
 import type { Database } from "@mobile/database";
-import { approvePartner, rejectPartner, updatePartnerFee } from "@/app/dashboard/(protected)/partners/actions";
+import { approvePartner, rejectPartner, updatePartnerFee, updatePayoutStatus } from "@/app/dashboard/(protected)/partners/actions";
 
 type Partner = Database["public"]["Tables"]["partners"]["Row"];
 type PartnerStatus = Partner["status"];
+type Payout = Database["public"]["Tables"]["payouts"]["Row"];
+type PayoutStatus = Payout["status"];
+type PayoutWithBusiness = Payout & { businessName: string };
+
+const PAYOUT_STATUS_BADGE: Record<PayoutStatus, { label: string; classes: string }> = {
+  pending: { label: "Pending", classes: "bg-amber-50 text-amber-700 border-amber-200" },
+  processing: { label: "Processing", classes: "bg-blue-50 text-blue-700 border-blue-200" },
+  paid: { label: "Paid", classes: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+  rejected: { label: "Rejected", classes: "bg-red-50 text-red-700 border-red-200" },
+};
+
+const fmtDate = (iso: string) =>
+  new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 
 const STATUS_BADGE: Record<PartnerStatus, { label: string; classes: string }> = {
   pending: { label: "Pending", classes: "bg-amber-50 text-amber-700 border-amber-200" },
@@ -24,15 +37,24 @@ const BUSINESS_TYPE_LABELS: Record<Partner["business_type"], string> = {
   community: "Community Partner",
 };
 
-const TABS: { key: "all" | PartnerStatus; label: string }[] = [
+type TabKey = "all" | PartnerStatus | "payouts";
+
+const TABS: { key: TabKey; label: string }[] = [
   { key: "all", label: "All" },
   { key: "pending", label: "Pending" },
   { key: "approved", label: "Approved" },
   { key: "rejected", label: "Rejected" },
+  { key: "payouts", label: "Payouts" },
 ];
 
-export default function PartnersClient({ partners }: { partners: Partner[] }) {
-  const [tab, setTab] = useState<"all" | PartnerStatus>("all");
+export default function PartnersClient({
+  partners,
+  payouts = [],
+}: {
+  partners: Partner[];
+  payouts?: PayoutWithBusiness[];
+}) {
+  const [tab, setTab] = useState<TabKey>("all");
   const [selected, setSelected] = useState<Partner | null>(null);
   const [feeInput, setFeeInput] = useState("");
   const [isPending, startTransition] = useTransition();
@@ -73,6 +95,12 @@ export default function PartnersClient({ partners }: { partners: Partner[] }) {
     });
   }
 
+  function handlePayoutStatus(id: string, status: "processing" | "paid" | "rejected") {
+    startTransition(async () => {
+      await updatePayoutStatus(id, status);
+    });
+  }
+
   return (
     <>
       {/* Tabs */}
@@ -90,13 +118,104 @@ export default function PartnersClient({ partners }: { partners: Partner[] }) {
             {label}
             <span className={`ml-2 text-xs px-1.5 py-0.5 rounded-full
               ${tab === key ? "bg-emerald-100 text-[#3D7A52]" : "bg-slate-100 text-slate-400"}`}>
-              {key === "all" ? partners.length : partners.filter((p) => p.status === key).length}
+              {key === "all"
+                ? partners.length
+                : key === "payouts"
+                  ? payouts.length
+                  : partners.filter((p) => p.status === key).length}
             </span>
           </button>
         ))}
       </div>
 
+      {/* Payouts table */}
+      {tab === "payouts" && (
+        <div className="overflow-x-auto animate-fade-up" style={{ "--i": 2 } as React.CSSProperties}>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-slate-100">
+                {["Business", "Amount", "Status", "Requested", "Paid", "Actions"].map((h) => (
+                  <th key={h} className="px-6 py-3 text-left text-xs font-semibold tracking-wide text-slate-400 uppercase">
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-50">
+              {payouts.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-6 py-16 text-center text-slate-400 text-sm">
+                    No payout requests yet.
+                  </td>
+                </tr>
+              )}
+              {payouts.map((p) => {
+                const badge = PAYOUT_STATUS_BADGE[p.status];
+                return (
+                  <tr key={p.id} className="hover:bg-emerald-50/50 transition-colors duration-150">
+                    <td className="px-6 py-4 font-medium text-slate-800">{p.businessName}</td>
+                    <td className="px-6 py-4 font-semibold text-slate-800">₹{Number(p.amount).toFixed(2)}</td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${badge.classes}`}>
+                        {badge.label}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-slate-400 text-xs">{fmtDate(p.requested_at)}</td>
+                    <td className="px-6 py-4 text-slate-400 text-xs">{p.paid_at ? fmtDate(p.paid_at) : "—"}</td>
+                    <td className="px-6 py-4">
+                      <div className="flex gap-2">
+                        {p.status === "pending" && (
+                          <>
+                            <button
+                              disabled={isPending}
+                              onClick={() => handlePayoutStatus(p.id, "processing")}
+                              className="px-3 py-1 text-xs font-semibold rounded-lg bg-[#0A2416] text-white transition-all active:scale-[0.97] disabled:opacity-40"
+                            >
+                              Approve
+                            </button>
+                            <button
+                              disabled={isPending}
+                              onClick={() => handlePayoutStatus(p.id, "rejected")}
+                              className="px-3 py-1 text-xs font-semibold rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-all active:scale-[0.97] disabled:opacity-40"
+                            >
+                              Reject
+                            </button>
+                          </>
+                        )}
+                        {p.status === "processing" && (
+                          <>
+                            <button
+                              disabled={isPending}
+                              onClick={() => handlePayoutStatus(p.id, "paid")}
+                              className="px-3 py-1 text-xs font-semibold rounded-lg transition-all active:scale-[0.97] disabled:opacity-40"
+                              style={{ backgroundColor: "#CAEF61", color: "#0A2416" }}
+                            >
+                              Mark paid
+                            </button>
+                            <button
+                              disabled={isPending}
+                              onClick={() => handlePayoutStatus(p.id, "rejected")}
+                              className="px-3 py-1 text-xs font-semibold rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-all active:scale-[0.97] disabled:opacity-40"
+                            >
+                              Reject
+                            </button>
+                          </>
+                        )}
+                        {(p.status === "paid" || p.status === "rejected") && (
+                          <span className="text-xs text-slate-300">—</span>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
       {/* Table */}
+      {tab !== "payouts" && (
       <div className="overflow-x-auto animate-fade-up" style={{ "--i": 2 } as React.CSSProperties}>
         <table className="w-full text-sm">
           <thead>
@@ -143,6 +262,7 @@ export default function PartnersClient({ partners }: { partners: Partner[] }) {
           </tbody>
         </table>
       </div>
+      )}
 
       {/* Slide-over drawer */}
       {selected && (
