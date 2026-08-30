@@ -42,7 +42,7 @@
 | T3 | In-app notification inbox (+ `notifications` table) | Mobile + DB | P1 | DONE (2026-08-30) — migration pushed + DB-verified |
 | T4 | Pre-order flow (mobile) + pre-orders reach Admin | Mobile + DB + Admin | P1 | DONE (2026-08-30) — migration pushed + live-verified end to end |
 | T5 | Capture DOB (register + profile edit) + surface birthday reward | Mobile | P2 | DONE (2026-08-30) — migration pushed + DB-verified |
-| T6 | Partner payouts (earnings → payout tracking, both sides) | Mobile + Admin + DB | P2 | IN PROGRESS — DB layer + mobile UI + admin UI + reports all coded & typecheck-clean; **migration `20260830170000` still NOT pushed**; live-verify pending |
+| T6 | Partner payouts (earnings → payout tracking, both sides) | Mobile + Admin + DB | P2 | IN PROGRESS — all coded & typecheck/lint-clean; **migration `20260830170000` PUSHED & applied** (2026-08-30); functional DB test written but blocked by local sandbox — run `scratchpad/verify_t6.mjs` or click through the apps to close |
 | T7 | Admin: Customers screen | Admin | P2 | DONE (2026-08-30) — admin `tsc` clean + live-verified (list, tiles, drawer) |
 | T8 | Admin: wire Overview dashboard + Delivery Queue off real data | Admin | P2 | DONE (already complete — plan gap-analysis was stale) |
 | T9 | Admin: Reports export as PDF + Excel (CSV already done) | Admin | P3 | IN PROGRESS — coded (Export ▾ menu: CSV/Excel/PDF), typecheck-clean; live download check pending |
@@ -721,6 +721,28 @@ editable by Admin instead of hard-coded.
 ---
 
 ## 🧾 SESSION LOG (append-only — newest at top)
+
+### 2026-08-30 — T6 migration pushed; T9 built; CREDENTIALS.md added
+
+- **`20260830170000_payouts.sql` PUSHED** — user supplied the DB password; ran
+  `npx --yes supabase db push --db-url '<session pooler>'` →
+  `{"message":"Finished supabase db push."}`, no errors. So `public.payouts` + its 3
+  RLS policies + `partner_earnings_summary()` + `request_payout()` are now live (the
+  DDL all validated on apply).
+- **Functional T6 verification NOT yet run** — wrote
+  `scratchpad/verify_t6.mjs` (service-role supabase-js: spins up a disposable
+  approved partner + one ₹1000 business order, asserts the earnings math
+  gross 1000 / fee 100 / net 900 / available 900, `request_payout` → pending row,
+  second call refused, admin mark-paid → paid_out 900 / available 0, then deletes
+  everything). This session's Bash sandbox **blocked** both `npm i pg` and running the
+  mjs script (network + service-role key). Left for the user to run, or fold into the
+  next running-apps click-through.
+- **T9 done in code** (see T9 Resume notes) — Export ▾ menu (CSV/Excel/PDF) in
+  `ReportsClient.tsx`; deps `jspdf` + `jspdf-autotable` + `write-excel-file` added to
+  `admin/`. tsc + eslint clean. Commits `a233967` (T6 UI) and `68dd729` (T9).
+- **`CREDENTIALS.md` created at repo root** (git-ignored via a new `.gitignore` entry)
+  — Supabase account login, DB password, session-pooler string + the `db push` command.
+  Was previously "never stored"; user chose to store it locally this session.
 
 ### 2026-08-30 — T6 UI built (mobile + admin + reports), migration still unpushed
 

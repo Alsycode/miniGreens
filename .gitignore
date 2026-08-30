@@ -35,6 +35,10 @@ yarn-error.*
 .env*.local
 !.env.example
 
+# local secrets — never commit
+CREDENTIALS.md
+verify_t6.mjs
+
 # typescript
 *.tsbuildinfo
 
