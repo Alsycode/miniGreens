@@ -42,7 +42,7 @@
 | T3 | In-app notification inbox (+ `notifications` table) | Mobile + DB | P1 | DONE (2026-08-30) — migration pushed + DB-verified |
 | T4 | Pre-order flow (mobile) + pre-orders reach Admin | Mobile + DB + Admin | P1 | DONE (2026-08-30) — migration pushed + live-verified end to end |
 | T5 | Capture DOB (register + profile edit) + surface birthday reward | Mobile | P2 | DONE (2026-08-30) — migration pushed + DB-verified |
-| T6 | Partner payouts (earnings → payout tracking, both sides) | Mobile + Admin + DB | P2 | IN PROGRESS — all coded & typecheck/lint-clean; **migration `20260830170000` PUSHED & applied** (2026-08-30); functional DB test written but blocked by local sandbox — run `scratchpad/verify_t6.mjs` or click through the apps to close |
+| T6 | Partner payouts (earnings → payout tracking, both sides) | Mobile + Admin + DB | P2 | DONE (2026-08-30) — migration `20260830170000` pushed; `verify_t6.mjs` 22/22 PASS (earnings math + request_payout + refuse-when-empty + admin mark-paid, all live); mobile + admin `tsc`/eslint clean. Mobile Earnings card & admin Payouts tab *rendering* not yet click-tested (same caveat as T2/T3) — the RPCs they call are proven. |
 | T7 | Admin: Customers screen | Admin | P2 | DONE (2026-08-30) — admin `tsc` clean + live-verified (list, tiles, drawer) |
 | T8 | Admin: wire Overview dashboard + Delivery Queue off real data | Admin | P2 | DONE (already complete — plan gap-analysis was stale) |
 | T9 | Admin: Reports export as PDF + Excel (CSV already done) | Admin | P3 | IN PROGRESS — coded (Export ▾ menu: CSV/Excel/PDF), typecheck-clean; live download check pending |
@@ -721,6 +721,23 @@ editable by Admin instead of hard-coded.
 ---
 
 ## 🧾 SESSION LOG (append-only — newest at top)
+
+### 2026-08-30 — T6 verified 22/22 → DONE
+
+User ran `node verify_t6.mjs` → **ALL GREEN, 22/22**. Confirmed live against the
+remote DB: `payouts` selectable; `partner_earnings_summary` returns
+`gross 1000 / fee% 10 / fee 100 / net 900 / paid_out 0 / pending 0 / available 900`
+for one ₹1000 business order at 10% fee; `request_payout` → `{ok, amount:900}` +
+a `pending` payouts row; summary then shows `pending 900 / available 0`; a second
+`request_payout` is refused (`"Nothing available to withdraw right now."`); after
+`status='paid'` the summary shows `paid_out 900 / pending 0 / available 0`;
+disposable partner/order/user all cleaned up, no leftover rows. Mobile + admin
+`tsc` and admin `eslint` were already clean. **T6 DONE.** Only unpolished edge:
+the mobile Earnings card + admin Payouts-tab *rendering* haven't been eyeballed in
+a running app (they call the now-proven RPCs) — fold into the next apps pass.
+
+`verify_t6.mjs` stays at repo root (git-ignored; holds the service-role key) for
+re-runs — safe to delete.
 
 ### 2026-08-30 — T6 migration pushed; T9 built; CREDENTIALS.md added
 
