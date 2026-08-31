@@ -46,7 +46,7 @@
 | T7 | Admin: Customers screen | Admin | P2 | DONE (2026-08-30) — admin `tsc` clean + live-verified (list, tiles, drawer) |
 | T8 | Admin: wire Overview dashboard + Delivery Queue off real data | Admin | P2 | DONE (already complete — plan gap-analysis was stale) |
 | T9 | Admin: Reports export as PDF + Excel (CSV already done) | Admin | P3 | IN PROGRESS — coded (Export ▾ menu: CSV/Excel/PDF), typecheck-clean; live download check pending |
-| T10 | Partner KYC document upload | Mobile + Admin + Storage | P3 | IN PROGRESS — migration `20260831000000` written (NOT pushed); mobile upload UI + admin review UI coded & typecheck-clean; live-verify pending |
+| T10 | Partner KYC document upload | Mobile + Admin + Storage | P3 | IN PROGRESS — migration `20260831000000` PUSHED & applied (2026-08-31, storage.objects policies took cleanly); mobile + admin UI coded & tsc/eslint-clean; run `verify_t10.mjs` + apps click-through to close |
 | T11 | (Optional) Testimonials / Why-Choose / Blog → DB + admin CMS | Full-stack | P4 | TODO |
 | — | ~~WhatsApp-to-Admin new-order alert~~ | — | — | **BLOCKED** — no WhatsApp BSP account. Out of scope until credentials exist. |
 
@@ -726,17 +726,15 @@ under their uid, and Admin can open it. Both apps typecheck.
 - Mobile `npx tsc --noEmit` clean; admin `npx tsc --noEmit` clean. Admin eslint on changed files: pending.
 
 **TODO — pick up here:**
-1. **Push the migration** (tell the user): `npx --yes supabase db push --db-url '<pooler url from CREDENTIALS.md>'`
-   → applies `20260831000000_partner_kyc.sql`.
-   ⚠️ If `create policy ... on storage.objects` errors on the pooler (ownership), fall back to
-   pasting those 4 `create policy` statements into the dashboard SQL Editor (Storage → Policies
-   also works), and keep the bucket + `alter table` in the migration.
-2. Live-verify: on mobile, apply as a partner with a document attached → confirm the object lands
-   at `partner-kyc/<uid>/...` and `partners.kyc_documents` has the row. In admin, open that
-   application → **Open** downloads the file (signed URL) → **Verify KYC** flips `kyc_status`.
-   Clean up the test partner + object.
-3. `npx tsc --noEmit` (root) + `cd admin && npx tsc --noEmit` — re-confirm clean. Flip Status
-   Board T10 → DONE.
+1. ~~Push the migration~~ — DONE 2026-08-31 (`Finished supabase db push.`, no ownership error).
+2. **Run `node verify_t10.mjs`** (repo root, git-ignored) — asserts: bucket exists + private;
+   `partners.kyc_documents`/`kyc_status` columns; upload to `partner-kyc/<uid>/…` + signed-URL
+   round-trip of the exact bytes; `kyc_documents` manifest round-trips through a partner insert;
+   `kyc_status` defaults `pending`, updates to `verified`, and the check constraint rejects a
+   bogus value; cleans up. Expect `ALL GREEN`.
+3. Apps click-through (fold into the next running-apps pass): mobile `partner/apply` → Add
+   Document → submit; admin drawer → **Open** (signed URL) → **Verify KYC**.
+4. Then flip Status Board T10 → DONE.
 
 ---
 
@@ -758,6 +756,16 @@ editable by Admin instead of hard-coded.
 ---
 
 ## 🧾 SESSION LOG (append-only — newest at top)
+
+### 2026-08-31 — T10 migration pushed
+
+User ran `supabase db push` → `Finished supabase db push.` applying
+`20260831000000_partner_kyc.sql`. **No ownership error** on the four
+`create policy ... on storage.objects` statements — they applied via the pooler
+fine, so the dashboard-SQL-Editor fallback wasn't needed. `partner-kyc` bucket +
+`partners.kyc_documents`/`kyc_status` are live. Wrote `verify_t10.mjs` (git-ignored,
+service-role) for the user to run — same "sandbox blocks DB-writing scripts"
+situation as T6. Committed `b2cdc1e` (code) + `c0d2ae4` (push note).
 
 ### 2026-08-31 — T10 coded (partner KYC upload), migration unpushed
 
