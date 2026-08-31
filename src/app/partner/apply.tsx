@@ -1,16 +1,20 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Pressable, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInUp } from 'react-native-reanimated';
-import { colors, spacing } from '../../theme';
+import * as DocumentPicker from 'expo-document-picker';
+import { colors, spacing, borderRadius } from '../../theme';
 import { Typography } from '../../components/ui/Typography';
 import { TextField } from '../../components/ui/TextField';
 import { Button } from '../../components/ui/Button';
 import { Chip } from '../../components/ui/Chip';
 import { useAuthStore } from '../../store/useAuthStore';
 import { supabase } from '../../lib/supabase';
-import type { PartnerBusinessType } from '../../types/database';
+import type { PartnerBusinessType, KycDocument } from '../../types/database';
+
+const KYC_BUCKET = 'partner-kyc';
 
 const BUSINESS_TYPES: { value: PartnerBusinessType; label: string }[] = [
   { value: 'individual', label: 'Individual Partner' },
@@ -31,8 +35,50 @@ export default function PartnerApplyScreen() {
   const [contactPerson, setContactPerson] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
+  const [docs, setDocs] = useState<KycDocument[]>([]);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const handleAddDocument = async () => {
+    if (!session) {
+      setError('Log in first to upload documents.');
+      return;
+    }
+    const result = await DocumentPicker.getDocumentAsync({
+      type: ['image/*', 'application/pdf'],
+      copyToCacheDirectory: true,
+      multiple: false,
+    });
+    if (result.canceled || !result.assets?.length) return;
+    const asset = result.assets[0];
+
+    setError(null);
+    setUploading(true);
+    try {
+      const fileRes = await fetch(asset.uri);
+      const body = await fileRes.arrayBuffer();
+      const safeName = asset.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const path = `${session.user.id}/${Date.now()}_${safeName}`;
+      const { error: uploadError } = await supabase.storage
+        .from(KYC_BUCKET)
+        .upload(path, body, { contentType: asset.mimeType ?? 'application/octet-stream', upsert: false });
+      if (uploadError) {
+        setError(uploadError.message);
+        return;
+      }
+      setDocs((prev) => [...prev, { name: asset.name, path, uploaded_at: new Date().toISOString() }]);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Upload failed.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleRemoveDocument = async (path: string) => {
+    setDocs((prev) => prev.filter((d) => d.path !== path));
+    await supabase.storage.from(KYC_BUCKET).remove([path]);
+  };
 
   const handleSubmit = async () => {
     if (!session) {
@@ -52,6 +98,7 @@ export default function PartnerApplyScreen() {
       contact_person: contactPerson.trim(),
       phone: phone.trim(),
       address: address.trim() || null,
+      kyc_documents: docs,
     });
     setLoading(false);
     if (insertError) {
@@ -130,6 +177,41 @@ export default function PartnerApplyScreen() {
             value={address}
             onChangeText={setAddress}
           />
+
+          <View style={styles.docsSection}>
+            <Typography variant="bodySmall" color={colors.textSecondary} weight="medium" style={styles.sectionLabel}>
+              KYC Documents (optional)
+            </Typography>
+            <Typography variant="caption" color={colors.textTertiary} style={styles.docsHint}>
+              ID proof, business licence, GST certificate — image or PDF.
+            </Typography>
+            {docs.map((doc) => (
+              <View key={doc.path} style={styles.docRow}>
+                <Ionicons name="document-text-outline" size={18} color={colors.primaryDark} />
+                <Typography variant="bodySmall" color={colors.text} style={styles.docName} numberOfLines={1}>
+                  {doc.name}
+                </Typography>
+                <Pressable onPress={() => handleRemoveDocument(doc.path)} hitSlop={10}>
+                  <Ionicons name="close-circle" size={18} color={colors.textTertiary} />
+                </Pressable>
+              </View>
+            ))}
+            <Pressable
+              onPress={handleAddDocument}
+              disabled={uploading}
+              style={[styles.addDocButton, uploading && styles.addDocButtonDisabled]}
+            >
+              {uploading ? (
+                <ActivityIndicator size="small" color={colors.primaryDark} />
+              ) : (
+                <Ionicons name="cloud-upload-outline" size={18} color={colors.primaryDark} />
+              )}
+              <Typography variant="bodySmall" color={colors.primaryDark} weight="medium">
+                {uploading ? 'Uploading…' : 'Add Document'}
+              </Typography>
+            </Pressable>
+          </View>
+
           {error && (
             <Typography variant="bodySmall" color={colors.error} style={styles.error}>
               {error}
@@ -177,5 +259,41 @@ const styles = StyleSheet.create({
   },
   submit: {
     marginTop: spacing.sm,
+  },
+  docsSection: {
+    marginTop: spacing.sm,
+    marginBottom: spacing.lg,
+  },
+  docsHint: {
+    marginTop: -spacing.xs,
+    marginBottom: spacing.sm,
+  },
+  docRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.md,
+    marginBottom: spacing.xs,
+  },
+  docName: {
+    flex: 1,
+  },
+  addDocButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: colors.primaryDark,
+    borderStyle: 'dashed',
+    marginTop: spacing.xs,
+  },
+  addDocButtonDisabled: {
+    opacity: 0.6,
   },
 });

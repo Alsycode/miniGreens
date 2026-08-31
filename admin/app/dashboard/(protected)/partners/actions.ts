@@ -21,6 +21,15 @@ export async function updatePartnerFee(partnerId: string, feePercent: number) {
   revalidatePath("/dashboard/partners");
 }
 
+export async function updateKycStatus(
+  partnerId: string,
+  kycStatus: "pending" | "verified" | "rejected",
+) {
+  const supabase = await createSupabaseServerClient();
+  await supabase.from("partners").update({ kyc_status: kycStatus }).eq("id", partnerId);
+  revalidatePath("/dashboard/partners");
+}
+
 export async function updatePayoutStatus(
   payoutId: string,
   status: "processing" | "paid" | "rejected",

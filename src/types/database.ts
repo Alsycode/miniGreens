@@ -20,6 +20,13 @@ export type DiscountType = 'percentage' | 'flat';
 export type DiscountTarget = 'all' | 'category' | 'product' | 'subscription_plan' | 'partner' | 'wholesale';
 export type PaymentStatus = 'pending' | 'paid' | 'failed';
 export type PayoutStatus = 'pending' | 'processing' | 'paid' | 'rejected';
+export type KycStatus = 'pending' | 'verified' | 'rejected';
+
+export interface KycDocument {
+  name: string;
+  path: string;
+  uploaded_at: string;
+}
 
 export interface Database {
   public: {
@@ -292,14 +299,25 @@ export interface Database {
           applied_at: string;
           reviewed_at: string | null;
           reviewed_by: string | null;
+          kyc_documents: KycDocument[];
+          kyc_status: KycStatus;
         };
         Insert: Omit<
           Database['public']['Tables']['partners']['Row'],
-          'id' | 'status' | 'platform_fee_percent' | 'applied_at' | 'reviewed_at' | 'reviewed_by'
+          | 'id'
+          | 'status'
+          | 'platform_fee_percent'
+          | 'applied_at'
+          | 'reviewed_at'
+          | 'reviewed_by'
+          | 'kyc_documents'
+          | 'kyc_status'
         > & {
           id?: string;
           status?: PartnerStatus;
           platform_fee_percent?: number;
+          kyc_documents?: KycDocument[];
+          kyc_status?: KycStatus;
         };
         Update: Partial<Database['public']['Tables']['partners']['Insert']> & {
           reviewed_at?: string | null;

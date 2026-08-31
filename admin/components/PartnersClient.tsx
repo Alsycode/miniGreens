@@ -2,11 +2,24 @@
 
 import { useState, useMemo, useTransition } from "react";
 import { X } from "@phosphor-icons/react";
-import type { Database } from "@mobile/database";
-import { approvePartner, rejectPartner, updatePartnerFee, updatePayoutStatus } from "@/app/dashboard/(protected)/partners/actions";
+import type { Database, KycDocument, KycStatus } from "@mobile/database";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import {
+  approvePartner,
+  rejectPartner,
+  updatePartnerFee,
+  updatePayoutStatus,
+  updateKycStatus,
+} from "@/app/dashboard/(protected)/partners/actions";
 
 type Partner = Database["public"]["Tables"]["partners"]["Row"];
 type PartnerStatus = Partner["status"];
+
+const KYC_BADGE: Record<KycStatus, { label: string; classes: string }> = {
+  pending: { label: "KYC pending", classes: "bg-amber-50 text-amber-700 border-amber-200" },
+  verified: { label: "KYC verified", classes: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+  rejected: { label: "KYC rejected", classes: "bg-red-50 text-red-700 border-red-200" },
+};
 type Payout = Database["public"]["Tables"]["payouts"]["Row"];
 type PayoutStatus = Payout["status"];
 type PayoutWithBusiness = Payout & { businessName: string };
@@ -99,6 +112,23 @@ export default function PartnersClient({
     startTransition(async () => {
       await updatePayoutStatus(id, status);
     });
+  }
+
+  function handleKycStatus(id: string, status: KycStatus) {
+    startTransition(async () => {
+      await updateKycStatus(id, status);
+      setSelected((cur) => (cur && cur.id === id ? { ...cur, kyc_status: status } : cur));
+    });
+  }
+
+  async function handleOpenDoc(path: string) {
+    const supabase = createSupabaseBrowserClient();
+    const { data, error } = await supabase.storage.from("partner-kyc").createSignedUrl(path, 120);
+    if (error || !data?.signedUrl) {
+      alert("Could not open document: " + (error?.message ?? "unknown error"));
+      return;
+    }
+    window.open(data.signedUrl, "_blank", "noopener");
   }
 
   return (
@@ -320,6 +350,48 @@ export default function PartnersClient({
                   </button>
                 </div>
               )}
+
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">KYC Documents</p>
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${KYC_BADGE[selected.kyc_status].classes}`}>
+                    {KYC_BADGE[selected.kyc_status].label}
+                  </span>
+                </div>
+                {selected.kyc_documents.length === 0 ? (
+                  <p className="rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-400">No documents uploaded.</p>
+                ) : (
+                  <ul className="space-y-1.5">
+                    {selected.kyc_documents.map((doc: KycDocument) => (
+                      <li key={doc.path} className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 text-sm">
+                        <span className="flex-1 truncate text-slate-700" title={doc.name}>{doc.name}</span>
+                        <button
+                          onClick={() => handleOpenDoc(doc.path)}
+                          className="px-2.5 py-1 text-xs font-semibold rounded-lg border border-slate-200 text-slate-600 hover:bg-white transition-all active:scale-[0.97]"
+                        >
+                          Open
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <div className="flex gap-2 mt-2">
+                  <button
+                    disabled={isPending || selected.kyc_status === "verified"}
+                    onClick={() => handleKycStatus(selected.id, "verified")}
+                    className="flex-1 py-2 text-sm font-semibold rounded-xl border border-emerald-200 text-emerald-700 hover:bg-emerald-50 transition-all active:scale-[0.97] disabled:opacity-40"
+                  >
+                    Verify KYC
+                  </button>
+                  <button
+                    disabled={isPending || selected.kyc_status === "rejected"}
+                    onClick={() => handleKycStatus(selected.id, "rejected")}
+                    className="flex-1 py-2 text-sm font-semibold rounded-xl border border-red-200 text-red-600 hover:bg-red-50 transition-all active:scale-[0.97] disabled:opacity-40"
+                  >
+                    Reject KYC
+                  </button>
+                </div>
+              </div>
 
               <div>
                 <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">

@@ -46,7 +46,7 @@
 | T7 | Admin: Customers screen | Admin | P2 | DONE (2026-08-30) — admin `tsc` clean + live-verified (list, tiles, drawer) |
 | T8 | Admin: wire Overview dashboard + Delivery Queue off real data | Admin | P2 | DONE (already complete — plan gap-analysis was stale) |
 | T9 | Admin: Reports export as PDF + Excel (CSV already done) | Admin | P3 | IN PROGRESS — coded (Export ▾ menu: CSV/Excel/PDF), typecheck-clean; live download check pending |
-| T10 | Partner KYC document upload | Mobile + Admin + Storage | P3 | TODO |
+| T10 | Partner KYC document upload | Mobile + Admin + Storage | P3 | IN PROGRESS — migration `20260831000000` written (NOT pushed); mobile upload UI + admin review UI coded & typecheck-clean; live-verify pending |
 | T11 | (Optional) Testimonials / Why-Choose / Blog → DB + admin CMS | Full-stack | P4 | TODO |
 | — | ~~WhatsApp-to-Admin new-order alert~~ | — | — | **BLOCKED** — no WhatsApp BSP account. Out of scope until credentials exist. |
 
@@ -699,7 +699,44 @@ CSV. Admin typechecks clean.
 **Definition of done:** a partner applicant can attach a file, it lands in the `partner-kyc` bucket
 under their uid, and Admin can open it. Both apps typecheck.
 
-**Resume notes:** _(none yet)_
+**Resume notes (2026-08-31 — coded, migration NOT pushed):**
+
+- **Migration `supabase/migrations/20260831000000_partner_kyc.sql`** — NOT PUSHED. Creates:
+  - private Storage bucket `partner-kyc` (`insert into storage.buckets ... on conflict do nothing`).
+  - `partners.kyc_documents jsonb not null default '[]'` (array of `{name, path, uploaded_at}`)
+    and `partners.kyc_status text not null default 'pending' check in (pending|verified|rejected)`.
+  - 4 RLS policies on `storage.objects` (`partner_kyc_{insert,select,update,delete}_own`): an
+    authenticated user may touch objects only under a folder named after their `auth.uid()`
+    (path = `<uid>/<file>`); admins additionally get `select` on all `partner-kyc` objects.
+- **Dep:** `npx expo install expo-document-picker` (was none installed). No config plugin needed.
+- **`src/types/database.ts`** — `KycStatus` type, `KycDocument` interface; `partners` Row gains
+  `kyc_documents: KycDocument[]` + `kyc_status: KycStatus`, Insert gains both as optional.
+- **Mobile `src/app/partner/apply.tsx`** — new "KYC Documents (optional)" section: dashed
+  "Add Document" button → `DocumentPicker.getDocumentAsync({ type: ['image/*','application/pdf'] })`
+  → `fetch(uri).arrayBuffer()` → `supabase.storage.from('partner-kyc').upload('<uid>/<ts>_<name>', body, {contentType})`
+  → appends `{name, path, uploaded_at}` to local `docs`. Each uploaded row shows name + a
+  remove (×) that also `storage.remove([path])`. `docs` is written to the `partners` insert as
+  `kyc_documents`. Upload spinner + `error` surfacing. Guarded on `session`.
+- **Admin `partners/actions.ts`** — `updateKycStatus(partnerId, 'pending'|'verified'|'rejected')`.
+- **Admin `PartnersClient.tsx`** drawer — new "KYC Documents" block: `kyc_status` badge, list of
+  `kyc_documents` each with an **Open** button (`createSupabaseBrowserClient().storage.from('partner-kyc').createSignedUrl(path, 120)`
+  → `window.open`), and **Verify KYC** / **Reject KYC** buttons wired to `updateKycStatus` (with a
+  local optimistic `setSelected`). Uses the admin's cookie session → `is_admin()` satisfies the
+  storage select policy.
+- Mobile `npx tsc --noEmit` clean; admin `npx tsc --noEmit` clean. Admin eslint on changed files: pending.
+
+**TODO — pick up here:**
+1. **Push the migration** (tell the user): `npx --yes supabase db push --db-url '<pooler url from CREDENTIALS.md>'`
+   → applies `20260831000000_partner_kyc.sql`.
+   ⚠️ If `create policy ... on storage.objects` errors on the pooler (ownership), fall back to
+   pasting those 4 `create policy` statements into the dashboard SQL Editor (Storage → Policies
+   also works), and keep the bucket + `alter table` in the migration.
+2. Live-verify: on mobile, apply as a partner with a document attached → confirm the object lands
+   at `partner-kyc/<uid>/...` and `partners.kyc_documents` has the row. In admin, open that
+   application → **Open** downloads the file (signed URL) → **Verify KYC** flips `kyc_status`.
+   Clean up the test partner + object.
+3. `npx tsc --noEmit` (root) + `cd admin && npx tsc --noEmit` — re-confirm clean. Flip Status
+   Board T10 → DONE.
 
 ---
 
@@ -721,6 +758,25 @@ editable by Admin instead of hard-coded.
 ---
 
 ## 🧾 SESSION LOG (append-only — newest at top)
+
+### 2026-08-31 — T10 coded (partner KYC upload), migration unpushed
+
+Built the whole T10 surface (full detail in T10 "Resume notes"):
+- Migration `20260831000000_partner_kyc.sql` (NOT pushed): private `partner-kyc`
+  bucket + `partners.kyc_documents`/`kyc_status` + 4 uid-scoped `storage.objects`
+  RLS policies (admin gets select-all).
+- `expo-document-picker` installed (no plugin needed).
+- Mobile `partner/apply.tsx`: "Add Document" → pick image/PDF → upload to
+  `partner-kyc/<uid>/<ts>_<name>` → row added to the `partners` insert as
+  `kyc_documents`; per-doc remove also deletes the object.
+- Admin `PartnersClient.tsx` drawer: KYC status badge, document list with **Open**
+  (signed URL via the browser client), **Verify / Reject KYC** → new
+  `updateKycStatus` server action.
+- Mobile + admin `tsc` clean; admin eslint on changed files clean.
+
+Next: user pushes `20260831000000_partner_kyc.sql`, then live-verify the
+upload→review→verify round trip. (Watch for a possible ownership error on
+`create policy ... on storage.objects` via the pooler — fallback noted in T10.)
 
 ### 2026-08-30 — T6 verified 22/22 → DONE
 
