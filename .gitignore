@@ -38,6 +38,7 @@ yarn-error.*
 # local secrets — never commit
 CREDENTIALS.md
 verify_t6.mjs
+verify_t10.mjs
 
 # typescript
 *.tsbuildinfo
