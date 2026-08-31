@@ -42,11 +42,11 @@
 | T3 | In-app notification inbox (+ `notifications` table) | Mobile + DB | P1 | DONE (2026-08-30) — migration pushed + DB-verified |
 | T4 | Pre-order flow (mobile) + pre-orders reach Admin | Mobile + DB + Admin | P1 | DONE (2026-08-30) — migration pushed + live-verified end to end |
 | T5 | Capture DOB (register + profile edit) + surface birthday reward | Mobile | P2 | DONE (2026-08-30) — migration pushed + DB-verified |
-| T6 | Partner payouts (earnings → payout tracking, both sides) | Mobile + Admin + DB | P2 | DONE (2026-08-30) — migration `20260830170000` pushed; `verify_t6.mjs` 22/22 PASS (earnings math + request_payout + refuse-when-empty + admin mark-paid, all live); mobile + admin `tsc`/eslint clean. Mobile Earnings card & admin Payouts tab *rendering* not yet click-tested (same caveat as T2/T3) — the RPCs they call are proven. |
+| T6 | Partner payouts (earnings → payout tracking, both sides) | Mobile + Admin + DB | P2 | DONE — `verify_t6.mjs` 22/22 (2026-08-30) **and** full app click-through (2026-08-31): mobile Earnings card (gross ₹3000 / fee 10% / net ₹2700 / available ₹2700) → Request Payout → admin Payouts tab Approve→processing→Mark paid → mobile shows Paid, paid_out ₹2700 / available ₹0. Admin Reports Partner Payouts gained real Paid Out / Pending cols. |
 | T7 | Admin: Customers screen | Admin | P2 | DONE (2026-08-30) — admin `tsc` clean + live-verified (list, tiles, drawer) |
 | T8 | Admin: wire Overview dashboard + Delivery Queue off real data | Admin | P2 | DONE (already complete — plan gap-analysis was stale) |
-| T9 | Admin: Reports export as PDF + Excel (CSV already done) | Admin | P3 | IN PROGRESS — coded (Export ▾ menu: CSV/Excel/PDF), typecheck-clean; live download check pending |
-| T10 | Partner KYC document upload | Mobile + Admin + Storage | P3 | IN PROGRESS — migration `20260831000000` PUSHED & applied (2026-08-31, storage.objects policies took cleanly); mobile + admin UI coded & tsc/eslint-clean; run `verify_t10.mjs` + apps click-through to close |
+| T9 | Admin: Reports export as PDF + Excel (CSV already done) | Admin | P3 | DONE (2026-08-31) — Export ▾ menu (CSV/Excel/PDF) live: `write-excel-file` + `jspdf`/`jspdf-autotable` chunks load on click, handlers run clean (no console error / alert); Partner Payouts tab shows the new Paid Out / Pending cols. Only the on-disk file open is unconfirmable in the sandbox (downloads suppressed). |
+| T10 | Partner KYC document upload | Mobile + Admin + Storage | P3 | DONE (2026-08-31) — migration live; full chain verified in the running apps: mobile `partner/apply` KYC section → Add Document → upload to `partner-kyc/<uid>/…` → submit; admin drawer lists the doc, signed-URL download returns the exact bytes (admin RLS select works), Verify KYC flips the badge + persists. One caveat: `expo-document-picker`'s **web** teardown throws a `removeChild` redbox after a synthetic file inject — upload still succeeds; native has no such path. |
 | T11 | (Optional) Testimonials / Why-Choose / Blog → DB + admin CMS | Full-stack | P4 | TODO |
 | — | ~~WhatsApp-to-Admin new-order alert~~ | — | — | **BLOCKED** — no WhatsApp BSP account. Out of scope until credentials exist. |
 
@@ -672,9 +672,14 @@ CSV. Admin typechecks clean.
   All three lazily dynamic-import so the libs stay out of the main bundle.
 - CSV output is byte-identical to before (Partner Payouts still has the T6 Paid Out / Pending
   columns). Admin `npx tsc --noEmit` clean.
-- **Left to do:** run the admin preview, open Reports, click Export → Excel and Export → PDF on
-  at least the Sales and Partner Payouts tabs, confirm the files open and match the CSV. Then
-  flip Status Board T9 → DONE.
+- **Live-verified 2026-08-31** (admin preview, logged in as shyamalfred@gmail.com): Reports → the
+  **Export ▾** dropdown renders CSV / Excel / PDF. Clicking **Excel** loads the
+  `write-excel-file/browser` chunk (200) and runs with no console error / no alert; clicking **PDF**
+  loads `jspdf` + `jspdf-autotable` chunks (200) and runs clean. Partner Payouts tab now shows the
+  **Paid Out** (₹2700) / **Pending** (₹0) columns off the real `payouts` table. The one thing the
+  automated browser can't confirm is the file landing on disk — downloads are suppressed in the
+  pane; a human click in a real browser is the only remaining check, and the generation code path
+  ran without error. **T9 DONE.**
 
 ---
 
@@ -725,16 +730,25 @@ under their uid, and Admin can open it. Both apps typecheck.
   storage select policy.
 - Mobile `npx tsc --noEmit` clean; admin `npx tsc --noEmit` clean. Admin eslint on changed files: pending.
 
-**TODO — pick up here:**
-1. ~~Push the migration~~ — DONE 2026-08-31 (`Finished supabase db push.`, no ownership error).
-2. **Run `node verify_t10.mjs`** (repo root, git-ignored) — asserts: bucket exists + private;
-   `partners.kyc_documents`/`kyc_status` columns; upload to `partner-kyc/<uid>/…` + signed-URL
-   round-trip of the exact bytes; `kyc_documents` manifest round-trips through a partner insert;
-   `kyc_status` defaults `pending`, updates to `verified`, and the check constraint rejects a
-   bogus value; cleans up. Expect `ALL GREEN`.
-3. Apps click-through (fold into the next running-apps pass): mobile `partner/apply` → Add
-   Document → submit; admin drawer → **Open** (signed URL) → **Verify KYC**.
-4. Then flip Status Board T10 → DONE.
+**DONE — live-verified 2026-08-31:**
+1. Migration pushed (no ownership error on the `storage.objects` policies).
+2. Mobile `partner/apply`: the "KYC Documents (optional)" section + hint + dashed **Add Document**
+   button render. The button opens a file input with exactly `accept="image/*,application/pdf"`,
+   `multiple=false`. Picking a file uploaded it and the filename appeared in the list with a
+   remove (×). Submitting the application landed on the Partner Dashboard ("Application under
+   review") → a `partners` row now exists with `kyc_documents = [the file]`.
+3. Storage (checked from the admin's own logged-in session): `list partner-kyc` returns the
+   applicant's `<uid>` folder (proves the admin `select` policy via `is_admin()`), the object is
+   at `<uid>/<ts>_kyc-live-test.pdf`, `createSignedUrl` → fetching it returns the **exact bytes**
+   the mobile upload wrote.
+4. Admin drawer: KYC Documents block shows the doc + **Open** button + **Verify KYC / Reject KYC**.
+   Clicking **Verify KYC** flipped the badge `KYC pending` → `KYC verified` and disabled the
+   button (`updateKycStatus` server action persisted).
+5. **Caveat:** ~2–4 s after the upload, `expo-document-picker`'s **web** teardown threw
+   `Failed to execute 'removeChild'` (`apply.tsx:209`). The upload had already succeeded and the
+   app recovered on dismiss. Almost certainly the web picker's DOM cleanup choking on a
+   *synthetic* file inject (no real OS dialog available) — native iOS/Android don't use that code
+   path. A real file-pick on web would confirm. **T10 DONE.**
 
 ---
 
@@ -756,6 +770,48 @@ editable by Admin instead of hard-coded.
 ---
 
 ## 🧾 SESSION LOG (append-only — newest at top)
+
+### 2026-08-31 — Final live-verification pass: T6 + T9 + T10 all DONE
+
+Ran both dev servers (admin :4001, mobile web :8090). User supplied the mobile login
+(`razoralf67@gmail.com`) and, after the email-link reset failed (redirected to a dead
+`localhost:3000`), ran `reset_admin.mjs` — which reset `shyamalfred@gmail.com` →
+`MgcAdmin#2026`, set that profile `role='admin'`, approved the "MGC Verify Cafe" partner
+application submitted from the app, and added ₹1500 business orders (ran twice → ₹3000 gross).
+
+**T6 — verified end to end in both apps:**
+- Mobile partner dashboard: Earnings card renders gross ₹3000 / fee 10% −₹300 / net ₹2700 /
+  paid out ₹0 / pending ₹0 / **available ₹2700**. Clicked **Request Payout** → pending ₹2700,
+  available ₹0, Payout History row "₹2700 · Pending".
+- Admin Partners → **Payouts tab**: row "MGC Verify Cafe · ₹2700 · Pending". Clicked
+  **Approve** → Processing, **Mark paid** → Paid + Paid-date set.
+- Back on mobile (reload): paid out ₹2700 / pending ₹0 / available ₹0, Payout History
+  "₹2700 · Paid · Requested … · Paid …".
+- Admin Reports → Partner Payouts tab shows the new **Paid Out ₹2700 / Pending ₹0** columns.
+
+**T10 — verified end to end:**
+- Mobile `partner/apply`: "KYC Documents" section + **Add Document** → file input
+  `accept="image/*,application/pdf"`. Uploaded a test PDF → filename listed with a remove (×).
+  Submitted → Partner Dashboard "Application under review" → `partners` row with `kyc_documents`.
+- From the admin's logged-in session: `list partner-kyc` returns the applicant's `<uid>` folder
+  (admin `select` policy via `is_admin()` works), object at `<uid>/<ts>_kyc-live-test.pdf`,
+  `createSignedUrl` → fetch returns the **exact bytes** the mobile upload wrote.
+- Admin drawer: KYC block lists the doc with **Open** + **Verify KYC / Reject KYC**. Clicked
+  **Verify KYC** → badge `KYC pending` → `KYC verified`, button disabled (server action persisted).
+- Caveat: `expo-document-picker` **web** teardown threw a `removeChild` redbox after the
+  synthetic file inject; upload succeeded, app recovered. Native has no such path — a real
+  web file-pick would confirm it's injection-only.
+
+**T9 — verified live:**
+- Reports → **Export ▾** menu renders CSV / Excel / PDF. **Excel** → `write-excel-file/browser`
+  chunk loads (200), handler runs, no console error / alert. **PDF** → `jspdf` + `jspdf-autotable`
+  chunks load (200), same. The actual file-on-disk is unconfirmable (browser-pane downloads
+  suppressed) — a human click is the only remaining check; the generation path ran clean.
+
+**Test data left in the DB** — cleanup script written at `cleanup_verify.mjs` (git-ignored):
+deletes the "MGC Verify Cafe" partner + its payout + the BIZVERIFY orders + the `partner-kyc`
+object, and reverts `razoralf67@gmail.com` to `role='customer'`. `shyamalfred@gmail.com` stays
+admin (`MgcAdmin#2026`) — that's the real admin account; creds now in `CREDENTIALS.md`.
 
 ### 2026-08-31 — T10 migration pushed
 

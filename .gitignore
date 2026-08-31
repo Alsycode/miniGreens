@@ -39,6 +39,8 @@ yarn-error.*
 CREDENTIALS.md
 verify_t6.mjs
 verify_t10.mjs
+reset_admin.mjs
+cleanup_verify.mjs
 
 # typescript
 *.tsbuildinfo
