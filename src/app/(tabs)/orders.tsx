@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { View, ScrollView, StyleSheet, Pressable } from 'react-native';
+import { View, ScrollView, StyleSheet, Pressable, Image } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
@@ -17,6 +17,7 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { Loading } from '../../components/ui/Loading';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../store/useAuthStore';
+import { resolveImageSource, getProductPlaceholder } from '../../utils/placeholders';
 import type { Database, OrderStatus, PaymentStatus } from '../../types/database';
 
 type OrderRow = Database['public']['Tables']['orders']['Row'];
@@ -109,7 +110,11 @@ function OrderCard({ order, index }: { order: OrderWithItems; index: number }) {
           <View style={styles.orderItems}>
             {order.order_items.map((item) => (
               <View key={item.id} style={styles.orderItem}>
-                <View style={styles.orderItemImage} />
+                <Image
+                  source={resolveImageSource(item.image || getProductPlaceholder(item.product_name))}
+                  style={styles.orderItemImage}
+                  resizeMode="cover"
+                />
                 <View style={styles.orderItemInfo}>
                   <Typography variant="bodySmall" weight="semibold">
                     {item.product_name}
@@ -128,7 +133,7 @@ function OrderCard({ order, index }: { order: OrderWithItems; index: number }) {
                 ? `Expected ${formatDate(order.expected_availability_date)}`
                 : formatDate(order.created_at)}
             </Typography>
-            <Typography variant="body" weight="bold" color={colors.primaryDark}>
+            <Typography variant="body" weight="bold" color={colors.accent}>
               ₹{order.total.toFixed(2)}
             </Typography>
           </View>
@@ -155,6 +160,10 @@ export default function OrdersScreen() {
         .from('orders')
         .select('*, order_items(*)')
         .eq('profile_id', profile.id)
+        // Business orders placed via the partner flow are fulfilled through
+        // Admin and have no self-serve payment — keep them out of the
+        // customer Orders tab (BUG-05).
+        .neq('order_type', 'business')
         .order('created_at', { ascending: false })
         .then(({ data }) => {
           if (!cancelled) {
@@ -181,7 +190,7 @@ export default function OrdersScreen() {
           entering={FadeInUp.springify().damping(31)}
           style={styles.header}
         >
-          <Typography variant="h3" color={colors.primaryDark}>
+          <Typography variant="h3" color={colors.accent}>
             Orders
           </Typography>
         </Animated.View>
@@ -202,7 +211,7 @@ export default function OrdersScreen() {
         entering={FadeInUp.springify().damping(31)}
         style={styles.header}
       >
-        <Typography variant="h3" color={colors.primaryDark}>
+        <Typography variant="h3" color={colors.accent}>
           Orders
         </Typography>
       </Animated.View>

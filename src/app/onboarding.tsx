@@ -2,30 +2,93 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   StyleSheet,
-  Dimensions,
+  useWindowDimensions,
   FlatList,
   Image,
+  Pressable,
   NativeScrollEvent,
   NativeSyntheticEvent,
 } from 'react-native';
 import { router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
-  FadeInUp,
-  FadeIn,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { colors, spacing, borderRadius } from '../theme';
 import { Typography } from '../components/ui/Typography';
-import { Button } from '../components/ui/Button';
+import { Logo } from '../components/Logo';
 import { useAppStore } from '../store/useAppStore';
-import { onboardingSlides } from '../mock';
+import { onboardingSlides, OnboardingFeature } from '../mock';
 
-const { width, height } = Dimensions.get('window');
+// Slightly darker green than the theme chip colour so the dark-green product
+// photography on each slide melts into the canvas.
+const SLIDE_BG = '#0A2416';
+
+// ─── Brand lockup ─────────────────────────────────────────────────────────────
+
+function BrandMark() {
+  return (
+    <View style={styles.brand}>
+      <Logo width={132} />
+    </View>
+  );
+}
+
+// ─── Feature list (rows) ──────────────────────────────────────────────────────
+
+function FeatureRows({ features }: { features: OnboardingFeature[] }) {
+  const hasDescriptions = features.some((f) => !!f.description);
+  return (
+    <View style={styles.rows}>
+      {features.map((f, i) => (
+        <View key={f.title} style={[styles.row, hasDescriptions && i > 0 && styles.rowDivider]}>
+          <View style={styles.rowIcon}>
+            <Ionicons name={f.icon as any} size={20} color={colors.secondary} />
+          </View>
+          <View style={styles.rowBody}>
+            <Typography variant="h4" color={colors.textInverse} style={styles.rowTitle}>
+              {f.title}
+            </Typography>
+            {f.description ? (
+              <Typography variant="bodySmall" color="rgba(255,255,255,0.6)">
+                {f.description}
+              </Typography>
+            ) : null}
+          </View>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+// ─── Feature list (cards) ─────────────────────────────────────────────────────
+
+function FeatureCards({ features }: { features: OnboardingFeature[] }) {
+  return (
+    <View style={styles.cards}>
+      {features.map((f) => (
+        <View key={f.title} style={styles.card}>
+          <Ionicons name={f.icon as any} size={26} color={colors.secondary} />
+          <Typography
+            variant="bodySmall"
+            color={colors.textInverse}
+            align="center"
+            weight="bold"
+            style={styles.cardTitle}
+          >
+            {f.title}
+          </Typography>
+        </View>
+      ))}
+    </View>
+  );
+}
 
 // ─── Animated Dot ─────────────────────────────────────────────────────────────
 
@@ -48,7 +111,11 @@ function SliderDot({ isActive }: { isActive: boolean }) {
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 
+const FOOTER_HEIGHT = 176;
+
 export default function OnboardingScreen() {
+  const insets = useSafeAreaInsets();
+  const { width, height } = useWindowDimensions();
   const [currentIndex, setCurrentIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
   const setOnboardingComplete = useAppStore((s) => s.setOnboardingComplete);
@@ -69,14 +136,17 @@ export default function OnboardingScreen() {
   };
 
   const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const index = Math.round(e.nativeEvent.contentOffset.x / width);
-    setCurrentIndex(index);
+    setCurrentIndex(Math.round(e.nativeEvent.contentOffset.x / width));
   };
 
   const isLastSlide = currentIndex === onboardingSlides.length - 1;
+  const topPad = insets.top + spacing.md;
+  const bottomPad = insets.bottom + spacing['2xl'];
 
   return (
     <View style={styles.container}>
+      <StatusBar style="light" />
+
       <FlatList
         ref={flatListRef}
         data={onboardingSlides}
@@ -87,102 +157,191 @@ export default function OnboardingScreen() {
         scrollEventThrottle={16}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <View style={styles.slide}>
-            <Image source={{ uri: item.image }} style={styles.image} />
-            <LinearGradient
-              colors={['transparent', 'rgba(10,36,22,0.92)']}
-              style={styles.gradient}
-            />
-            <View style={styles.content}>
-              <Animated.View entering={FadeInUp.delay(80).springify().damping(31)}>
-                <Typography variant="h1" color={colors.textInverse} style={styles.title}>
-                  {item.title}
-                </Typography>
-              </Animated.View>
-              <Animated.View entering={FadeInUp.delay(160).springify().damping(31)}>
-                <Typography variant="body" color="rgba(255,255,255,0.78)" style={styles.subtitle}>
-                  {item.subtitle}
-                </Typography>
-              </Animated.View>
+          <View
+            style={[
+              styles.slide,
+              {
+                width,
+                height,
+                paddingTop: topPad,
+                paddingBottom: bottomPad + FOOTER_HEIGHT,
+              },
+            ]}
+          >
+            <View
+              style={[
+                styles.hero,
+                {
+                  top: topPad + height * 0.02,
+                  right: -width * 0.08,
+                  width: width * 0.74,
+                  height: height * 0.44,
+                  pointerEvents: 'none',
+                },
+              ]}
+            >
+              <Image source={item.image} style={styles.heroImage} resizeMode="cover" />
+              {/* Blend the photo's straight edges into the dark-green canvas */}
+              <LinearGradient
+                colors={[SLIDE_BG, 'rgba(10,36,22,0.05)', 'transparent']}
+                start={{ x: 0, y: 0.5 }}
+                end={{ x: 0.6, y: 0.5 }}
+                style={StyleSheet.absoluteFill}
+              />
+              <LinearGradient
+                colors={['transparent', 'rgba(10,36,22,0.4)', SLIDE_BG]}
+                start={{ x: 0.5, y: 0.45 }}
+                end={{ x: 0.5, y: 1 }}
+                style={StyleSheet.absoluteFill}
+              />
             </View>
+
+            <BrandMark />
+
+            <View style={{ maxWidth: width * 0.66 }}>
+              <Typography variant="h1" color={colors.textInverse}>
+                {item.title}
+                {'  '}
+                <Ionicons name="leaf" size={26} color={colors.secondary} />
+              </Typography>
+            </View>
+
+            <Typography
+              variant="body"
+              color="rgba(255,255,255,0.72)"
+              style={[styles.subtitle, { maxWidth: width * 0.6 }]}
+            >
+              {item.subtitle}
+            </Typography>
+
+            <View style={styles.spacer} />
+
+            {item.featureStyle === 'cards' ? (
+              <FeatureCards features={item.features} />
+            ) : (
+              <FeatureRows features={item.features} />
+            )}
           </View>
         )}
       />
 
-      <View style={styles.footer}>
-        <Animated.View entering={FadeIn.delay(100).duration(400)} style={styles.pagination}>
+      <View style={[styles.footer, { paddingBottom: bottomPad }]}>
+        <View style={styles.pagination}>
           {onboardingSlides.map((_, index) => (
             <SliderDot key={index} isActive={index === currentIndex} />
           ))}
-        </Animated.View>
+        </View>
 
-        <Animated.View entering={FadeInUp.delay(300).springify().damping(31)} style={styles.buttons}>
-          <Button
-            title={isLastSlide ? 'Get Started' : 'Next'}
+        <View style={styles.buttons}>
+          <Pressable
             onPress={handleNext}
-            size="lg"
-            fullWidth
-          />
+            style={({ pressed }) => [styles.cta, pressed && styles.ctaPressed]}
+          >
+            <Typography variant="body" color="#06130D" weight="bold" style={styles.ctaLabel}>
+              {isLastSlide ? 'Get Started' : 'Next'}
+            </Typography>
+          </Pressable>
           {!isLastSlide && (
-            <Button
-              title="Skip"
-              variant="ghost"
-              onPress={handleGetStarted}
-              style={styles.skipButton}
-            />
+            <Pressable onPress={handleGetStarted} style={styles.skipButton} hitSlop={12}>
+              <Typography variant="body" color={colors.secondary} weight="bold">
+                Skip
+              </Typography>
+            </Pressable>
           )}
-        </Animated.View>
+        </View>
       </View>
     </View>
   );
 }
 
+const CARD_GAP = spacing.md;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.primaryDark,
+    backgroundColor: SLIDE_BG,
   },
   slide: {
-    width,
-    height,
+    paddingHorizontal: spacing['2xl'],
   },
-  image: {
-    width,
-    height,
-    resizeMode: 'cover',
-  },
-  gradient: {
+  hero: {
     position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: height * 0.65,
   },
-  content: {
-    position: 'absolute',
-    bottom: height * 0.21,
-    left: spacing['2xl'],
-    right: spacing['2xl'],
+  heroImage: {
+    width: '100%',
+    height: '100%',
   },
-  title: {
-    marginBottom: spacing.lg,
+  brand: {
+    marginBottom: spacing['4xl'],
   },
   subtitle: {
-    lineHeight: 26,
+    marginTop: spacing.lg,
+    lineHeight: 24,
   },
+  spacer: {
+    flex: 1,
+    minHeight: spacing['2xl'],
+  },
+  // ── rows ──
+  rows: {
+    width: '100%',
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.md,
+  },
+  rowDivider: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'rgba(255,255,255,0.12)',
+  },
+  rowIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: borderRadius.full,
+    backgroundColor: 'rgba(150,255,31,0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.lg,
+  },
+  rowBody: {
+    flex: 1,
+  },
+  rowTitle: {
+    marginBottom: 2,
+  },
+  // ── cards ──
+  cards: {
+    flexDirection: 'row',
+    gap: CARD_GAP,
+  },
+  card: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.14)',
+    borderRadius: borderRadius.xl,
+    paddingVertical: spacing.xl,
+    paddingHorizontal: spacing.sm,
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.03)',
+  },
+  cardTitle: {
+    marginTop: spacing.md,
+  },
+  // ── footer ──
   footer: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
     paddingHorizontal: spacing['2xl'],
-    paddingBottom: spacing['6xl'],
     paddingTop: spacing.xl,
+    backgroundColor: SLIDE_BG,
   },
   pagination: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginBottom: spacing['2xl'],
+    marginBottom: spacing.xl,
   },
   dot: {
     width: 8,
@@ -198,7 +357,25 @@ const styles = StyleSheet.create({
   buttons: {
     alignItems: 'center',
   },
+  cta: {
+    width: '100%',
+    minHeight: 58,
+    borderRadius: borderRadius.xl,
+    backgroundColor: colors.secondary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.lg,
+  },
+  ctaPressed: {
+    opacity: 0.9,
+    transform: [{ scale: 0.98 }],
+  },
+  ctaLabel: {
+    fontSize: 17,
+    letterSpacing: 0.2,
+  },
   skipButton: {
-    marginTop: spacing.md,
+    marginTop: spacing.lg,
+    paddingVertical: spacing.sm,
   },
 });

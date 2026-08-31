@@ -104,6 +104,7 @@ export default function RootLayout() {
           <Stack.Screen name="profile/terms" options={{ animation: 'slide_from_right' }} />
           <Stack.Screen name="profile/privacy" options={{ animation: 'slide_from_right' }} />
           <Stack.Screen name="partner/apply" options={{ animation: 'slide_from_right' }} />
+          <Stack.Screen name="partner/submitted" options={{ animation: 'fade', gestureEnabled: false }} />
           <Stack.Screen name="partner/dashboard" options={{ animation: 'slide_from_right' }} />
           <Stack.Screen name="partner/business-order" options={{ animation: 'slide_from_right' }} />
           <Stack.Screen name="subscription/manage" options={{ animation: 'slide_from_right' }} />

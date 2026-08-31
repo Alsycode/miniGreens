@@ -1,5 +1,17 @@
 import { create } from 'zustand';
+import { createJSONStorage, persist } from 'zustand/middleware';
+import { createMMKV } from 'react-native-mmkv';
 import { supabase } from '../lib/supabase';
+
+const storage = createMMKV({ id: 'cart-store' });
+
+const mmkvJSONStorage = createJSONStorage(() => ({
+  getItem: (key: string) => storage.getString(key) ?? null,
+  setItem: (key: string, value: string) => storage.set(key, value),
+  removeItem: (key: string) => {
+    storage.remove(key);
+  },
+}));
 
 export interface CartItem {
   productId: string;
@@ -18,61 +30,71 @@ interface CartState {
   clearCart: () => void;
 }
 
-export const useCartStore = create<CartState>((set, get) => ({
-  items: [],
+export const useCartStore = create<CartState>()(
+  persist(
+    (set, get) => ({
+      items: [],
 
-  addItemBySlug: async (slug, quantity = 1) => {
-    const { data: product } = await supabase
-      .from('products')
-      .select('id, slug, name, price, images')
-      .eq('slug', slug)
-      .maybeSingle();
-    if (!product) {
-      return false;
-    }
+      addItemBySlug: async (slug, quantity = 1) => {
+        const { data: product } = await supabase
+          .from('products')
+          .select('id, slug, name, price, images')
+          .eq('slug', slug)
+          .maybeSingle();
+        if (!product) {
+          return false;
+        }
 
-    set((state) => {
-      const existing = state.items.find((i) => i.productId === product.id);
-      if (existing) {
-        return {
-          items: state.items.map((i) =>
-            i.productId === product.id ? { ...i, quantity: i.quantity + quantity } : i,
-          ),
-        };
-      }
-      return {
-        items: [
-          ...state.items,
-          {
-            productId: product.id,
-            slug: product.slug,
-            name: product.name,
-            price: Number(product.price),
-            image: product.images[0] ?? null,
-            quantity,
-          },
-        ],
-      };
-    });
-    return true;
-  },
+        set((state) => {
+          const existing = state.items.find((i) => i.productId === product.id);
+          if (existing) {
+            return {
+              items: state.items.map((i) =>
+                i.productId === product.id ? { ...i, quantity: i.quantity + quantity } : i,
+              ),
+            };
+          }
+          return {
+            items: [
+              ...state.items,
+              {
+                productId: product.id,
+                slug: product.slug,
+                name: product.name,
+                price: Number(product.price),
+                image: product.images[0] ?? null,
+                quantity,
+              },
+            ],
+          };
+        });
+        return true;
+      },
 
-  removeItem: (productId) => {
-    set((state) => ({ items: state.items.filter((i) => i.productId !== productId) }));
-  },
+      removeItem: (productId) => {
+        set((state) => ({ items: state.items.filter((i) => i.productId !== productId) }));
+      },
 
-  updateQuantity: (productId, quantity) => {
-    if (quantity <= 0) {
-      get().removeItem(productId);
-      return;
-    }
-    set((state) => ({
-      items: state.items.map((i) => (i.productId === productId ? { ...i, quantity } : i)),
-    }));
-  },
+      updateQuantity: (productId, quantity) => {
+        if (quantity <= 0) {
+          get().removeItem(productId);
+          return;
+        }
+        set((state) => ({
+          items: state.items.map((i) => (i.productId === productId ? { ...i, quantity } : i)),
+        }));
+      },
 
-  clearCart: () => set({ items: [] }),
-}));
+      clearCart: () => set({ items: [] }),
+    }),
+    {
+      // BUG-16: persist the cart so it survives an app restart.
+      name: 'minigreens-cart-store',
+      storage: mmkvJSONStorage,
+      partialize: (state) => ({ items: state.items }),
+    },
+  ),
+);
 
 export function cartSubtotal(items: CartItem[]): number {
   return items.reduce((sum, i) => sum + i.price * i.quantity, 0);

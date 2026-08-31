@@ -40,7 +40,7 @@ const contactMethods = [
     icon: 'logo-instagram' as const,
     label: 'Instagram',
     value: '@minigreens.in',
-    action: () => Linking.openURL('https://instagram.com'),
+    action: () => Linking.openURL('https://instagram.com/minigreens.in'),
     hint: 'Follow for fresh updates',
   },
 ];

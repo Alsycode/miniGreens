@@ -29,14 +29,40 @@ export default function CheckoutSuccessScreen() {
   const { orderId } = useLocalSearchParams<{ orderId: string }>();
   const insets = useSafeAreaInsets();
   const [order, setOrder] = useState<OrderRow | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
 
   const iconScale = useSharedValue(0);
   const pulseScale = useSharedValue(0.8);
   const pulseOpacity = useSharedValue(0);
 
   useEffect(() => {
-    if (!orderId) return;
-    supabase.from('orders').select('*').eq('id', orderId).maybeSingle().then(({ data }) => setOrder(data));
+    if (!orderId) {
+      setLoadFailed(true);
+      return;
+    }
+    let cancelled = false;
+    supabase
+      .from('orders')
+      .select('*')
+      .eq('id', orderId)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        if (error || !data) {
+          setLoadFailed(true);
+        } else {
+          setOrder(data);
+        }
+      });
+    // Payment has already succeeded by the time we land here — never leave the
+    // user on an endless spinner if the order row is slow / blocked (RLS, bad id).
+    const timer = setTimeout(() => {
+      if (!cancelled) setLoadFailed(true);
+    }, 8000);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, [orderId]);
 
   useEffect(() => {
@@ -48,10 +74,58 @@ export default function CheckoutSuccessScreen() {
   const iconStyle = useAnimatedStyle(() => ({ transform: [{ scale: iconScale.value }] }));
   const pulseStyle = useAnimatedStyle(() => ({ transform: [{ scale: pulseScale.value }], opacity: pulseOpacity.value }));
 
-  if (!order) {
+  if (!order && !loadFailed) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <Loading fullScreen />
+      </View>
+    );
+  }
+
+  if (!order) {
+    // Payment succeeded but we couldn't load the order row. Don't trap the user.
+    return (
+      <View style={[styles.container, { paddingTop: insets.top }]}>
+        <View style={styles.confirmHeader}>
+          <View style={styles.confirmIconWrapper}>
+            <LinearGradient
+              colors={[colors.successLight, colors.green[100]]}
+              style={styles.confirmIconBg}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <Ionicons name="checkmark" size={44} color={colors.success} />
+            </LinearGradient>
+          </View>
+          <View style={styles.confirmTextBlock}>
+            <Typography variant="h3" color={colors.text} align="center" style={{ marginBottom: spacing.xs }}>
+              Payment Successful!
+            </Typography>
+            <Typography variant="body" color={colors.textSecondary} align="center">
+              Your order has been placed. We couldn't load the details here, but you can
+              find it in My Orders.
+            </Typography>
+          </View>
+        </View>
+        <View style={styles.body}>
+          <Button
+            title="View My Orders"
+            variant="primary"
+            size="lg"
+            fullWidth
+            onPress={() => {
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              router.replace('/(tabs)/orders');
+            }}
+          />
+          <Button
+            title="Continue Shopping"
+            variant="outline"
+            fullWidth
+            onPress={() => router.replace('/(tabs)/explore')}
+            style={{ marginTop: spacing.md }}
+          />
+        </View>
       </View>
     );
   }

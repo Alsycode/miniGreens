@@ -387,7 +387,7 @@ export default function HomeScreen() {
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
           />
-          <Typography variant="h1" color="rgba(202,239,97,0.12)" style={styles.subscriptionBigNum}>
+          <Typography variant="h1" color="rgba(150,255,31,0.12)" style={styles.subscriptionBigNum}>
             15%
           </Typography>
           <View style={styles.subscriptionContent}>
@@ -714,7 +714,7 @@ const styles = StyleSheet.create({
   },
   seasonalTag: {
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(202,239,97,0.12)',
+    backgroundColor: 'rgba(150,255,31,0.12)',
     borderRadius: borderRadius.full,
     paddingHorizontal: spacing.md,
     paddingVertical: 5,
@@ -765,7 +765,7 @@ const styles = StyleSheet.create({
   },
   subscriptionTag: {
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(202,239,97,0.12)',
+    backgroundColor: 'rgba(150,255,31,0.12)',
     borderRadius: borderRadius.full,
     paddingHorizontal: spacing.md,
     paddingVertical: 5,
@@ -816,7 +816,7 @@ const styles = StyleSheet.create({
     left: spacing.sm,
     backgroundColor: 'rgba(6,19,13,0.75)',
     borderWidth: 1,
-    borderColor: 'rgba(202,239,97,0.35)',
+    borderColor: 'rgba(150,255,31,0.35)',
     paddingHorizontal: spacing.sm,
     paddingVertical: 4,
     borderRadius: borderRadius.full,

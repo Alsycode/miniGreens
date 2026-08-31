@@ -61,7 +61,7 @@ function CartStepper({ slug, compact = false }: { slug: string; compact?: boolea
       <Pressable style={styles.stepperBtn} onPress={dec} hitSlop={6} disabled={qty === 0}>
         <Ionicons name="remove" size={14} color={qty === 0 ? colors.textTertiary : colors.primary} />
       </Pressable>
-      <Typography variant="bodySmall" weight="bold" color={colors.text} style={styles.stepperQty}>
+      <Typography variant="bodySmall" weight="bold" color={colors.accent} style={styles.stepperQty}>
         {qty}
       </Typography>
       <Pressable style={styles.stepperBtn} onPress={inc} hitSlop={6}>
@@ -115,7 +115,7 @@ export function ProductCard({ product, onPress, variant = 'default', index = 0, 
               </Typography>
             </View>
             <View style={styles.priceRow}>
-              <Typography variant="h4" color={accent} weight="bold">
+              <Typography variant="h4" color={colors.accent} weight="bold">
                 ₹{product.price.toFixed(0)}
               </Typography>
               {product.originalPrice && (
@@ -169,11 +169,10 @@ export function ProductCard({ product, onPress, variant = 'default', index = 0, 
             />
           </Pressable>
 
-          <View style={styles.unitBadgeStandalone}>
-            <Typography style={styles.unitBadgeText} color="#06130D">{product.unit}</Typography>
-          </View>
-
           <View style={styles.seasonalOverlayBody}>
+            <View style={styles.unitBadgeInline}>
+              <Typography style={styles.unitBadgeText} color="#06130D">{product.unit}</Typography>
+            </View>
             <Typography variant="body" weight="bold" color={colors.textInverse} numberOfLines={1}>
               {product.name}
             </Typography>
@@ -184,7 +183,7 @@ export function ProductCard({ product, onPress, variant = 'default', index = 0, 
             <View style={styles.seasonalBottom}>
               <View>
                 <Typography variant="caption" color="rgba(255,255,255,0.55)">Price</Typography>
-                <Typography variant="h4" weight="bold" color={colors.textInverse}>
+                <Typography variant="h4" weight="bold" color={colors.accent}>
                   ₹{product.price.toFixed(0)}
                 </Typography>
               </View>
@@ -220,7 +219,7 @@ export function ProductCard({ product, onPress, variant = 'default', index = 0, 
               {product.name}
             </Typography>
             <View style={styles.compactPriceRow}>
-              <Typography variant="bodySmall" color={accent} weight="bold">
+              <Typography variant="bodySmall" color={colors.accent} weight="bold">
                 ₹{product.price.toFixed(0)}
               </Typography>
               <CartStepper slug={product.slug} compact />
@@ -266,13 +265,12 @@ export function ProductCard({ product, onPress, variant = 'default', index = 0, 
           />
         </Pressable>
 
-        <View style={[styles.unitBadgeStandalone, { backgroundColor: accent }]}>
-          <Typography style={styles.unitBadgeText} color="#06130D">
-            {product.unit}
-          </Typography>
-        </View>
-
         <View style={styles.defaultOverlayBody}>
+          <View style={[styles.unitBadgeInline, { backgroundColor: accent }]}>
+            <Typography style={styles.unitBadgeText} color="#06130D">
+              {product.unit}
+            </Typography>
+          </View>
           <Typography variant="body" weight="bold" color={colors.textInverse} numberOfLines={1}>
             {product.name}
           </Typography>
@@ -286,7 +284,7 @@ export function ProductCard({ product, onPress, variant = 'default', index = 0, 
           </Typography>
 
           <View style={styles.bottomRow}>
-            <Typography variant="h4" weight="bold" color={accent}>
+            <Typography variant="h4" weight="bold" color={colors.accent}>
               ₹{product.price.toFixed(0)}
             </Typography>
             <CartStepper slug={product.slug} />
@@ -391,6 +389,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
     borderRadius: borderRadius.sm,
+  },
+  // Unit ("350ml") badge sits in normal flow at the top of the overlay body,
+  // directly above the product name — avoids the old absolute badge being
+  // overlapped by a tall (2-line) name/description block.
+  unitBadgeInline: {
+    alignSelf: 'flex-start',
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: borderRadius.sm,
+    marginBottom: spacing.sm,
   },
   seasonalOverlayBody: {
     position: 'absolute',

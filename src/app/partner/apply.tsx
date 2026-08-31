@@ -105,7 +105,7 @@ export default function PartnerApplyScreen() {
       setError(insertError.message);
       return;
     }
-    router.replace('/partner/dashboard');
+    router.replace('/partner/submitted');
   };
 
   return (

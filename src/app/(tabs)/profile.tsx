@@ -18,6 +18,7 @@ import { Card } from '../../components/ui/Card';
 import { profile as mockProfile } from '../../mock';
 import { useAuthStore } from '../../store/useAuthStore';
 import { supabase } from '../../lib/supabase';
+import { getAvatarPlaceholder } from '../../utils/placeholders';
 
 interface MenuItem {
   icon: keyof typeof Ionicons.glyphMap;
@@ -107,7 +108,8 @@ export default function ProfileScreen() {
 
   const displayName = authProfile?.full_name || mockProfile.fullName;
   const displayEmail = authProfile?.email || session?.user.email || mockProfile.email;
-  const displayAvatar = authProfile?.avatar || mockProfile.avatar;
+  // BUG-15: fall back to a generated initial avatar (the mock URL can 404).
+  const displayAvatar = authProfile?.avatar || getAvatarPlaceholder(displayName);
   const menuSections = getMenuSections(authProfile?.role);
 
   const [orderCount, setOrderCount] = useState<number | null>(null);
@@ -167,7 +169,7 @@ export default function ProfileScreen() {
           {[
             { label: 'Orders', value: orderCount === null ? '–' : String(orderCount) },
             { label: 'Addresses', value: addressCount === null ? '–' : String(addressCount) },
-            { label: 'Reviews', value: '0' },
+            // BUG-15: 'Reviews' tile removed — no reviews feature exists (was hardcoded 0).
           ].map((stat, index) => (
             <View key={index} style={styles.statItem}>
               <Typography variant="h4" color={colors.primaryDark} weight="bold">

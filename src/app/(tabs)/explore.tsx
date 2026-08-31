@@ -150,7 +150,7 @@ export default function ExploreScreen() {
         entering={FadeInUp.springify().damping(31)}
         style={styles.header}
       >
-        <Typography variant="h3" color={colors.primaryDark}>
+        <Typography variant="h3" color={colors.accent}>
           Explore
         </Typography>
         <TouchableOpacity

@@ -193,10 +193,60 @@ export const searchSuggestions = [
   { id: 'sg-14', text: 'Pink Radish', type: 'product' as const },
 ];
 
-export const onboardingSlides = [
-  { id: 'onboard-1', title: 'Sip Fresh, Live Well', subtitle: 'Premium smoothies and cold-pressed juices, crafted fresh daily and delivered straight to your door.', image: ph('Sip Fresh', '#1B5E20', 800, 800) },
-  { id: 'onboard-2', title: '100% Natural Goodness', subtitle: 'Every drink is made from handpicked fruits and vegetables. No added sugar. No preservatives. Just pure, delicious nutrition.', image: ph('100% Natural', '#2E7D32', 800, 800) },
-  { id: 'onboard-3', title: 'Your Daily Wellness', subtitle: 'From creamy smoothies to refreshing cold-pressed juices, discover delicious ways to nourish your body every day.', image: ph('Daily Wellness', '#1B5E20', 800, 800) },
+const onboardingBerryImg = require('../assets/onboarding-berry.jpg');
+const onboardingMangoImg = require('../assets/onboarding-mango.jpg');
+const onboardingGreenImg = require('../assets/onboarding-green.jpg');
+
+export type OnboardingFeature = { icon: string; title: string; description?: string };
+
+export const onboardingSlides: {
+  id: string;
+  title: string;
+  accent?: string;
+  subtitle: string;
+  image: number;
+  featureStyle: 'rows' | 'cards';
+  features: OnboardingFeature[];
+}[] = [
+  {
+    id: 'onboard-1',
+    title: 'Sip Fresh, Live Well',
+    subtitle:
+      'Premium smoothies and cold-pressed juices, crafted fresh daily and delivered straight to your door.',
+    image: onboardingBerryImg,
+    featureStyle: 'rows',
+    features: [
+      { icon: 'leaf-outline', title: 'Crafted Fresh Daily', description: 'Made every morning with care.' },
+      { icon: 'nutrition-outline', title: 'Premium Quality', description: 'High-quality ingredients in every sip.' },
+      { icon: 'car-outline', title: 'Delivered to You', description: 'Fast, reliable delivery to your doorstep.' },
+    ],
+  },
+  {
+    id: 'onboard-2',
+    title: '100% Natural Goodness',
+    subtitle:
+      'Every drink is made from handpicked fruits and vegetables. No added sugar. No preservatives. Just pure, delicious nutrition.',
+    image: onboardingMangoImg,
+    featureStyle: 'cards',
+    features: [
+      { icon: 'leaf-outline', title: 'No Added Sugar' },
+      { icon: 'flask-outline', title: 'No Preservatives' },
+      { icon: 'nutrition-outline', title: 'Real Ingredients' },
+    ],
+  },
+  {
+    id: 'onboard-3',
+    title: 'Your Daily Wellness',
+    subtitle:
+      'From creamy smoothies to refreshing cold-pressed juices, discover delicious ways to nourish your body every day.',
+    image: onboardingGreenImg,
+    featureStyle: 'rows',
+    features: [
+      { icon: 'leaf-outline', title: 'Made Fresh Daily' },
+      { icon: 'water-outline', title: '100% Natural' },
+      { icon: 'car-outline', title: 'Delivered to You' },
+    ],
+  },
 ];
 
 export const whyChooseUs = [

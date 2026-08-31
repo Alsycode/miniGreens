@@ -116,11 +116,14 @@ export default function PreorderScreen() {
       image: typeof product.images[0] === 'string' ? (product.images[0] as string) : null,
     });
 
-    setPlacing(false);
     if (itemErr) {
+      // BUG-10: roll back the orphaned order row (exists with zero items).
+      await supabase.from('orders').delete().eq('id', order.id);
+      setPlacing(false);
       setError(itemErr.message);
       return;
     }
+    setPlacing(false);
 
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     router.replace(`/order/${order.id}`);

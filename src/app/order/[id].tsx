@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, ScrollView, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -19,6 +19,7 @@ import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { Loading } from '../../components/ui/Loading';
 import { supabase } from '../../lib/supabase';
+import { resolveImageSource, getProductPlaceholder } from '../../utils/placeholders';
 import type { Database, OrderStatus, PaymentStatus } from '../../types/database';
 
 type OrderRow = Database['public']['Tables']['orders']['Row'];
@@ -250,7 +251,9 @@ export default function OrderDetailScreen() {
           </Card>
         </Animated.View>
 
-        {order.payment_status !== 'paid' && order.order_type !== 'preorder' && (
+        {order.payment_status !== 'paid' &&
+          order.order_type !== 'preorder' &&
+          order.order_type !== 'business' && (
           <Animated.View entering={FadeInUp.delay(100).springify().damping(31)}>
             <Button
               title={order.payment_status === 'failed' ? 'Retry Payment' : 'Complete Payment'}
@@ -293,14 +296,18 @@ export default function OrderDetailScreen() {
           >
             <Card variant="outlined" padding="lg" style={styles.itemCard}>
               <View style={styles.itemRow}>
-                <View style={styles.itemImage} />
+                <Image
+                  source={resolveImageSource(item.image || getProductPlaceholder(item.product_name))}
+                  style={styles.itemImage}
+                  resizeMode="cover"
+                />
                 <View style={styles.itemInfo}>
                   <Typography variant="bodySmall" weight="semibold">{item.product_name}</Typography>
                   <Typography variant="caption" color={colors.textSecondary}>
                     Qty: {item.quantity} × ₹{item.price.toFixed(2)}
                   </Typography>
                 </View>
-                <Typography variant="bodySmall" weight="bold" color={colors.primaryDark}>
+                <Typography variant="bodySmall" weight="bold" color={colors.accent}>
                   ₹{(item.quantity * item.price).toFixed(2)}
                 </Typography>
               </View>
@@ -324,7 +331,7 @@ export default function OrderDetailScreen() {
             </View>
             <View style={[styles.summaryRow, styles.totalRow]}>
               <Typography variant="bodySmall" weight="bold">Total</Typography>
-              <Typography variant="body" weight="bold" color={colors.primaryDark}>
+              <Typography variant="body" weight="bold" color={colors.accent}>
                 ₹{order.total.toFixed(2)}
               </Typography>
             </View>

@@ -167,7 +167,7 @@ export default function ProductDetailScreen() {
             style={styles.priceRow}
           >
             <View style={styles.pricePill}>
-              <Typography variant="h2" color={colors.primaryLight}>
+              <Typography variant="h2" color={colors.accent}>
                 ₹{product.price.toFixed(2)}
               </Typography>
             </View>
@@ -225,7 +225,7 @@ export default function ProductDetailScreen() {
                 <Ionicons name="remove" size={20} color={colors.primaryDark} />
               </Pressable>
               <Animated.View style={quantityAnimStyle}>
-                <Typography variant="h4" weight="bold" style={styles.quantityValue} color={colors.primaryDark}>
+                <Typography variant="h4" weight="bold" style={styles.quantityValue} color={colors.accent}>
                   {quantity}
                 </Typography>
               </Animated.View>
@@ -266,7 +266,7 @@ export default function ProductDetailScreen() {
                 { label: 'Fiber', value: product.nutrition.fiber },
               ].map((item, index) => (
                 <View key={index} style={styles.nutritionItem}>
-                  <Typography variant="h4" color={colors.primaryLight} weight="bold">
+                  <Typography variant="h4" color={colors.accent} weight="bold">
                     {item.value}
                   </Typography>
                   <Typography variant="caption" color={colors.textSecondary}>
@@ -370,7 +370,7 @@ export default function ProductDetailScreen() {
       >
         <View style={styles.totalPrice}>
           <Typography variant="caption" color={colors.textTertiary}>Total</Typography>
-          <Typography variant="h3" color={colors.primaryDark}>
+          <Typography variant="h3" color={colors.accent}>
             ₹{(product.price * quantity).toFixed(2)}
           </Typography>
         </View>

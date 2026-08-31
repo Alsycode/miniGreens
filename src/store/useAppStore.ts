@@ -1,5 +1,17 @@
 import { create } from 'zustand';
+import { createJSONStorage, persist } from 'zustand/middleware';
+import { createMMKV } from 'react-native-mmkv';
 import { Address, Profile } from '../types';
+
+const storage = createMMKV({ id: 'app-store' });
+
+const mmkvJSONStorage = createJSONStorage(() => ({
+  getItem: (key: string) => storage.getString(key) ?? null,
+  setItem: (key: string, value: string) => storage.set(key, value),
+  removeItem: (key: string) => {
+    storage.remove(key);
+  },
+}));
 
 interface AppState {
   // Onboarding
@@ -23,24 +35,38 @@ interface AppState {
   clearSearchHistory: () => void;
 }
 
-export const useAppStore = create<AppState>((set) => ({
-  hasCompletedOnboarding: false,
-  setOnboardingComplete: () => set({ hasCompletedOnboarding: true }),
+export const useAppStore = create<AppState>()(
+  persist(
+    (set) => ({
+      hasCompletedOnboarding: false,
+      setOnboardingComplete: () => set({ hasCompletedOnboarding: true }),
 
-  profile: null,
-  setProfile: (profile) => set({ profile }),
+      profile: null,
+      setProfile: (profile) => set({ profile }),
 
-  addresses: [],
-  setAddresses: (addresses) => set({ addresses }),
-  addAddress: (address) => set((state) => ({ addresses: [...state.addresses, address] })),
-  removeAddress: (id) => set((state) => ({ addresses: state.addresses.filter((a) => a.id !== id) })),
-  updateAddress: (address) => set((state) => ({
-    addresses: state.addresses.map((a) => (a.id === address.id ? address : a)),
-  })),
+      addresses: [],
+      setAddresses: (addresses) => set({ addresses }),
+      addAddress: (address) => set((state) => ({ addresses: [...state.addresses, address] })),
+      removeAddress: (id) => set((state) => ({ addresses: state.addresses.filter((a) => a.id !== id) })),
+      updateAddress: (address) => set((state) => ({
+        addresses: state.addresses.map((a) => (a.id === address.id ? address : a)),
+      })),
 
-  searchHistory: [],
-  addSearchHistory: (query) => set((state) => ({
-    searchHistory: [query, ...state.searchHistory.filter((q) => q !== query)].slice(0, 10),
-  })),
-  clearSearchHistory: () => set({ searchHistory: [] }),
-}));
+      searchHistory: [],
+      addSearchHistory: (query) => set((state) => ({
+        searchHistory: [query, ...state.searchHistory.filter((q) => q !== query)].slice(0, 10),
+      })),
+      clearSearchHistory: () => set({ searchHistory: [] }),
+    }),
+    {
+      name: 'minigreens-app-store',
+      storage: mmkvJSONStorage,
+      // Only persist what should survive a cold start. Profile is re-fetched
+      // from Supabase on launch, so it is intentionally excluded.
+      partialize: (state) => ({
+        hasCompletedOnboarding: state.hasCompletedOnboarding,
+        searchHistory: state.searchHistory,
+      }),
+    },
+  ),
+);

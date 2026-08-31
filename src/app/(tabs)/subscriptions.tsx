@@ -89,7 +89,7 @@ export default function SubscriptionsScreen() {
         entering={FadeInUp.springify().damping(31)}
         style={styles.header}
       >
-        <Typography variant="h3" color={colors.primaryDark}>
+        <Typography variant="h3" color={colors.accent}>
           Subscriptions
         </Typography>
       </Animated.View>
@@ -160,7 +160,7 @@ export default function SubscriptionsScreen() {
                   </Typography>
                 </View>
                 <View style={styles.planPrice}>
-                  <Typography variant="h3" color={colors.primaryDark} weight="bold">
+                  <Typography variant="h3" color={colors.accent} weight="bold">
                     ₹{plan.price}
                   </Typography>
                   <Typography variant="caption" color={colors.textSecondary}>

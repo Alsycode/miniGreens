@@ -19,12 +19,23 @@ import { EmptyState } from '../components/ui/EmptyState';
 import { Loading } from '../components/ui/Loading';
 import { searchSuggestions } from '../mock';
 import { useProducts } from '../services/catalog';
+import { useAppStore } from '../store/useAppStore';
 
 export default function SearchScreen() {
   const insets = useSafeAreaInsets();
   const [query, setQuery] = useState('');
-  const [recentSearches] = useState(['mango fresh', 'choco chill', 'watermelon fresh']);
+  const recentSearches = useAppStore((s) => s.searchHistory);
+  const addSearchHistory = useAppStore((s) => s.addSearchHistory);
+  const clearSearchHistory = useAppStore((s) => s.clearSearchHistory);
   const { products, isLoading } = useProducts();
+
+  const recordSearch = useCallback(
+    (raw: string) => {
+      const q = raw.trim();
+      if (q) addSearchHistory(q);
+    },
+    [addSearchHistory]
+  );
 
   const headerScale = useSharedValue(1);
   const headerAnimStyle = useAnimatedStyle(() => ({
@@ -63,7 +74,7 @@ export default function SearchScreen() {
             <SearchBar
               value={query}
               onChangeText={setQuery}
-              onSubmit={() => {}}
+              onSubmit={() => recordSearch(query)}
               onClear={() => setQuery('')}
               placeholder="Search products..."
               autoFocus
@@ -81,7 +92,12 @@ export default function SearchScreen() {
                 <Typography variant="bodySmall" color={colors.textTertiary} uppercase weight="medium">
                   Recent
                 </Typography>
-                <TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => {
+                    Haptics.selectionAsync();
+                    clearSearchHistory();
+                  }}
+                >
                   <Typography variant="caption" color={colors.primary}>
                     Clear
                   </Typography>
@@ -97,6 +113,7 @@ export default function SearchScreen() {
                     onPress={() => {
                       Haptics.selectionAsync();
                       setQuery(search);
+                      recordSearch(search);
                     }}
                   >
                     <Ionicons name="time-outline" size={18} color={colors.textTertiary} />
@@ -131,6 +148,7 @@ export default function SearchScreen() {
                     onPress={() => {
                       Haptics.selectionAsync();
                       setQuery(suggestion.text);
+                      recordSearch(suggestion.text);
                     }}
                   >
                     <Typography variant="bodySmall" color={colors.primary} weight="medium">

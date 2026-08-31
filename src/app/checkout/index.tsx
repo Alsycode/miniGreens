@@ -41,7 +41,8 @@ type CheckoutStep = 'review' | 'delivery' | 'address';
 const STEPS: CheckoutStep[] = ['review', 'delivery', 'address'];
 const STEP_INDEX: Record<CheckoutStep, number> = { review: 0, delivery: 1, address: 2 };
 const CONNECTOR_WIDTH = 60;
-const DELIVERY_FEE = 35.49;
+// BUG-13: flat delivery fee — a round INR figure (was 35.49).
+const DELIVERY_FEE = 40;
 
 const TIME_SLOTS = ['Morning 8–12', 'Afternoon 12–4', 'Evening 4–8'];
 
@@ -230,6 +231,36 @@ export default function CheckoutScreen() {
     setCouponError(null);
   }
 
+  // BUG-09: keep an applied coupon's discount in sync with the live subtotal.
+  // Cart quantities can change after a coupon is applied; without this a
+  // percentage coupon keeps its stale absolute amount (only clamped by Math.min),
+  // and a min-order coupon stays applied even after it no longer qualifies.
+  useEffect(() => {
+    if (!appliedCoupon) return;
+    const code = appliedCoupon.code;
+    let cancelled = false;
+    supabase
+      .rpc('validate_discount', { p_code: code, p_subtotal: subtotal })
+      .then(({ data, error }) => {
+        if (cancelled || error) return; // keep last known good amount on a transient error
+        if (!data || !data.valid) {
+          setAppliedCoupon(null);
+          setCouponError(data?.reason ?? 'Coupon no longer applies to this order.');
+          return;
+        }
+        const nextAmount = data.discount_amount ?? 0;
+        setAppliedCoupon((prev) =>
+          prev && prev.code === code && prev.amount !== nextAmount
+            ? { code: prev.code, amount: nextAmount }
+            : prev
+        );
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subtotal]);
+
   async function handlePlaceOrder() {
     if (!profile || items.length === 0) return;
     setOrderError(null);
@@ -279,11 +310,15 @@ export default function CheckoutScreen() {
       }))
     );
 
-    setPlacing(false);
     if (itemsError) {
+      // BUG-10: the order row exists but has no items — roll it back so we don't
+      // leave an orphaned, unpayable order behind.
+      await supabase.from('orders').delete().eq('id', order.id);
+      setPlacing(false);
       setOrderError(itemsError.message);
       return;
     }
+    setPlacing(false);
 
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     clearCart();

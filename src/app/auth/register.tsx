@@ -7,6 +7,7 @@ import { colors, spacing } from '../../theme';
 import { Typography } from '../../components/ui/Typography';
 import { TextField } from '../../components/ui/TextField';
 import { Button } from '../../components/ui/Button';
+import { Logo } from '../../components/Logo';
 import { useAuthStore } from '../../store/useAuthStore';
 import { maskDobInput, parseDobInput } from '../../utils/date';
 
@@ -88,6 +89,7 @@ export default function RegisterScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <Animated.View entering={FadeInUp.delay(40).springify().damping(31)}>
+          <Logo width={128} style={styles.logo} />
           <Typography variant="h2" color={colors.text} style={styles.title}>
             Create your account
           </Typography>
@@ -174,6 +176,10 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: spacing['2xl'],
     paddingBottom: spacing['4xl'],
+  },
+  logo: {
+    alignSelf: 'center',
+    marginBottom: spacing.lg,
   },
   title: {
     marginBottom: spacing.sm,

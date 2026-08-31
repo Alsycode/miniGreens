@@ -103,12 +103,18 @@ export default function BusinessOrderScreen() {
       image: null,
     });
 
-    setSubmitting(false);
     if (itemError) {
+      // BUG-10: roll back the orphaned order row (exists with zero items).
+      await supabase.from('orders').delete().eq('id', order.id);
+      setSubmitting(false);
       setError(itemError.message);
       return;
     }
-    router.replace('/partner/dashboard');
+    setSubmitting(false);
+    // BUG-11: land on the new order's detail screen (same as the pre-order and
+    // standard checkout flows) instead of silently dropping the partner back on
+    // the dashboard with no confirmation of what was placed.
+    router.replace(`/order/${order.id}`);
   };
 
   if (loading) {

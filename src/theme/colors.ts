@@ -1,14 +1,14 @@
 export const colors = {
   // ── Brand green (accent) ────────────────────────────────────────────────
-  primary: '#789849',      // olive-green accent: CTAs, active states, links, price highlights
+  primary: '#96FF1F',      // olive-green accent: CTAs, active states, links, price highlights
   primaryLight: '#6EE7B7',
   primaryDark: '#10B981',  // deeper green: emphasis text + icons (must stay readable on dark)
   primaryBg: '#0F241B',    // dark green tint: icon chips, pill backgrounds
 
-  secondary: '#CAEF61',    // acid lime pop: bestseller pills, highlights
+  secondary: '#96FF1F',    // acid lime pop: bestseller pills, highlights
   secondaryLight: '#DDF590',
 
-  accent: '#CAEF61',
+  accent: '#96FF1F',
   accentLight: '#1E2A0C',  // dark lime tint
 
   // ── Surfaces ────────────────────────────────────────────────────────────
@@ -23,7 +23,7 @@ export const colors = {
   textSecondary: '#A1A1AA',
   textTertiary: '#6B7280',
   textInverse: '#FFFFFF',  // white text on green fills, dark blocks, image overlays
-  textAcid: '#CAEF61',
+  textAcid: '#96FF1F',
 
   // ── Lines ───────────────────────────────────────────────────────────────
   border: '#2A2A2A',

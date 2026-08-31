@@ -23,7 +23,9 @@ function svgDataUri(text: string, bgColor: string, width = 400, height = 400): s
     <text x="${width / 2}" y="${height / 2 - 10}" text-anchor="middle" fill="rgba(255,255,255,0.9)" font-size="48" font-weight="bold" font-family="system-ui">${safeText[0]?.toUpperCase() || '?'}</text>
     <text x="${width / 2}" y="${height / 2 + 40}" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="18" font-family="system-ui">${safeText}</text>
   </svg>`;
-  return `data:image/svg+xml;charset=utf-8,${encoded.replace(/\n/g, '').replace(/\s+/g, ' ')}`;
+  // encodeURIComponent is required — a raw '#' in a fill colour (e.g. #388E3C)
+  // would otherwise be read as a URI fragment and the image renders blank on web.
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(encoded.replace(/\n/g, '').replace(/\s+/g, ' '))}`;
 }
 
 export function getPlaceholder(name: string, customColor?: string): string {
@@ -57,7 +59,9 @@ export function getBannerPlaceholder(title: string): string {
     <text x="${width / 2}" y="${height / 2 - 20}" text-anchor="middle" fill="white" font-size="42" font-weight="bold" font-family="system-ui">${safeText}</text>
     <text x="${width / 2}" y="${height / 2 + 40}" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="22" font-family="system-ui">Premium wellness, delivered fresh</text>
   </svg>`;
-  return `data:image/svg+xml;charset=utf-8,${encoded.replace(/\n/g, '').replace(/\s+/g, ' ')}`;
+  // encodeURIComponent is required — a raw '#' in a fill colour (e.g. #388E3C)
+  // would otherwise be read as a URI fragment and the image renders blank on web.
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(encoded.replace(/\n/g, '').replace(/\s+/g, ' '))}`;
 }
 
 export function getAvatarPlaceholder(name: string): string {
@@ -67,7 +71,9 @@ export function getAvatarPlaceholder(name: string): string {
     <circle cx="100" cy="100" r="100" fill="${color}"/>
     <text x="100" y="120" text-anchor="middle" fill="white" font-size="80" font-weight="bold" font-family="system-ui">${initial}</text>
   </svg>`;
-  return `data:image/svg+xml;charset=utf-8,${encoded.replace(/\n/g, '').replace(/\s+/g, ' ')}`;
+  // encodeURIComponent is required — a raw '#' in a fill colour (e.g. #388E3C)
+  // would otherwise be read as a URI fragment and the image renders blank on web.
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(encoded.replace(/\n/g, '').replace(/\s+/g, ' '))}`;
 }
 
 // Maps product/category names to relevant emoji for visual variety

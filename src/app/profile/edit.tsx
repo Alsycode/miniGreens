@@ -32,9 +32,11 @@ interface FieldProps {
   keyboardType?: 'default' | 'email-address' | 'phone-pad' | 'number-pad';
   maxLength?: number;
   delay: number;
+  readOnly?: boolean;
+  hint?: string;
 }
 
-function Field({ label, value, onChangeText, placeholder, keyboardType = 'default', maxLength, delay }: FieldProps) {
+function Field({ label, value, onChangeText, placeholder, keyboardType = 'default', maxLength, delay, readOnly, hint }: FieldProps) {
   const [focused, setFocused] = useState(false);
 
   return (
@@ -42,19 +44,25 @@ function Field({ label, value, onChangeText, placeholder, keyboardType = 'defaul
       <Typography variant="caption" weight="semibold" color={colors.textTertiary} uppercase style={styles.fieldLabel}>
         {label}
       </Typography>
-      <View style={[styles.inputContainer, focused && styles.inputFocused]}>
+      <View style={[styles.inputContainer, focused && styles.inputFocused, readOnly && styles.inputReadOnly]}>
         <TextInput
-          style={styles.input}
+          style={[styles.input, readOnly && styles.inputTextReadOnly]}
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder ?? label}
           placeholderTextColor={colors.textTertiary}
           keyboardType={keyboardType}
           maxLength={maxLength}
+          editable={!readOnly}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
         />
       </View>
+      {hint && (
+        <Typography variant="caption" color={colors.textTertiary} style={styles.fieldHint}>
+          {hint}
+        </Typography>
+      )}
     </Animated.View>
   );
 }
@@ -65,10 +73,9 @@ export default function EditProfileScreen() {
   const fetchProfile = useAuthStore((s) => s.fetchProfile);
 
   const [fullName, setFullName] = useState(profile?.full_name ?? '');
-  const [email, setEmail] = useState(profile?.email ?? '');
+  const email = profile?.email ?? '';
   const [phone, setPhone] = useState(profile?.phone ?? '');
   const [dob, setDob] = useState(formatDobDisplay(profile?.date_of_birth));
-  const [bio, setBio] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -133,18 +140,18 @@ export default function EditProfileScreen() {
               <Ionicons name="person" size={40} color={colors.primary} />
             </View>
           </View>
-          <TouchableOpacity
-            style={styles.changePhotoBtn}
-            onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
-          >
-            <Typography variant="bodySmall" color={colors.primary} weight="semibold">
-              Change Photo
-            </Typography>
-          </TouchableOpacity>
         </Animated.View>
 
         <Field label="Full Name" value={fullName} onChangeText={setFullName} delay={120} />
-        <Field label="Email" value={email} onChangeText={setEmail} keyboardType="email-address" delay={180} />
+        <Field
+          label="Email"
+          value={email}
+          onChangeText={() => {}}
+          keyboardType="email-address"
+          delay={180}
+          readOnly
+          hint="Email is tied to your account and can't be changed here."
+        />
         <Field label="Phone" value={phone} onChangeText={setPhone} keyboardType="phone-pad" delay={240} />
         <Field
           label="Date of Birth"
@@ -161,24 +168,6 @@ export default function EditProfileScreen() {
             <ErrorNotice message={error} onDismiss={() => setError(null)} />
           </Animated.View>
         )}
-
-        {/* Bio */}
-        <Animated.View entering={FadeInUp.delay(300).springify().damping(31)} style={styles.fieldWrapper}>
-          <Typography variant="caption" weight="semibold" color={colors.textTertiary} uppercase style={styles.fieldLabel}>
-            Bio
-          </Typography>
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={[styles.input, styles.bioInput]}
-              value={bio}
-              onChangeText={setBio}
-              placeholder="Tell us about yourself"
-              placeholderTextColor={colors.textTertiary}
-              multiline
-              numberOfLines={4}
-            />
-          </View>
-        </Animated.View>
 
         <Animated.View entering={FadeInUp.delay(380).springify().damping(31)} style={styles.saveButton}>
           <Button
@@ -241,15 +230,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  changePhotoBtn: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-  },
   fieldWrapper: {
     marginBottom: spacing.lg,
   },
   fieldLabel: {
     marginBottom: spacing.sm,
+  },
+  fieldHint: {
+    marginTop: spacing.xs,
   },
   inputContainer: {
     backgroundColor: colors.surface,
@@ -261,6 +249,10 @@ const styles = StyleSheet.create({
   inputFocused: {
     borderColor: colors.primary,
   },
+  inputReadOnly: {
+    backgroundColor: colors.borderLight,
+    borderColor: colors.border,
+  },
   input: {
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
@@ -268,9 +260,8 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontFamily: 'PlusJakartaSans_400Regular',
   },
-  bioInput: {
-    minHeight: 100,
-    textAlignVertical: 'top',
+  inputTextReadOnly: {
+    color: colors.textTertiary,
   },
   saveButton: {
     marginTop: spacing.md,
