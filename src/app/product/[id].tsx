@@ -112,7 +112,7 @@ export default function ProductDetailScreen() {
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Hero Image */}
-        <Animated.View entering={FadeInUp.springify().damping(34).stiffness(180)}>
+        <Animated.View entering={FadeInUp.springify().damping(34).stiffness(180).mass(1)}>
           <View style={styles.imageContainer}>
             <Image
               source={resolveImageSource(product.images[selectedImage])}
@@ -126,7 +126,7 @@ export default function ProductDetailScreen() {
             />
             {discountPct && (
               <Animated.View
-                entering={ZoomIn.delay(200).springify().damping(17)}
+                entering={ZoomIn.delay(200).springify().damping(19).mass(1).stiffness(100)}
                 style={styles.discountBadge}
               >
                 <Typography variant="caption" color={colors.textInverse} weight="bold">
@@ -151,7 +151,7 @@ export default function ProductDetailScreen() {
 
         <View style={styles.content}>
           {/* Title & Price */}
-          <Animated.View entering={FadeInUp.delay(80).springify().damping(31)} style={styles.titleRow}>
+          <Animated.View entering={FadeInUp.delay(80).springify().damping(31).mass(1).stiffness(100)} style={styles.titleRow}>
             <View style={{ flex: 1 }}>
               <Typography variant="caption" color={colors.primary} weight="medium" uppercase>
                 {product.unit}
@@ -163,7 +163,7 @@ export default function ProductDetailScreen() {
           </Animated.View>
 
           <Animated.View
-            entering={ZoomIn.delay(200).springify().damping(17)}
+            entering={ZoomIn.delay(200).springify().damping(19).mass(1).stiffness(100)}
             style={styles.priceRow}
           >
             <View style={styles.pricePill}>
@@ -179,7 +179,7 @@ export default function ProductDetailScreen() {
           </Animated.View>
 
           {product.isPreorder && (
-            <Animated.View entering={FadeInUp.delay(230).springify().damping(31)} style={styles.preorderNote}>
+            <Animated.View entering={FadeInUp.delay(230).springify().damping(31).mass(1).stiffness(100)} style={styles.preorderNote}>
               <Ionicons name="time-outline" size={15} color={colors.primary} />
               <Typography variant="caption" color={colors.primary} weight="semibold" style={{ marginLeft: spacing.xs }}>
                 Available for pre-order — reserve yours now
@@ -188,7 +188,7 @@ export default function ProductDetailScreen() {
           )}
 
           {/* Rating */}
-          <Animated.View entering={FadeInUp.delay(260).springify().damping(31)} style={styles.ratingRow}>
+          <Animated.View entering={FadeInUp.delay(260).springify().damping(31).mass(1).stiffness(100)} style={styles.ratingRow}>
             <View style={styles.stars}>
               {Array.from({ length: 5 }).map((_, i) => (
                 <Ionicons
@@ -206,7 +206,7 @@ export default function ProductDetailScreen() {
 
           {/* Quantity Selector */}
           <Animated.View
-            entering={FadeInUp.delay(320).springify().damping(31)}
+            entering={FadeInUp.delay(320).springify().damping(31).mass(1).stiffness(100)}
             style={styles.quantitySection}
           >
             <Typography variant="bodySmall" weight="semibold">Quantity</Typography>
@@ -217,8 +217,8 @@ export default function ProductDetailScreen() {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   setQuantity(Math.max(1, quantity - 1));
                   quantityScale.value = withSequence(
-                    withSpring(0.85, { damping: 17 }),
-                    withSpring(1, { damping: 20 })
+                    withSpring(0.92, { damping: 19, stiffness: 100, mass: 1 }),
+                    withSpring(1, { damping: 20, stiffness: 100, mass: 1 })
                   );
                 }}
               >
@@ -235,8 +235,8 @@ export default function ProductDetailScreen() {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   setQuantity(quantity + 1);
                   quantityScale.value = withSequence(
-                    withSpring(1.25, { damping: 14 }),
-                    withSpring(1, { damping: 20 })
+                    withSpring(1.12, { damping: 19, stiffness: 100, mass: 1 }),
+                    withSpring(1, { damping: 20, stiffness: 100, mass: 1 })
                   );
                 }}
               >
@@ -246,14 +246,14 @@ export default function ProductDetailScreen() {
           </Animated.View>
 
           {/* Description */}
-          <Animated.View entering={FadeInUp.delay(380).springify().damping(31)}>
+          <Animated.View entering={FadeInUp.delay(380).springify().damping(31).mass(1).stiffness(100)}>
             <Typography variant="body" color={colors.textSecondary} style={styles.description}>
               {product.description}
             </Typography>
           </Animated.View>
 
           {/* Nutrition */}
-          <Animated.View entering={FadeInUp.delay(420).springify().damping(31)} style={styles.section}>
+          <Animated.View entering={FadeInUp.delay(420).springify().damping(31).mass(1).stiffness(100)} style={styles.section}>
             <Typography variant="body" weight="semibold" style={styles.sectionTitle}>
               Nutrition Information
             </Typography>
@@ -284,7 +284,7 @@ export default function ProductDetailScreen() {
           </Animated.View>
 
           {/* Benefits */}
-          <Animated.View entering={FadeInUp.delay(460).springify().damping(31)} style={styles.section}>
+          <Animated.View entering={FadeInUp.delay(460).springify().damping(31).mass(1).stiffness(100)} style={styles.section}>
             <Typography variant="body" weight="semibold" style={styles.sectionTitle}>
               Benefits
             </Typography>
@@ -299,7 +299,7 @@ export default function ProductDetailScreen() {
           </Animated.View>
 
           {/* Storage */}
-          <Animated.View entering={FadeInUp.delay(500).springify().damping(31)} style={styles.section}>
+          <Animated.View entering={FadeInUp.delay(500).springify().damping(31).mass(1).stiffness(100)} style={styles.section}>
             <Typography variant="body" weight="semibold" style={styles.sectionTitle}>
               Storage Instructions
             </Typography>
@@ -312,7 +312,7 @@ export default function ProductDetailScreen() {
           </Animated.View>
 
           {/* Consumption Tips */}
-          <Animated.View entering={FadeInUp.delay(540).springify().damping(31)} style={styles.section}>
+          <Animated.View entering={FadeInUp.delay(540).springify().damping(31).mass(1).stiffness(100)} style={styles.section}>
             <Typography variant="body" weight="semibold" style={styles.sectionTitle}>
               How to Enjoy
             </Typography>
@@ -331,7 +331,7 @@ export default function ProductDetailScreen() {
           </Animated.View>
 
           {/* Tags */}
-          <Animated.View entering={FadeInUp.delay(580).springify().damping(31)} style={styles.tagsSection}>
+          <Animated.View entering={FadeInUp.delay(580).springify().damping(31).mass(1).stiffness(100)} style={styles.tagsSection}>
             {product.tags.map((tag, index) => (
               <Chip key={index} label={tag} variant="outlined" color={colors.primary} />
             ))}
@@ -339,7 +339,7 @@ export default function ProductDetailScreen() {
 
           {/* Related Products */}
           {relatedProducts.length > 0 && (
-            <Animated.View entering={FadeInUp.delay(620).springify().damping(31)} style={styles.section}>
+            <Animated.View entering={FadeInUp.delay(620).springify().damping(31).mass(1).stiffness(100)} style={styles.section}>
               <Typography variant="body" weight="semibold" style={styles.sectionTitle}>
                 You May Also Like
               </Typography>
@@ -365,7 +365,7 @@ export default function ProductDetailScreen() {
 
       {/* Bottom CTA */}
       <Animated.View
-        entering={FadeInUp.delay(140).springify().damping(34)}
+        entering={FadeInUp.delay(140).springify().damping(34).mass(1).stiffness(100)}
         style={[styles.bottomCTA, { paddingBottom: insets.bottom + spacing.lg }]}
       >
         <View style={styles.totalPrice}>

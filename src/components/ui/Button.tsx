@@ -99,11 +99,11 @@ export function Button({
         }}
         onPressIn={() => {
           if (!disabled && !loading) {
-            scale.value = withSpring(0.96, { damping: 31, stiffness: 220 });
+            scale.value = withSpring(0.96, { damping: 31, stiffness: 220, mass: 1 });
           }
         }}
         onPressOut={() => {
-          scale.value = withSpring(1, { damping: 31, stiffness: 220 });
+          scale.value = withSpring(1, { damping: 31, stiffness: 220, mass: 1 });
         }}
         disabled={disabled || loading}
       >

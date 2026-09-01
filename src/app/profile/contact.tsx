@@ -59,13 +59,13 @@ function ContactRow({
 
   return (
     <Animated.View
-      entering={FadeInUp.delay(120 + index * 70).springify().damping(31)}
+      entering={FadeInUp.delay(120 + index * 70).springify().damping(31).mass(1).stiffness(100)}
       style={animStyle}
     >
       <Pressable
         style={[styles.contactRow, !isLast && styles.contactRowBorder]}
-        onPressIn={() => { scale.value = withSpring(0.97, { damping: 31, stiffness: 220 }); }}
-        onPressOut={() => { scale.value = withSpring(1, { damping: 31, stiffness: 220 }); }}
+        onPressIn={() => { scale.value = withSpring(0.97, { damping: 31, stiffness: 220, mass: 1 }); }}
+        onPressOut={() => { scale.value = withSpring(1, { damping: 31, stiffness: 220, mass: 1 }); }}
         onPress={() => {
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
           method.action();
@@ -111,7 +111,7 @@ export default function ContactScreen() {
       </Animated.View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        <Animated.View entering={FadeInUp.delay(40).springify().damping(31)} style={styles.hero}>
+        <Animated.View entering={FadeInUp.delay(40).springify().damping(31).mass(1).stiffness(100)} style={styles.hero}>
           <View style={styles.heroIconBg}>
             <Ionicons name="headset-outline" size={36} color={colors.primary} />
           </View>
@@ -134,7 +134,7 @@ export default function ContactScreen() {
           ))}
         </View>
 
-        <Animated.View entering={FadeInUp.delay(400).springify().damping(31)} style={styles.officeCard}>
+        <Animated.View entering={FadeInUp.delay(400).springify().damping(31).mass(1).stiffness(100)} style={styles.officeCard}>
           <View style={styles.officeHeader}>
             <Ionicons name="business-outline" size={20} color={colors.primary} />
             <Typography variant="bodySmall" weight="semibold" style={{ marginLeft: spacing.sm }}>

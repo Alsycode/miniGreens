@@ -40,7 +40,7 @@ function Field({ label, value, onChangeText, placeholder, keyboardType = 'defaul
   const [focused, setFocused] = useState(false);
 
   return (
-    <Animated.View entering={FadeInUp.delay(delay).springify().damping(31)} style={styles.fieldWrapper}>
+    <Animated.View entering={FadeInUp.delay(delay).springify().damping(31).mass(1).stiffness(100)} style={styles.fieldWrapper}>
       <Typography variant="caption" weight="semibold" color={colors.textTertiary} uppercase style={styles.fieldLabel}>
         {label}
       </Typography>
@@ -134,7 +134,7 @@ export default function EditProfileScreen() {
         keyboardShouldPersistTaps="handled"
       >
         {/* Avatar */}
-        <Animated.View entering={FadeInUp.delay(60).springify().damping(31)} style={styles.avatarSection}>
+        <Animated.View entering={FadeInUp.delay(60).springify().damping(31).mass(1).stiffness(100)} style={styles.avatarSection}>
           <View style={styles.avatarRing}>
             <View style={styles.avatarPlaceholder}>
               <Ionicons name="person" size={40} color={colors.primary} />
@@ -164,12 +164,12 @@ export default function EditProfileScreen() {
         />
 
         {error && (
-          <Animated.View entering={FadeInUp.springify().damping(31)} style={styles.fieldWrapper}>
+          <Animated.View entering={FadeInUp.springify().damping(31).mass(1).stiffness(100)} style={styles.fieldWrapper}>
             <ErrorNotice message={error} onDismiss={() => setError(null)} />
           </Animated.View>
         )}
 
-        <Animated.View entering={FadeInUp.delay(380).springify().damping(31)} style={styles.saveButton}>
+        <Animated.View entering={FadeInUp.delay(380).springify().damping(31).mass(1).stiffness(100)} style={styles.saveButton}>
           <Button
             title="Save Changes"
             variant="primary"

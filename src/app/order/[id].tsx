@@ -90,12 +90,12 @@ function TrackerItem({
 
   return (
     <Animated.View
-      entering={FadeInUp.delay(delay).springify().damping(31)}
+      entering={FadeInUp.delay(delay).springify().damping(31).mass(1).stiffness(100)}
       style={styles.trackerItem}
     >
       <View style={styles.trackerLine}>
         <Animated.View
-          entering={ZoomIn.delay(delay + 60).springify().damping(17)}
+          entering={ZoomIn.delay(delay + 60).springify().damping(19).mass(1).stiffness(100)}
           style={[
             styles.trackerDot,
             isCompleted && styles.trackerDotActive,
@@ -202,7 +202,7 @@ export default function OrderDetailScreen() {
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {/* Order Header */}
-        <Animated.View entering={FadeInUp.delay(60).springify().damping(31)}>
+        <Animated.View entering={FadeInUp.delay(60).springify().damping(31).mass(1).stiffness(100)}>
           <Card padding="lg" style={styles.orderHeaderCard}>
             <View style={styles.orderInfoRow}>
               <Typography variant="bodySmall" color={colors.textTertiary}>Order Number</Typography>
@@ -215,7 +215,7 @@ export default function OrderDetailScreen() {
             <View style={styles.orderInfoRow}>
               <Typography variant="bodySmall" color={colors.textTertiary}>Status</Typography>
               <Animated.View
-                entering={ZoomIn.delay(160).springify().damping(17)}
+                entering={ZoomIn.delay(160).springify().damping(19).mass(1).stiffness(100)}
                 style={[styles.statusBadge, { backgroundColor: statusColors[order.status] + '20' }]}
               >
                 <Typography variant="caption" weight="semibold" color={statusColors[order.status]}>
@@ -226,7 +226,7 @@ export default function OrderDetailScreen() {
             <View style={styles.orderInfoRow}>
               <Typography variant="bodySmall" color={colors.textTertiary}>Payment</Typography>
               <Animated.View
-                entering={ZoomIn.delay(180).springify().damping(17)}
+                entering={ZoomIn.delay(180).springify().damping(19).mass(1).stiffness(100)}
                 style={[styles.statusBadge, { backgroundColor: paymentStatusColors[order.payment_status] + '20' }]}
               >
                 <Typography variant="caption" weight="semibold" color={paymentStatusColors[order.payment_status]}>
@@ -254,7 +254,7 @@ export default function OrderDetailScreen() {
         {order.payment_status !== 'paid' &&
           order.order_type !== 'preorder' &&
           order.order_type !== 'business' && (
-          <Animated.View entering={FadeInUp.delay(100).springify().damping(31)}>
+          <Animated.View entering={FadeInUp.delay(100).springify().damping(31).mass(1).stiffness(100)}>
             <Button
               title={order.payment_status === 'failed' ? 'Retry Payment' : 'Complete Payment'}
               variant="primary"
@@ -267,7 +267,7 @@ export default function OrderDetailScreen() {
 
         {/* Status Tracker */}
         {order.status !== 'cancelled' && (
-          <Animated.View entering={FadeInUp.delay(140).springify().damping(31)}>
+          <Animated.View entering={FadeInUp.delay(140).springify().damping(31).mass(1).stiffness(100)}>
             <Card padding="lg" style={styles.trackerCard}>
               {statusSteps.map((step, index) => (
                 <TrackerItem
@@ -284,7 +284,7 @@ export default function OrderDetailScreen() {
         )}
 
         {/* Items */}
-        <Animated.View entering={FadeInUp.delay(420).springify().damping(31)}>
+        <Animated.View entering={FadeInUp.delay(420).springify().damping(31).mass(1).stiffness(100)}>
           <Typography variant="bodySmall" weight="semibold" color={colors.textTertiary} uppercase style={styles.sectionLabel}>
             Items
           </Typography>
@@ -292,7 +292,7 @@ export default function OrderDetailScreen() {
         {order.order_items.map((item, index) => (
           <Animated.View
             key={item.id}
-            entering={FadeInUp.delay(460 + index * 70).springify().damping(31)}
+            entering={FadeInUp.delay(460 + index * 70).springify().damping(31).mass(1).stiffness(100)}
           >
             <Card variant="outlined" padding="lg" style={styles.itemCard}>
               <View style={styles.itemRow}>
@@ -316,7 +316,7 @@ export default function OrderDetailScreen() {
         ))}
 
         {/* Payment Summary */}
-        <Animated.View entering={FadeInUp.delay(560).springify().damping(31)}>
+        <Animated.View entering={FadeInUp.delay(560).springify().damping(31).mass(1).stiffness(100)}>
           <Card variant="outlined" padding="lg" style={styles.summaryCard}>
             <Typography variant="bodySmall" weight="semibold" style={styles.summaryTitle}>
               Payment Summary
@@ -340,7 +340,7 @@ export default function OrderDetailScreen() {
 
         {/* Delivery Address */}
         {order.addresses && (
-          <Animated.View entering={FadeInUp.delay(620).springify().damping(31)}>
+          <Animated.View entering={FadeInUp.delay(620).springify().damping(31).mass(1).stiffness(100)}>
             <Typography variant="bodySmall" weight="semibold" color={colors.textTertiary} uppercase style={styles.sectionLabel}>
               Delivery Address
             </Typography>
@@ -360,7 +360,7 @@ export default function OrderDetailScreen() {
         )}
 
         {order.notes && (
-          <Animated.View entering={FadeInUp.delay(680).springify().damping(31)}>
+          <Animated.View entering={FadeInUp.delay(680).springify().damping(31).mass(1).stiffness(100)}>
             <Card variant="outlined" padding="lg" style={styles.notesCard}>
               <Typography variant="bodySmall" weight="semibold">Delivery Notes</Typography>
               <Typography variant="bodySmall" color={colors.textSecondary}>{order.notes}</Typography>

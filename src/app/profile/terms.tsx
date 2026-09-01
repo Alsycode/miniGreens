@@ -70,7 +70,7 @@ export default function TermsScreen() {
       </Animated.View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        <Animated.View entering={FadeInUp.delay(40).springify().damping(31)} style={styles.intro}>
+        <Animated.View entering={FadeInUp.delay(40).springify().damping(31).mass(1).stiffness(100)} style={styles.intro}>
           <Typography variant="h4" color={colors.primaryDark}>Terms of Service</Typography>
           <Typography variant="caption" color={colors.textTertiary} style={styles.effectiveDate}>
             Last updated: January 1, 2025
@@ -83,7 +83,7 @@ export default function TermsScreen() {
         {sections.map((section, i) => (
           <Animated.View
             key={i}
-            entering={FadeInUp.delay(80 + i * 50).springify().damping(31)}
+            entering={FadeInUp.delay(80 + i * 50).springify().damping(31).mass(1).stiffness(100)}
             style={styles.section}
           >
             <Typography variant="bodySmall" weight="semibold" color={colors.text} style={styles.sectionTitle}>
@@ -96,7 +96,7 @@ export default function TermsScreen() {
         ))}
 
         <Animated.View
-          entering={FadeInUp.delay(80 + sections.length * 50).springify().damping(31)}
+          entering={FadeInUp.delay(80 + sections.length * 50).springify().damping(31).mass(1).stiffness(100)}
           style={styles.contact}
         >
           <Typography variant="caption" color={colors.textTertiary} style={{ textAlign: 'center' }}>

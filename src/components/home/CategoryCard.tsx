@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Image, StyleSheet, Pressable } from 'react-native';
+import { View, Image, StyleSheet, Pressable, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, {
@@ -27,7 +27,7 @@ export function CategoryCard({ category, onPress, index = 0, active = false }: C
 
   return (
     <Animated.View
-      entering={FadeInUp.delay(index * 70).springify().damping(31)}
+      entering={FadeInUp.delay(index * 70).springify().damping(31).mass(1).stiffness(100)}
       style={[styles.wrap, animStyle]}
     >
       <Pressable
@@ -35,19 +35,20 @@ export function CategoryCard({ category, onPress, index = 0, active = false }: C
           Haptics.selectionAsync();
           onPress();
         }}
-        onPressIn={() => { scale.value = withSpring(0.96, { damping: 31, stiffness: 220 }); }}
-        onPressOut={() => { scale.value = withSpring(1, { damping: 31, stiffness: 220 }); }}
+        onPressIn={() => { scale.value = withSpring(0.96, { damping: 31, stiffness: 220, mass: 1 }); }}
+        onPressOut={() => { scale.value = withSpring(1, { damping: 31, stiffness: 220, mass: 1 }); }}
         style={[styles.card, active && styles.cardActive]}
       >
         <Image source={resolveImageSource(category.image)} style={styles.image} resizeMode="cover" />
-        {/* Fade the image's left edge into the card so there's no hard seam */}
+        {/* Fade the image's left edge into the card surface so there's no hard
+            seam. Stop colours track the active/idle surface tokens. */}
         <LinearGradient
           colors={
             active
-              ? ['rgba(15,36,27,1)', 'rgba(15,36,27,1)', 'rgba(15,36,27,0)']
-              : ['rgba(22,22,22,1)', 'rgba(22,22,22,1)', 'rgba(22,22,22,0)']
+              ? ['rgba(22,40,27,1)', 'rgba(22,40,27,0.94)', 'rgba(22,40,27,0)']
+              : ['rgba(20,26,21,1)', 'rgba(20,26,21,0.92)', 'rgba(20,26,21,0)']
           }
-          locations={[0, 0.32, 0.78]}
+          locations={[0, 0.46, 1]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={StyleSheet.absoluteFill}
@@ -70,17 +71,21 @@ export function CategoryCard({ category, onPress, index = 0, active = false }: C
           {category.name}
         </Typography>
       </Pressable>
-      <View style={[styles.underline, active && styles.underlineActive]} />
+      {active && <View style={styles.underlineActive} />}
     </Animated.View>
   );
 }
 
-const CARD_W = 150;
-const CARD_H = 92;
+// Size the tiles so ALL FOUR categories (incl. the local "Bowls" tile) fit fully
+// within the row at once — page padding on the left, one gap per tile.
+const ROW_W = Dimensions.get('window').width;
+const GAP = spacing.xs + 2; // 6
+const CARD_W = Math.floor((ROW_W - spacing.lg - GAP * 4) / 4);
+const CARD_H = Math.round(CARD_W * 0.9);
 
 const styles = StyleSheet.create({
   wrap: {
-    marginRight: spacing.md,
+    marginRight: GAP,
     alignItems: 'center',
   },
   card: {
@@ -89,20 +94,25 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
     backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderSubtle,
     overflow: 'hidden',
   },
   cardActive: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primaryBg,
+    borderColor: colors.accent,
+    backgroundColor: colors.surfaceElevated,
+    shadowColor: colors.accent,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.22,
+    shadowRadius: 7,
+    elevation: 3,
   },
   iconChip: {
     position: 'absolute',
-    top: spacing.sm,
-    left: spacing.sm,
-    width: 22,
-    height: 22,
-    borderRadius: 11,
+    top: spacing.xs + 2,
+    left: spacing.xs + 2,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
     backgroundColor: 'rgba(255,255,255,0.06)',
     alignItems: 'center',
     justifyContent: 'center',
@@ -117,18 +127,18 @@ const styles = StyleSheet.create({
   },
   label: {
     position: 'absolute',
-    left: spacing.sm,
-    bottom: spacing.sm,
+    left: spacing.xs + 2,
+    bottom: spacing.xs + 2,
+    right: spacing.xs,
     zIndex: 2,
+    fontSize: 11,
+    lineHeight: 14,
   },
-  underline: {
+  underlineActive: {
     marginTop: 6,
     height: 3,
     width: 22,
     borderRadius: 2,
-    backgroundColor: 'transparent',
-  },
-  underlineActive: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.accent,
   },
 });

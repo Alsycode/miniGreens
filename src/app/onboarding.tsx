@@ -97,8 +97,8 @@ function SliderDot({ isActive }: { isActive: boolean }) {
   const opacity = useSharedValue(isActive ? 1 : 0.4);
 
   useEffect(() => {
-    scaleX.value = withSpring(isActive ? 1 : 0.5, { damping: 15, stiffness: 160 });
-    opacity.value = withSpring(isActive ? 1 : 0.4, { damping: 31, stiffness: 200 });
+    scaleX.value = withSpring(isActive ? 1 : 0.5, { damping: 24, stiffness: 160, mass: 1 });
+    opacity.value = withSpring(isActive ? 1 : 0.4, { damping: 31, stiffness: 200, mass: 1 });
   }, [isActive]);
 
   const dotStyle = useAnimatedStyle(() => ({

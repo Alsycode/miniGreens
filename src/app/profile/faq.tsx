@@ -62,12 +62,12 @@ function FAQItem({ item, index }: { item: (typeof faqs)[0]; index: number }) {
     Haptics.selectionAsync();
     const next = !open;
     setOpen(next);
-    rotation.value = withSpring(next ? 45 : 0, { damping: 24, stiffness: 180 });
+    rotation.value = withSpring(next ? 45 : 0, { damping: 25, stiffness: 180, mass: 1 });
     bodyOpacity.value = withTiming(next ? 1 : 0, { duration: 220 });
   };
 
   return (
-    <Animated.View entering={FadeInUp.delay(80 + index * 60).springify().damping(31)}>
+    <Animated.View entering={FadeInUp.delay(80 + index * 60).springify().damping(31).mass(1).stiffness(100)}>
       <Pressable style={styles.faqItem} onPress={toggle}>
         <View style={styles.faqRow}>
           <Typography variant="body" weight="semibold" color={colors.text} style={styles.faqQuestion}>
@@ -109,7 +109,7 @@ export default function FAQScreen() {
       </Animated.View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        <Animated.View entering={FadeInUp.delay(40).springify().damping(31)} style={styles.intro}>
+        <Animated.View entering={FadeInUp.delay(40).springify().damping(31).mass(1).stiffness(100)} style={styles.intro}>
           <Typography variant="h4" color={colors.primaryDark}>
             Frequently Asked Questions
           </Typography>

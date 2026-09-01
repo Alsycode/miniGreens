@@ -109,13 +109,13 @@ function AddressCard({
   index: number;
 }) {
   return (
-    <Animated.View entering={FadeInUp.delay(80 + index * 100).springify().damping(31)} style={styles.addressCardOuter}>
+    <Animated.View entering={FadeInUp.delay(80 + index * 100).springify().damping(31).mass(1).stiffness(100)} style={styles.addressCardOuter}>
       <Pressable onPress={onSelect}>
         <View style={[styles.addressCard, isSelected && styles.addressCardSelected]}>
           <View style={styles.addressHeader}>
             <View style={styles.addressLabelRow}>
               <View style={isSelected ? styles.radioActive : styles.radioInactive}>
-                {isSelected && <Animated.View entering={ZoomIn.springify().damping(17)} style={styles.radioDot} />}
+                {isSelected && <Animated.View entering={ZoomIn.springify().damping(19).mass(1).stiffness(100)} style={styles.radioDot} />}
               </View>
               <Typography variant="bodySmall" weight="semibold" style={{ marginLeft: spacing.sm }}>
                 {address.label}
@@ -329,13 +329,13 @@ export default function CheckoutScreen() {
     switch (step) {
       case 'review':
         return (
-          <Animated.View key="review" entering={FadeInRight.springify().damping(34).stiffness(180)}>
+          <Animated.View key="review" entering={FadeInRight.springify().damping(34).stiffness(180).mass(1)}>
             <Typography variant="h4" color={colors.text} style={styles.stepTitle}>
               Review Your Order
             </Typography>
 
             {items.map((item, i) => (
-              <Animated.View key={item.productId} entering={FadeInUp.delay(80 + i * 60).springify().damping(31)}>
+              <Animated.View key={item.productId} entering={FadeInUp.delay(80 + i * 60).springify().damping(31).mass(1).stiffness(100)}>
                 <Card style={styles.productCard} variant="outlined" padding="lg">
                   <View style={styles.productRow}>
                     <Image
@@ -425,7 +425,7 @@ export default function CheckoutScreen() {
 
       case 'delivery':
         return (
-          <Animated.View key="delivery" entering={FadeInRight.springify().damping(34).stiffness(180)}>
+          <Animated.View key="delivery" entering={FadeInRight.springify().damping(34).stiffness(180).mass(1)}>
             <Typography variant="h4" color={colors.text} style={styles.stepTitle}>Delivery Information</Typography>
 
             <Typography variant="bodySmall" weight="semibold" color={colors.text} style={styles.fieldLabel}>Delivery Date</Typography>
@@ -479,7 +479,7 @@ export default function CheckoutScreen() {
 
       case 'address':
         return (
-          <Animated.View key="address" entering={FadeInRight.springify().damping(34).stiffness(180)}>
+          <Animated.View key="address" entering={FadeInRight.springify().damping(34).stiffness(180).mass(1)}>
             <Typography variant="h4" color={colors.text} style={styles.stepTitle}>Delivery Address</Typography>
 
             {addresses.length === 0 && (

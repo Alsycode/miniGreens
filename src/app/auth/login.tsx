@@ -44,7 +44,7 @@ export default function LoginScreen() {
         contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + spacing['3xl'] }]}
         keyboardShouldPersistTaps="handled"
       >
-        <Animated.View entering={FadeInUp.delay(40).springify().damping(31)}>
+        <Animated.View entering={FadeInUp.delay(40).springify().damping(31).mass(1).stiffness(100)}>
           <Logo width={128} style={styles.logo} />
           <Typography variant="h2" color={colors.text} style={styles.title}>
             Welcome back
@@ -54,7 +54,7 @@ export default function LoginScreen() {
           </Typography>
         </Animated.View>
 
-        <Animated.View entering={FadeInUp.delay(120).springify().damping(31)} style={styles.form}>
+        <Animated.View entering={FadeInUp.delay(120).springify().damping(31).mass(1).stiffness(100)} style={styles.form}>
           <TextField
             label="Email"
             leftIcon="mail-outline"
@@ -80,7 +80,7 @@ export default function LoginScreen() {
           <Button title="Log In" onPress={handleLogin} loading={loading} fullWidth size="lg" style={styles.submit} />
         </Animated.View>
 
-        <Animated.View entering={FadeInUp.delay(200).springify().damping(31)} style={styles.footer}>
+        <Animated.View entering={FadeInUp.delay(200).springify().damping(31).mass(1).stiffness(100)} style={styles.footer}>
           <Typography variant="bodySmall" color={colors.textSecondary}>
             Don't have an account?
           </Typography>

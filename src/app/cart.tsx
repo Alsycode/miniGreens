@@ -48,7 +48,7 @@ export default function CartScreen() {
         <>
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
             {items.map((item, i) => (
-              <Animated.View key={item.productId} entering={FadeInUp.delay(i * 60).springify().damping(31)}>
+              <Animated.View key={item.productId} entering={FadeInUp.delay(i * 60).springify().damping(31).mass(1).stiffness(100)}>
                 <Card style={styles.itemCard} padding="lg">
                   <View style={styles.itemRow}>
                     <Image
@@ -89,7 +89,7 @@ export default function CartScreen() {
             ))}
           </ScrollView>
 
-          <Animated.View entering={FadeInUp.springify().damping(31)} style={[styles.footer, { paddingBottom: insets.bottom + spacing.lg }]}>
+          <Animated.View entering={FadeInUp.springify().damping(31).mass(1).stiffness(100)} style={[styles.footer, { paddingBottom: insets.bottom + spacing.lg }]}>
             <View style={styles.subtotalRow}>
               <Typography variant="body" color={colors.textSecondary}>Subtotal</Typography>
               <Typography variant="h4" color={colors.primaryDark}>₹{subtotal.toFixed(2)}</Typography>

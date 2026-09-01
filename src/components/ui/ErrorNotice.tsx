@@ -18,7 +18,7 @@ export function ErrorNotice({ message, title = 'Something went wrong', onDismiss
 
   return (
     <Animated.View
-      entering={FadeInDown.springify().damping(30)}
+      entering={FadeInDown.springify().damping(30).mass(1).stiffness(100)}
       exiting={FadeOut.duration(150)}
       style={[styles.container, style]}
     >

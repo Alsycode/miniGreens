@@ -71,7 +71,7 @@ function MenuRow({
 
   return (
     <Animated.View
-      entering={FadeInUp.delay(delay).springify().damping(31)}
+      entering={FadeInUp.delay(delay).springify().damping(31).mass(1).stiffness(100)}
       style={animStyle}
     >
       <Pressable
@@ -80,8 +80,8 @@ function MenuRow({
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
           router.push(item.route as any);
         }}
-        onPressIn={() => { scale.value = withSpring(0.98, { damping: 31, stiffness: 220 }); }}
-        onPressOut={() => { scale.value = withSpring(1, { damping: 31, stiffness: 220 }); }}
+        onPressIn={() => { scale.value = withSpring(0.98, { damping: 31, stiffness: 220, mass: 1 }); }}
+        onPressOut={() => { scale.value = withSpring(1, { damping: 31, stiffness: 220, mass: 1 }); }}
       >
         <View style={styles.menuItemLeft}>
           <View style={styles.menuIconBg}>
@@ -143,15 +143,15 @@ export default function ProfileScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {/* Profile Header */}
         <Animated.View
-          entering={FadeInUp.delay(40).springify().damping(31)}
+          entering={FadeInUp.delay(40).springify().damping(31).mass(1).stiffness(100)}
           style={styles.profileHeader}
         >
-          <Animated.View entering={ZoomIn.delay(80).springify().damping(15)}>
+          <Animated.View entering={ZoomIn.delay(80).springify().damping(19).mass(1).stiffness(100)}>
             <View style={styles.avatarRing}>
               <Image source={{ uri: displayAvatar }} style={styles.avatar} />
             </View>
           </Animated.View>
-          <Animated.View entering={FadeInUp.delay(180).springify().damping(31)} style={styles.profileInfo}>
+          <Animated.View entering={FadeInUp.delay(180).springify().damping(31).mass(1).stiffness(100)} style={styles.profileInfo}>
             <Typography variant="h3" color={colors.text} style={styles.profileName}>
               {displayName}
             </Typography>
@@ -163,7 +163,7 @@ export default function ProfileScreen() {
 
         {/* Stats */}
         <Animated.View
-          entering={FadeInUp.delay(220).springify().damping(31)}
+          entering={FadeInUp.delay(220).springify().damping(31).mass(1).stiffness(100)}
           style={styles.statsRow}
         >
           {[
@@ -187,7 +187,7 @@ export default function ProfileScreen() {
           return (
             <View key={sectionIndex} style={styles.menuSection}>
               <Animated.View
-                entering={FadeInUp.delay(itemDelay).springify().damping(31)}
+                entering={FadeInUp.delay(itemDelay).springify().damping(31).mass(1).stiffness(100)}
               >
                 <Typography
                   variant="bodySmall"
@@ -218,7 +218,7 @@ export default function ProfileScreen() {
         })}
 
         {/* Logout */}
-        <Animated.View entering={FadeInUp.delay(640).springify().damping(31)}>
+        <Animated.View entering={FadeInUp.delay(640).springify().damping(31).mass(1).stiffness(100)}>
           <Pressable
             style={styles.logoutButton}
             onPress={handleSignOut}

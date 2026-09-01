@@ -22,7 +22,7 @@ import Animated, {
   ZoomIn,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { colors, spacing, borderRadius, shadows } from '../../theme';
+import { colors, spacing, borderRadius, shadows, fontFamily } from '../../theme';
 import { Typography } from '../../components/ui/Typography';
 import { Button } from '../../components/ui/Button';
 import { SearchBar } from '../../components/ui/SearchBar';
@@ -45,6 +45,28 @@ import { isBirthdayToday } from '../../utils/date';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
+// Botanical environment asset — sits BEHIND all Home Screen content as part of
+// the background (never rendered as a normal image/card). See Phase 3.
+const LEAF_BG = require('../../../assets/leaf.png');
+// rgb() of colors.background (#0A0D0B) — used to build the readability scrim that
+// dissolves the foliage into the dark base before it reaches the content.
+const BG_RGB = '10,13,11';
+
+// "Bowls" isn't a catalogue category in Supabase (no bowl products yet), but the
+// reference Home Screen shows it as a fourth tile. Render it locally from the
+// bundled asset; tapping it opens the browse screen rather than an empty
+// /category/bowls route.
+const BOWLS_TILE = {
+  id: 'bowls-local',
+  name: 'Bowls',
+  slug: 'bowls',
+  description: 'Fresh fruit & smoothie bowls.',
+  image: require('../../assets/bowls.jpeg') as unknown as string,
+  icon: 'nutrition',
+  productCount: 0,
+  color: '#F472B6',
+};
+
 function greeting() {
   const h = new Date().getHours();
   if (h < 12) return 'Good morning';
@@ -57,7 +79,7 @@ function useStaggeredEntry(delay: number) {
   const opacity = useSharedValue(0);
 
   useEffect(() => {
-    y.value = withDelay(delay, withSpring(0, { damping: 37, stiffness: 160 }));
+    y.value = withDelay(delay, withSpring(0, { damping: 37, stiffness: 160, mass: 1 }));
     opacity.value = withDelay(delay, withTiming(1, { duration: 350 }));
   }, []);
 
@@ -137,6 +159,9 @@ export default function HomeScreen() {
   const seasonalProducts = products.filter((p) => p.isSeasonal);
   const bestSellers = products.filter((p) => p.isBestSeller);
   const [activeCat, setActiveCat] = useState<string | undefined>(undefined);
+  // Visual default only — highlight the first category until the user picks one
+  // (matches the reference). Tapping still navigates exactly as before.
+  const selectedCat = activeCat ?? categories[0]?.id;
 
   const headerStyle   = useStaggeredEntry(0);
   const searchStyle   = useStaggeredEntry(80);
@@ -150,12 +175,12 @@ export default function HomeScreen() {
   }));
 
   const handleSearchFocus = useCallback(() => {
-    searchScale.value = withSpring(1.02, { damping: 31, stiffness: 220 });
+    searchScale.value = withSpring(1.02, { damping: 31, stiffness: 220, mass: 1 });
     setSearchFocused(true);
   }, []);
 
   const handleSearchBlur = useCallback(() => {
-    searchScale.value = withSpring(1, { damping: 31, stiffness: 220 });
+    searchScale.value = withSpring(1, { damping: 31, stiffness: 220, mass: 1 });
     setSearchFocused(false);
   }, []);
 
@@ -169,20 +194,56 @@ export default function HomeScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
+      {/* ── Botanical environment ─────────────────────────────────────────────
+          Full-bleed background layer behind the ScrollView. pointerEvents="none"
+          so it never intercepts touches, scrolling or layout. Anchored to the
+          top so the large foliage reads in the upper/right region (as in the
+          reference), then a vertical scrim fades it into the dark base before it
+          reaches the category row / product cards. */}
+      <View
+        pointerEvents="none"
+        style={[styles.env, { top: -insets.top }]}
+      >
+        {/* Leaf asset fills the layer (its aspect ratio ~matches a phone screen,
+            so `cover` shows the whole image with the big top-right foliage up
+            top). The scrim then dissolves it into the dark base before the
+            category row / product cards. */}
+        <Image source={LEAF_BG} style={StyleSheet.absoluteFill} resizeMode="cover" />
+        <LinearGradient
+          colors={[
+            `rgba(${BG_RGB},0)`,
+            `rgba(${BG_RGB},0.06)`,
+            `rgba(${BG_RGB},0.55)`,
+            `rgba(${BG_RGB},1)`,
+            `rgba(${BG_RGB},1)`,
+          ]}
+          locations={[0, 0.12, 0.24, 0.34, 1]}
+          style={StyleSheet.absoluteFill}
+        />
+      </View>
+
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
         {/* Header */}
         <Animated.View style={[styles.header, headerStyle]}>
-          <View style={{ flex: 1 }}>
+          <View style={styles.headerText}>
             <Typography variant="bodySmall" color={colors.textSecondary}>
               {greeting()},
             </Typography>
-            <Typography variant="h3" color={colors.text} numberOfLines={1}>
-              {firstName} <Typography variant="h3" color={colors.primary}>🌿</Typography>
-            </Typography>
-            <Typography variant="caption" color={colors.textTertiary} style={{ marginTop: 2 }}>
+            <View style={styles.headerNameRow}>
+              <Typography
+                variant="h3"
+                color={colors.text}
+                numberOfLines={1}
+                style={[styles.headerName, styles.headerNameText]}
+              >
+                {firstName}
+              </Typography>
+              <Typography variant="h3" color={colors.primary} style={styles.headerName}> 🌿</Typography>
+            </View>
+            <Typography variant="bodySmall" color={colors.textTertiary} style={{ marginTop: 6 }}>
               Fuel your body. Refresh your mind. 🌿
             </Typography>
           </View>
@@ -242,13 +303,17 @@ export default function HomeScreen() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.horizontalScroll}
           >
-            {categories.map((cat, i) => (
+            {[...categories, BOWLS_TILE].map((cat, i) => (
               <CategoryCard
                 key={cat.id}
                 category={cat}
                 index={i}
-                active={cat.id === activeCat}
-                onPress={() => { setActiveCat(cat.id); handleCategoryPress(cat.slug); }}
+                active={cat.id === selectedCat}
+                onPress={() => {
+                  setActiveCat(cat.id);
+                  if (cat.slug === 'bowls') router.push('/(tabs)/explore');
+                  else handleCategoryPress(cat.slug);
+                }}
               />
             ))}
           </ScrollView>
@@ -258,7 +323,7 @@ export default function HomeScreen() {
         <Animated.View style={[styles.section, section2Style]}>
           <View style={styles.sectionHeader}>
             <View>
-              <Typography variant="h4" color={colors.text}>Best Sellers</Typography>
+              <Typography variant="h3" color={colors.text}>Best Sellers</Typography>
               <Typography variant="caption" color={colors.textTertiary} style={styles.sectionSub}>
                 Our most loved picks 💚
               </Typography>
@@ -293,20 +358,20 @@ export default function HomeScreen() {
               resizeMode="cover"
             />
             <LinearGradient
-              colors={['rgba(8,19,13,0.96)', 'rgba(8,19,13,0.7)', 'rgba(8,19,13,0)']}
-              locations={[0, 0.45, 0.9]}
+              colors={['rgba(10,13,11,0.94)', 'rgba(10,13,11,0.4)', 'rgba(10,13,11,0)']}
+              locations={[0, 0.42, 0.78]}
               start={{ x: 0, y: 0 }}
-              end={{ x: 0.95, y: 0 }}
+              end={{ x: 1, y: 0 }}
               style={StyleSheet.absoluteFill}
             />
             <View style={styles.promoText}>
-              <Typography variant="caption" color={colors.primary} weight="bold" style={styles.promoKicker}>
+              <Typography variant="caption" color={colors.accent} weight="bold" style={styles.promoKicker}>
                 LIMITED TIME ONLY
               </Typography>
               <Typography variant="h3" color={colors.textInverse} style={styles.promoTitle}>
                 Spring Fresh{'\n'}Collection
               </Typography>
-              <Typography variant="bodySmall" color="rgba(255,255,255,0.7)" style={styles.promoDesc}>
+              <Typography variant="bodySmall" color="rgba(255,255,255,0.68)" style={styles.promoDesc}>
                 Harvest the best of the season in every sip.
               </Typography>
               <TouchableOpacity
@@ -316,8 +381,8 @@ export default function HomeScreen() {
                   router.push('/(tabs)/explore');
                 }}
               >
-                <Typography variant="bodySmall" color="#06130D" weight="bold">Explore Collection</Typography>
-                <Ionicons name="arrow-forward" size={14} color="#06130D" style={{ marginLeft: 6 }} />
+                <Typography variant="bodySmall" color="#06130D" weight="bold" numberOfLines={1} style={styles.promoBtnText}>Explore Collection</Typography>
+                <Ionicons name="arrow-forward" size={12} color="#06130D" style={{ marginLeft: 5 }} />
               </TouchableOpacity>
             </View>
           </View>
@@ -326,37 +391,40 @@ export default function HomeScreen() {
         {/* Seasonal Products */}
         {seasonalProducts.length > 0 && (
           <Animated.View
-            entering={FadeInUp.delay(360).springify().damping(31)}
+            entering={FadeInUp.delay(360).springify().damping(31).mass(1).stiffness(100)}
             style={styles.section}
           >
             <View style={styles.sectionHeader}>
-              <Typography variant="h4" color={colors.text}>Seasonal Picks</Typography>
+              <Typography variant="h3" color={colors.text}>Seasonal Picks</Typography>
               <TouchableOpacity style={styles.viewAll} onPress={() => router.push('/(tabs)/explore')}>
                 <Typography variant="bodySmall" color={colors.primary} weight="semibold">View all</Typography>
                 <Ionicons name="arrow-forward" size={14} color={colors.primary} />
               </TouchableOpacity>
             </View>
-            <View style={styles.seasonalGrid}>
-              {seasonalProducts.slice(0, 2).map((product, i) => (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.horizontalScroll}
+            >
+              {seasonalProducts.map((product, i) => (
                 <ProductCard
                   key={product.id}
                   product={product}
-                  variant="seasonal"
                   index={i}
                   onPress={() => handleProductPress(product.slug)}
                 />
               ))}
-            </View>
+            </ScrollView>
           </Animated.View>
         )}
 
         {/* Featured Products */}
         <Animated.View
-          entering={FadeInUp.delay(420).springify().damping(31)}
+          entering={FadeInUp.delay(420).springify().damping(31).mass(1).stiffness(100)}
           style={styles.section}
         >
           <View style={styles.sectionHeader}>
-            <Typography variant="h4" color={colors.text}>Featured Products</Typography>
+            <Typography variant="h3" color={colors.text}>Featured Products</Typography>
           </View>
           {featuredProducts.slice(0, 4).map((product, i) => (
             <ProductCard
@@ -378,7 +446,7 @@ export default function HomeScreen() {
 
         {/* Subscription — full-bleed editorial */}
         <Animated.View
-          entering={FadeInUp.delay(480).springify().damping(31)}
+          entering={FadeInUp.delay(480).springify().damping(31).mass(1).stiffness(100)}
           style={styles.subscriptionBlock}
         >
           <LinearGradient
@@ -387,7 +455,7 @@ export default function HomeScreen() {
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
           />
-          <Typography variant="h1" color="rgba(150,255,31,0.12)" style={styles.subscriptionBigNum}>
+          <Typography variant="h1" color="rgba(139,224,75,0.12)" style={styles.subscriptionBigNum}>
             15%
           </Typography>
           <View style={styles.subscriptionContent}>
@@ -428,11 +496,11 @@ export default function HomeScreen() {
 
         {/* Lifestyle Articles */}
         <Animated.View
-          entering={FadeInUp.delay(520).springify().damping(31)}
+          entering={FadeInUp.delay(520).springify().damping(31).mass(1).stiffness(100)}
           style={styles.section}
         >
           <View style={styles.sectionHeader}>
-            <Typography variant="h4" color={colors.text}>Healthy Living</Typography>
+            <Typography variant="h3" color={colors.text}>Healthy Living</Typography>
             <TouchableOpacity style={styles.viewAll} onPress={() => router.push('/articles')}>
               <Typography variant="bodySmall" color={colors.primary} weight="semibold">View all</Typography>
               <Ionicons name="arrow-forward" size={14} color={colors.primary} />
@@ -477,11 +545,11 @@ export default function HomeScreen() {
 
         {/* Testimonials */}
         <Animated.View
-          entering={FadeInUp.delay(560).springify().damping(31)}
+          entering={FadeInUp.delay(560).springify().damping(31).mass(1).stiffness(100)}
           style={styles.section}
         >
           <View style={styles.sectionHeader}>
-            <Typography variant="h4" color={colors.text}>What Customers Say</Typography>
+            <Typography variant="h3" color={colors.text}>What Customers Say</Typography>
           </View>
           <ScrollView
             horizontal
@@ -528,17 +596,17 @@ export default function HomeScreen() {
 
         {/* Why Choose MiniGreens */}
         <Animated.View
-          entering={FadeInUp.delay(600).springify().damping(31)}
+          entering={FadeInUp.delay(600).springify().damping(31).mass(1).stiffness(100)}
           style={styles.section}
         >
-          <Typography variant="h4" color={colors.text} style={{ marginBottom: spacing.lg }}>
+          <Typography variant="h3" color={colors.text} style={{ marginBottom: spacing.lg }}>
             Why Choose MiniGreens
           </Typography>
           <View style={styles.whyGrid}>
             {whyChooseUs.map((item, i) => (
               <Animated.View
                 key={item.id}
-                entering={FadeInUp.delay(600 + i * 70).springify().damping(31)}
+                entering={FadeInUp.delay(600 + i * 70).springify().damping(31).mass(1).stiffness(100)}
                 style={styles.whyCard}
               >
                 <View style={styles.whyIconContainer}>
@@ -574,6 +642,15 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+  // Botanical environment layer (behind all content)
+  env: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    overflow: 'hidden',
+  },
   scrollContent: {
     paddingBottom: 120,
   },
@@ -582,7 +659,22 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
+    paddingTop: spacing['2xl'],
+  },
+  headerText: {
+    flex: 1,
+    marginRight: spacing.md,
+  },
+  headerNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerName: {
+    fontSize: 25,
+    lineHeight: 30,
+  },
+  headerNameText: {
+    flexShrink: 1,
   },
   headerActions: {
     flexDirection: 'row',
@@ -591,10 +683,10 @@ const styles = StyleSheet.create({
   iconButton: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.surface,
+    borderRadius: borderRadius.pill,
+    backgroundColor: colors.surfaceTranslucent,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderSubtle,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -619,7 +711,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: colors.primary,
     borderWidth: 1.5,
-    borderColor: colors.surface,
+    borderColor: colors.background,
   },
   sectionSub: {
     marginTop: 2,
@@ -630,39 +722,47 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   promoCard: {
-    borderRadius: borderRadius['2xl'],
+    borderRadius: borderRadius.card,
     overflow: 'hidden',
     backgroundColor: colors.surfaceDark,
     borderWidth: 1,
-    borderColor: colors.border,
-    minHeight: 190,
+    borderColor: colors.borderFaint,
+    minHeight: 148,
     justifyContent: 'center',
   },
   promoText: {
-    width: '72%',
-    padding: spacing.xl,
+    width: '60%',
+    padding: spacing.lg,
     zIndex: 2,
   },
   promoKicker: {
-    letterSpacing: 1.5,
-    fontSize: 10,
-    marginBottom: spacing.sm,
+    letterSpacing: 1.2,
+    fontSize: 8.5,
+    marginBottom: spacing.xs,
   },
   promoTitle: {
-    marginBottom: spacing.sm,
+    fontFamily: fontFamily.display,
+    fontSize: 19,
+    lineHeight: 22,
+    letterSpacing: -0.2,
+    marginBottom: spacing.xs,
   },
   promoDesc: {
-    lineHeight: 18,
-    marginBottom: spacing.lg,
+    fontSize: 11,
+    lineHeight: 15,
+    marginBottom: spacing.sm,
   },
   promoBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
     backgroundColor: colors.primary,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm + 2,
-    borderRadius: borderRadius.full,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs + 2,
+    borderRadius: borderRadius.pill,
+  },
+  promoBtnText: {
+    fontSize: 11,
   },
   promoImage: {
     position: 'absolute',
@@ -680,14 +780,14 @@ const styles = StyleSheet.create({
   },
   searchContainer: {
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
+    paddingTop: spacing['2xl'],
   },
   section: {
-    marginTop: spacing['2xl'],
+    marginTop: spacing.sectionGap,
     paddingHorizontal: spacing.lg,
   },
   categoriesRow: {
-    marginTop: spacing.xl,
+    marginTop: spacing['2xl'],
     paddingLeft: spacing.lg,
   },
   seasonalGrid: {
@@ -698,7 +798,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.headingGap,
   },
   horizontalScroll: {
     paddingRight: spacing.lg,
@@ -714,7 +814,7 @@ const styles = StyleSheet.create({
   },
   seasonalTag: {
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(150,255,31,0.12)',
+    backgroundColor: 'rgba(139,224,75,0.12)',
     borderRadius: borderRadius.full,
     paddingHorizontal: spacing.md,
     paddingVertical: 5,
@@ -740,13 +840,13 @@ const styles = StyleSheet.create({
   },
   viewAllButton: {
     marginTop: spacing.lg,
-    borderColor: colors.border,
+    borderColor: colors.borderSubtle,
   },
   // Subscription editorial block
   subscriptionBlock: {
     marginHorizontal: spacing.lg,
     marginTop: spacing['2xl'],
-    borderRadius: borderRadius['2xl'],
+    borderRadius: borderRadius.card,
     overflow: 'hidden',
     minHeight: 260,
     position: 'relative',
@@ -765,7 +865,7 @@ const styles = StyleSheet.create({
   },
   subscriptionTag: {
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(150,255,31,0.12)',
+    backgroundColor: 'rgba(139,224,75,0.12)',
     borderRadius: borderRadius.full,
     paddingHorizontal: spacing.md,
     paddingVertical: 5,
@@ -816,10 +916,10 @@ const styles = StyleSheet.create({
     left: spacing.sm,
     backgroundColor: 'rgba(6,19,13,0.75)',
     borderWidth: 1,
-    borderColor: 'rgba(150,255,31,0.35)',
+    borderColor: colors.borderAccent,
     paddingHorizontal: spacing.sm,
     paddingVertical: 4,
-    borderRadius: borderRadius.full,
+    borderRadius: borderRadius.pill,
   },
   articleTitle: {
     lineHeight: 20,
@@ -833,13 +933,13 @@ const styles = StyleSheet.create({
   testimonialCard: {
     width: 280,
     marginRight: spacing.md,
-    borderRadius: borderRadius.xl,
+    borderRadius: borderRadius.card,
     overflow: 'hidden',
     padding: spacing.xl,
     position: 'relative',
     backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderSubtle,
   },
   quoteChar: {
     position: 'absolute',
@@ -880,16 +980,16 @@ const styles = StyleSheet.create({
   whyCard: {
     width: (SCREEN_WIDTH - spacing.lg * 2 - spacing.md) / 2,
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.xl,
+    borderRadius: borderRadius.card,
     padding: spacing.lg,
     borderWidth: 1,
-    borderColor: colors.borderLight,
+    borderColor: colors.borderSubtle,
   },
   whyIconContainer: {
     width: 44,
     height: 44,
     borderRadius: borderRadius.md,
-    backgroundColor: colors.primaryBg,
+    backgroundColor: colors.accentSurface,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.md,
@@ -906,10 +1006,10 @@ const styles = StyleSheet.create({
     marginHorizontal: spacing.lg,
     marginTop: spacing.lg,
     padding: spacing.md,
-    borderRadius: borderRadius.xl,
+    borderRadius: borderRadius.card,
     backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.primary,
+    borderColor: colors.borderAccent,
   },
   birthdayIcon: {
     width: 38,

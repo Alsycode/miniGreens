@@ -20,7 +20,7 @@ export function Badge({ count, variant = 'primary', size = 'sm', style }: BadgeP
 
   return (
     <Animated.View
-      entering={ZoomIn.springify().damping(17).stiffness(160)}
+      entering={ZoomIn.springify().damping(24).stiffness(160).mass(1)}
       style={[styles.base, { width: dimension, height: dimension, backgroundColor: bgColor }, style]}
     >
       <Typography variant="caption" color={colors.textInverse} style={styles.text}>

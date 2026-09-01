@@ -74,17 +74,17 @@ export default function AboutScreen() {
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {/* Hero */}
-        <Animated.View entering={FadeInUp.delay(40).springify().damping(31)}>
+        <Animated.View entering={FadeInUp.delay(40).springify().damping(31).mass(1).stiffness(100)}>
           <LinearGradient
             colors={[colors.primaryDark, '#1a4a2e']}
             style={styles.hero}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
           >
-            <Animated.View entering={ZoomIn.delay(120).springify().damping(15)} style={styles.heroIcon}>
+            <Animated.View entering={ZoomIn.delay(120).springify().damping(19).mass(1).stiffness(100)} style={styles.heroIcon}>
               <Ionicons name="leaf" size={40} color={colors.secondary} />
             </Animated.View>
-            <Animated.View entering={FadeInUp.delay(180).springify().damping(31)}>
+            <Animated.View entering={FadeInUp.delay(180).springify().damping(31).mass(1).stiffness(100)}>
               <Typography variant="h3" color={colors.textInverse} style={styles.heroTitle}>
                 MiniGreens
               </Typography>
@@ -96,7 +96,7 @@ export default function AboutScreen() {
         </Animated.View>
 
         {/* Story */}
-        <Animated.View entering={FadeInUp.delay(220).springify().damping(31)} style={styles.storySection}>
+        <Animated.View entering={FadeInUp.delay(220).springify().damping(31).mass(1).stiffness(100)} style={styles.storySection}>
           <Typography variant="body" weight="semibold" style={styles.sectionTitle}>Our Story</Typography>
           <Typography variant="bodySmall" color={colors.textSecondary} style={styles.storyText}>
             MiniGreens was born in 2022 from a Bengaluru rooftop. Our founders, frustrated by the nutrient-poor produce
@@ -107,11 +107,11 @@ export default function AboutScreen() {
         </Animated.View>
 
         {/* Stats */}
-        <Animated.View entering={FadeInUp.delay(280).springify().damping(31)} style={styles.statsGrid}>
+        <Animated.View entering={FadeInUp.delay(280).springify().damping(31).mass(1).stiffness(100)} style={styles.statsGrid}>
           {stats.map((stat, i) => (
             <Animated.View
               key={i}
-              entering={ZoomIn.delay(300 + i * 60).springify().damping(17)}
+              entering={ZoomIn.delay(300 + i * 60).springify().damping(19).mass(1).stiffness(100)}
               style={styles.statCard}
             >
               <Typography variant="h3" color={colors.primaryDark} weight="bold">
@@ -125,13 +125,13 @@ export default function AboutScreen() {
         </Animated.View>
 
         {/* Values */}
-        <Animated.View entering={FadeInUp.delay(400).springify().damping(31)}>
+        <Animated.View entering={FadeInUp.delay(400).springify().damping(31).mass(1).stiffness(100)}>
           <Typography variant="body" weight="semibold" style={styles.sectionTitle}>Our Values</Typography>
         </Animated.View>
         {values.map((value, i) => (
           <Animated.View
             key={i}
-            entering={FadeInUp.delay(440 + i * 60).springify().damping(31)}
+            entering={FadeInUp.delay(440 + i * 60).springify().damping(31).mass(1).stiffness(100)}
             style={styles.valueCard}
           >
             <View style={styles.valueIcon}>

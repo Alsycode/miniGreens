@@ -68,7 +68,7 @@ export default function SearchScreen() {
             <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
           <Animated.View
-            entering={FadeInUp.delay(40).springify().damping(31)}
+            entering={FadeInUp.delay(40).springify().damping(31).mass(1).stiffness(100)}
             style={styles.searchWrapper}
           >
             <SearchBar
@@ -87,7 +87,7 @@ export default function SearchScreen() {
         <ScrollView contentContainerStyle={styles.scrollContent}>
           {/* Recent Searches */}
           {recentSearches.length > 0 && (
-            <Animated.View entering={FadeInUp.delay(80).springify().damping(31)} style={styles.section}>
+            <Animated.View entering={FadeInUp.delay(80).springify().damping(31).mass(1).stiffness(100)} style={styles.section}>
               <View style={styles.sectionHeader}>
                 <Typography variant="bodySmall" color={colors.textTertiary} uppercase weight="medium">
                   Recent
@@ -106,7 +106,7 @@ export default function SearchScreen() {
               {recentSearches.map((search, index) => (
                 <Animated.View
                   key={index}
-                  entering={FadeInUp.delay(100 + index * 60).springify().damping(31)}
+                  entering={FadeInUp.delay(100 + index * 60).springify().damping(31).mass(1).stiffness(100)}
                 >
                   <Pressable
                     style={styles.recentItem}
@@ -127,7 +127,7 @@ export default function SearchScreen() {
           )}
 
           {/* Suggestions */}
-          <Animated.View entering={FadeInUp.delay(280).springify().damping(31)} style={styles.section}>
+          <Animated.View entering={FadeInUp.delay(280).springify().damping(31).mass(1).stiffness(100)} style={styles.section}>
             <Typography
               variant="bodySmall"
               color={colors.textTertiary}
@@ -141,7 +141,7 @@ export default function SearchScreen() {
               {searchSuggestions.slice(0, 6).map((suggestion, i) => (
                 <Animated.View
                   key={suggestion.id}
-                  entering={ZoomIn.delay(300 + i * 40).springify().damping(24)}
+                  entering={ZoomIn.delay(300 + i * 40).springify().damping(24).mass(1).stiffness(100)}
                 >
                   <Pressable
                     style={styles.suggestionChip}
@@ -164,7 +164,7 @@ export default function SearchScreen() {
         <Loading message="Searching..." />
       ) : searchResults.length > 0 ? (
         <ScrollView contentContainerStyle={styles.resultsContainer}>
-          <Animated.View entering={FadeInUp.springify().damping(31)}>
+          <Animated.View entering={FadeInUp.springify().damping(31).mass(1).stiffness(100)}>
             <Typography variant="bodySmall" color={colors.textTertiary} style={styles.resultsCount}>
               {searchResults.length} result{searchResults.length !== 1 ? 's' : ''} for "{query}"
             </Typography>
@@ -173,7 +173,7 @@ export default function SearchScreen() {
             {searchResults.map((product, i) => (
               <Animated.View
                 key={product.id}
-                entering={FadeInUp.delay(i * 60).springify().damping(31)}
+                entering={FadeInUp.delay(i * 60).springify().damping(31).mass(1).stiffness(100)}
                 style={styles.productWrapper}
               >
                 <ProductCard
@@ -274,7 +274,6 @@ const styles = StyleSheet.create({
   },
   gridCard: {
     width: '100%',
-    height: 280,
     marginRight: 0,
   },
 });

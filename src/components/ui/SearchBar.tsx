@@ -31,7 +31,7 @@ export function SearchBar({
           {placeholder}
         </Typography>
         <View style={styles.filterButton}>
-          <Ionicons name="options-outline" size={16} color={colors.textInverse} />
+          <Ionicons name="options-outline" size={16} color={colors.accent} />
         </View>
       </TouchableOpacity>
     );
@@ -64,19 +64,21 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surfaceVariant,
-    borderRadius: borderRadius.full,
+    backgroundColor: colors.surfaceTranslucent,
+    borderRadius: borderRadius.pill,
     paddingLeft: spacing.lg,
     paddingRight: spacing.xs,
-    height: 52,
+    height: 56,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderSubtle,
   },
   filterButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: colors.primary,
+    width: 40,
+    height: 40,
+    borderRadius: borderRadius.pill,
+    backgroundColor: colors.accentSurface,
+    borderWidth: 1,
+    borderColor: colors.borderSubtle,
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -117,7 +117,7 @@ export default function PartnerApplyScreen() {
         contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + spacing['2xl'] }]}
         keyboardShouldPersistTaps="handled"
       >
-        <Animated.View entering={FadeInUp.delay(40).springify().damping(31)}>
+        <Animated.View entering={FadeInUp.delay(40).springify().damping(31).mass(1).stiffness(100)}>
           <Typography variant="h2" color={colors.text} style={styles.title}>
             Become an MGC Partner
           </Typography>
@@ -126,7 +126,7 @@ export default function PartnerApplyScreen() {
           </Typography>
         </Animated.View>
 
-        <Animated.View entering={FadeInUp.delay(120).springify().damping(31)}>
+        <Animated.View entering={FadeInUp.delay(120).springify().damping(31).mass(1).stiffness(100)}>
           <Typography variant="bodySmall" color={colors.textSecondary} weight="medium" style={styles.sectionLabel}>
             Business Type
           </Typography>
@@ -147,7 +147,7 @@ export default function PartnerApplyScreen() {
           )}
         </Animated.View>
 
-        <Animated.View entering={FadeInUp.delay(180).springify().damping(31)} style={styles.form}>
+        <Animated.View entering={FadeInUp.delay(180).springify().damping(31).mass(1).stiffness(100)} style={styles.form}>
           <TextField
             label="Business / Café / Shop Name"
             leftIcon="storefront-outline"

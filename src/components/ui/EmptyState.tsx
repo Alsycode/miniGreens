@@ -61,17 +61,17 @@ export function EmptyState({
 }: EmptyStateProps) {
   return (
     <Animated.View
-      entering={FadeInUp.delay(80).springify().damping(31)}
+      entering={FadeInUp.delay(80).springify().damping(31).mass(1).stiffness(100)}
       style={styles.container}
     >
       <FloatingIcon icon={icon} />
-      <Animated.View entering={FadeInUp.delay(200).springify().damping(31)}>
+      <Animated.View entering={FadeInUp.delay(200).springify().damping(31).mass(1).stiffness(100)}>
         <Typography variant="h4" color={colors.text} align="center" style={styles.title}>
           {title}
         </Typography>
       </Animated.View>
       {message && (
-        <Animated.View entering={FadeInUp.delay(280).springify().damping(31)}>
+        <Animated.View entering={FadeInUp.delay(280).springify().damping(31).mass(1).stiffness(100)}>
           <Typography
             variant="body"
             color={colors.textSecondary}
@@ -83,7 +83,7 @@ export function EmptyState({
         </Animated.View>
       )}
       {actionLabel && onAction && (
-        <Animated.View entering={FadeInUp.delay(360).springify().damping(31)}>
+        <Animated.View entering={FadeInUp.delay(360).springify().damping(31).mass(1).stiffness(100)}>
           <Button
             title={actionLabel}
             variant="primary"

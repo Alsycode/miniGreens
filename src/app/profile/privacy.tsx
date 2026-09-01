@@ -64,7 +64,7 @@ export default function PrivacyScreen() {
       </Animated.View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        <Animated.View entering={FadeInUp.delay(40).springify().damping(31)} style={styles.intro}>
+        <Animated.View entering={FadeInUp.delay(40).springify().damping(31).mass(1).stiffness(100)} style={styles.intro}>
           <Typography variant="h4" color={colors.primaryDark}>Privacy Policy</Typography>
           <Typography variant="caption" color={colors.textTertiary} style={styles.effectiveDate}>
             Effective: January 1, 2025
@@ -77,7 +77,7 @@ export default function PrivacyScreen() {
         {sections.map((section, i) => (
           <Animated.View
             key={i}
-            entering={FadeInUp.delay(100 + i * 60).springify().damping(31)}
+            entering={FadeInUp.delay(100 + i * 60).springify().damping(31).mass(1).stiffness(100)}
             style={styles.section}
           >
             <View style={styles.sectionHeader}>
@@ -94,7 +94,7 @@ export default function PrivacyScreen() {
           </Animated.View>
         ))}
 
-        <Animated.View entering={FadeInUp.delay(100 + sections.length * 60).springify().damping(31)} style={styles.contact}>
+        <Animated.View entering={FadeInUp.delay(100 + sections.length * 60).springify().damping(31).mass(1).stiffness(100)} style={styles.contact}>
           <Typography variant="caption" color={colors.textTertiary} style={{ textAlign: 'center' }}>
             Questions? Contact us at{' '}
             <Typography variant="caption" color={colors.primary}>privacy@minigreens.in</Typography>

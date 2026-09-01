@@ -86,7 +86,7 @@ export default function SubscriptionsScreen() {
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <Animated.View
-        entering={FadeInUp.springify().damping(31)}
+        entering={FadeInUp.springify().damping(31).mass(1).stiffness(100)}
         style={styles.header}
       >
         <Typography variant="h3" color={colors.accent}>
@@ -99,9 +99,9 @@ export default function SubscriptionsScreen() {
         contentContainerStyle={styles.scrollContent}
       >
         {/* Hero */}
-        <Animated.View entering={FadeInUp.delay(80).springify().damping(31)} style={styles.hero}>
+        <Animated.View entering={FadeInUp.delay(80).springify().damping(31).mass(1).stiffness(100)} style={styles.hero}>
           <Animated.View
-            entering={ZoomIn.delay(160).springify().damping(15)}
+            entering={ZoomIn.delay(160).springify().damping(19).mass(1).stiffness(100)}
             style={styles.heroIconContainer}
           >
             <LinearGradient
@@ -133,7 +133,7 @@ export default function SubscriptionsScreen() {
         {plans.map((plan, i) => (
           <Animated.View
             key={plan.id}
-            entering={FadeInUp.delay(180 + i * 100).springify().damping(31)}
+            entering={FadeInUp.delay(180 + i * 100).springify().damping(31).mass(1).stiffness(100)}
           >
             <Card
               style={[styles.planCard, plan.is_popular && styles.popularCard].filter(Boolean) as any}
@@ -142,7 +142,7 @@ export default function SubscriptionsScreen() {
             >
               {plan.is_popular && (
                 <Animated.View
-                  entering={ZoomIn.delay(280 + i * 100).springify().damping(17)}
+                  entering={ZoomIn.delay(280 + i * 100).springify().damping(19).mass(1).stiffness(100)}
                   style={styles.popularBadge}
                 >
                   <Typography variant="caption" color={colors.textInverse} weight="bold">
@@ -208,7 +208,7 @@ export default function SubscriptionsScreen() {
 
         {/* Inquiry */}
         <Animated.View
-          entering={FadeInUp.delay(480).springify().damping(31)}
+          entering={FadeInUp.delay(480).springify().damping(31).mass(1).stiffness(100)}
         >
           <Card style={styles.inquiryCard} variant="outlined" padding="xl">
             <Typography variant="body" weight="semibold" color={colors.text} align="center">

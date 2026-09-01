@@ -27,7 +27,7 @@ export function HeroBanner({ banner, onPress }: HeroBannerProps) {
   const contentOpacity = useSharedValue(0);
 
   useEffect(() => {
-    contentY.value = withDelay(200, withSpring(0, { damping: 37, stiffness: 180 }));
+    contentY.value = withDelay(200, withSpring(0, { damping: 37, stiffness: 180, mass: 1 }));
     contentOpacity.value = withDelay(200, withTiming(1, { duration: 400 }));
   }, []);
 
@@ -41,8 +41,8 @@ export function HeroBanner({ banner, onPress }: HeroBannerProps) {
     <Animated.View style={[styles.container, pressScale]}>
       <Pressable
         onPress={onPress}
-        onPressIn={() => { scale.value = withSpring(0.98, { damping: 26, stiffness: 300 }); }}
-        onPressOut={() => { scale.value = withSpring(1, { damping: 20, stiffness: 250 }); }}
+        onPressIn={() => { scale.value = withSpring(0.98, { damping: 32, stiffness: 300, mass: 1 }); }}
+        onPressOut={() => { scale.value = withSpring(1, { damping: 30, stiffness: 250, mass: 1 }); }}
         style={StyleSheet.absoluteFill}
       >
         <Image source={resolveImageSource(banner.image)} style={styles.image} resizeMode="cover" />

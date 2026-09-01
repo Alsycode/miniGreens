@@ -54,10 +54,10 @@ export function Card({
           style={cardStyles}
           onPress={onPress}
           onPressIn={() => {
-            scale.value = withSpring(0.97, { damping: 31, stiffness: 220 });
+            scale.value = withSpring(0.97, { damping: 31, stiffness: 220, mass: 1 });
           }}
           onPressOut={() => {
-            scale.value = withSpring(1, { damping: 31, stiffness: 220 });
+            scale.value = withSpring(1, { damping: 31, stiffness: 220, mass: 1 });
           }}
         >
           <View style={styles.glassEdge} pointerEvents="none" />

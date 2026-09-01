@@ -52,13 +52,13 @@ function AddressCard({
 
   return (
     <Animated.View
-      entering={FadeInUp.delay(120 + index * 80).springify().damping(31)}
+      entering={FadeInUp.delay(120 + index * 80).springify().damping(31).mass(1).stiffness(100)}
       style={[animStyle, styles.cardWrapper]}
     >
       <Pressable
         style={[styles.card, address.is_default && styles.cardDefault]}
-        onPressIn={() => { scale.value = withSpring(0.97, { damping: 31, stiffness: 220 }); }}
-        onPressOut={() => { scale.value = withSpring(1, { damping: 31, stiffness: 220 }); }}
+        onPressIn={() => { scale.value = withSpring(0.97, { damping: 31, stiffness: 220, mass: 1 }); }}
+        onPressOut={() => { scale.value = withSpring(1, { damping: 31, stiffness: 220, mass: 1 }); }}
         onPress={onSetDefault}
       >
         <View style={styles.cardHeader}>
@@ -74,7 +74,7 @@ function AddressCard({
               {address.label}
             </Typography>
             {address.is_default && (
-              <Animated.View entering={ZoomIn.delay(180 + index * 80).springify().damping(17)} style={styles.defaultBadge}>
+              <Animated.View entering={ZoomIn.delay(180 + index * 80).springify().damping(19).mass(1).stiffness(100)} style={styles.defaultBadge}>
                 <Typography variant="caption" color={colors.primary} weight="semibold">
                   Default
                 </Typography>
@@ -242,7 +242,7 @@ export default function AddressesScreen() {
           />
         ))}
 
-        <Animated.View entering={FadeInUp.delay(120 + addresses.length * 80).springify().damping(31)}>
+        <Animated.View entering={FadeInUp.delay(120 + addresses.length * 80).springify().damping(31).mass(1).stiffness(100)}>
           <Pressable
             style={styles.addButton}
             onPress={() => {

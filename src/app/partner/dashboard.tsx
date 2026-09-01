@@ -260,7 +260,7 @@ export default function PartnerDashboardScreen() {
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={GREEN} />}
       >
-        <Animated.View entering={FadeInUp.delay(40).springify().damping(31)} style={styles.header}>
+        <Animated.View entering={FadeInUp.delay(40).springify().damping(31).mass(1).stiffness(100)} style={styles.header}>
           <View style={styles.headerText}>
             <Typography variant="h2" color={colors.textInverse} style={styles.title}>
               {partner.business_name}
@@ -280,13 +280,13 @@ export default function PartnerDashboardScreen() {
 
         {partner.status === 'approved' && (
           <>
-            <Animated.View entering={FadeInUp.delay(120).springify().damping(31)} style={styles.statsRow}>
+            <Animated.View entering={FadeInUp.delay(120).springify().damping(31).mass(1).stiffness(100)} style={styles.statsRow}>
               <StatCard icon="trending-up-outline" value={`₹${totalSales.toFixed(0)}`} label="Total Sales" />
               <StatCard icon="wallet-outline" value={`₹${netEarnings.toFixed(0)}`} label="Net Earnings" />
               <StatCard icon="bag-handle-outline" value={`${orders.length}`} label="Orders" />
             </Animated.View>
 
-            <Animated.View entering={FadeInUp.delay(180).springify().damping(31)}>
+            <Animated.View entering={FadeInUp.delay(180).springify().damping(31).mass(1).stiffness(100)}>
               <Pressable
                 onPress={() => router.push('/partner/business-order')}
                 style={({ pressed }) => [styles.primaryCta, pressed && styles.pressed]}
@@ -302,7 +302,7 @@ export default function PartnerDashboardScreen() {
             </Animated.View>
 
             {earnings && !earnings.error && (
-              <Animated.View entering={FadeInUp.delay(210).springify().damping(31)}>
+              <Animated.View entering={FadeInUp.delay(210).springify().damping(31).mass(1).stiffness(100)}>
                 <Card variant="outlined" padding="lg" style={styles.earningsCard}>
                   <View style={styles.earningsHeader}>
                     <View style={styles.earningsHeaderLeft}>
@@ -403,7 +403,7 @@ export default function PartnerDashboardScreen() {
             )}
 
             {payouts.length > 0 && (
-              <Animated.View entering={FadeInUp.delay(230).springify().damping(31)}>
+              <Animated.View entering={FadeInUp.delay(230).springify().damping(31).mass(1).stiffness(100)}>
                 <View style={styles.sectionHeader}>
                   <Typography variant="h4" color={colors.textInverse}>
                     Payout History
@@ -449,7 +449,7 @@ export default function PartnerDashboardScreen() {
               </Animated.View>
             )}
 
-            <Animated.View entering={FadeInUp.delay(240).springify().damping(31)}>
+            <Animated.View entering={FadeInUp.delay(240).springify().damping(31).mass(1).stiffness(100)}>
               <Typography variant="h4" color={colors.textInverse} style={styles.sectionTitle}>
                 Order History
               </Typography>

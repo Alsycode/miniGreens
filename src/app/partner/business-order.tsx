@@ -130,7 +130,7 @@ export default function BusinessOrderScreen() {
         contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + spacing['2xl'] }]}
         keyboardShouldPersistTaps="handled"
       >
-        <Animated.View entering={FadeInUp.delay(40).springify().damping(31)}>
+        <Animated.View entering={FadeInUp.delay(40).springify().damping(31).mass(1).stiffness(100)}>
           <Typography variant="h2" color={colors.text} style={styles.title}>
             Place Business Order
           </Typography>
@@ -139,14 +139,14 @@ export default function BusinessOrderScreen() {
           </Typography>
         </Animated.View>
 
-        <Animated.View entering={FadeInUp.delay(100).springify().damping(31)}>
+        <Animated.View entering={FadeInUp.delay(100).springify().damping(31).mass(1).stiffness(100)}>
           <TextField label="Café/Shop Name" value={businessName} onChangeText={setBusinessName} leftIcon="storefront-outline" />
           <TextField label="Contact Person" value={contactPerson} onChangeText={setContactPerson} leftIcon="person-outline" />
           <TextField label="Phone" value={phone} onChangeText={setPhone} leftIcon="call-outline" keyboardType="phone-pad" />
           <TextField label="Address" value={address} onChangeText={setAddress} leftIcon="location-outline" />
         </Animated.View>
 
-        <Animated.View entering={FadeInUp.delay(160).springify().damping(31)}>
+        <Animated.View entering={FadeInUp.delay(160).springify().damping(31).mass(1).stiffness(100)}>
           <Typography variant="bodySmall" color={colors.textSecondary} weight="medium" style={styles.sectionLabel}>
             Product
           </Typography>
@@ -162,7 +162,7 @@ export default function BusinessOrderScreen() {
           </View>
         </Animated.View>
 
-        <Animated.View entering={FadeInUp.delay(220).springify().damping(31)}>
+        <Animated.View entering={FadeInUp.delay(220).springify().damping(31).mass(1).stiffness(100)}>
           <TextField
             label="Quantity"
             value={quantity}

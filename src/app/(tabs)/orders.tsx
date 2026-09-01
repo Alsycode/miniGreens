@@ -52,7 +52,7 @@ function OrderCard({ order, index }: { order: OrderWithItems; index: number }) {
 
   return (
     <Animated.View
-      entering={FadeInUp.delay(index * 80).springify().damping(31)}
+      entering={FadeInUp.delay(index * 80).springify().damping(31).mass(1).stiffness(100)}
       style={animStyle}
     >
       <Pressable
@@ -60,8 +60,8 @@ function OrderCard({ order, index }: { order: OrderWithItems; index: number }) {
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
           router.push(`/order/${order.id}`);
         }}
-        onPressIn={() => { scale.value = withSpring(0.97, { damping: 31, stiffness: 220 }); }}
-        onPressOut={() => { scale.value = withSpring(1, { damping: 31, stiffness: 220 }); }}
+        onPressIn={() => { scale.value = withSpring(0.97, { damping: 31, stiffness: 220, mass: 1 }); }}
+        onPressOut={() => { scale.value = withSpring(1, { damping: 31, stiffness: 220, mass: 1 }); }}
       >
         <Card style={styles.orderCard} padding="lg">
           <View style={styles.orderHeader}>
@@ -79,7 +79,7 @@ function OrderCard({ order, index }: { order: OrderWithItems; index: number }) {
             </View>
             <View style={styles.badgeRow}>
               <Animated.View
-                entering={ZoomIn.delay(index * 80 + 100).springify().damping(17)}
+                entering={ZoomIn.delay(index * 80 + 100).springify().damping(19).mass(1).stiffness(100)}
                 style={[styles.statusBadge, { backgroundColor: paymentStatusColors[order.payment_status] + '20' }]}
               >
                 <Typography
@@ -92,7 +92,7 @@ function OrderCard({ order, index }: { order: OrderWithItems; index: number }) {
                 </Typography>
               </Animated.View>
               <Animated.View
-                entering={ZoomIn.delay(index * 80 + 120).springify().damping(17)}
+                entering={ZoomIn.delay(index * 80 + 120).springify().damping(19).mass(1).stiffness(100)}
                 style={[styles.statusBadge, { backgroundColor: statusColors[order.status] + '20' }]}
               >
                 <Typography
@@ -187,7 +187,7 @@ export default function OrdersScreen() {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <Animated.View
-          entering={FadeInUp.springify().damping(31)}
+          entering={FadeInUp.springify().damping(31).mass(1).stiffness(100)}
           style={styles.header}
         >
           <Typography variant="h3" color={colors.accent}>
@@ -208,7 +208,7 @@ export default function OrdersScreen() {
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <Animated.View
-        entering={FadeInUp.springify().damping(31)}
+        entering={FadeInUp.springify().damping(31).mass(1).stiffness(100)}
         style={styles.header}
       >
         <Typography variant="h3" color={colors.accent}>

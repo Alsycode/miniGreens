@@ -84,13 +84,13 @@ function SettingRow({
 
   return (
     <Animated.View
-      entering={FadeInUp.delay(delay).springify().damping(31)}
+      entering={FadeInUp.delay(delay).springify().damping(31).mass(1).stiffness(100)}
       style={animStyle}
     >
       <Pressable
         style={[styles.row, !isLast && styles.rowBorder]}
-        onPressIn={() => { scale.value = withSpring(0.98, { damping: 31, stiffness: 220 }); }}
-        onPressOut={() => { scale.value = withSpring(1, { damping: 31, stiffness: 220 }); }}
+        onPressIn={() => { scale.value = withSpring(0.98, { damping: 31, stiffness: 220, mass: 1 }); }}
+        onPressOut={() => { scale.value = withSpring(1, { damping: 31, stiffness: 220, mass: 1 }); }}
         onPress={handlePress}
       >
         <View style={styles.rowIcon}>
@@ -158,7 +158,7 @@ export default function SettingsScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {settingSections.map((section, si) => (
           <View key={si} style={styles.section}>
-            <Animated.View entering={FadeInUp.delay(rowDelay).springify().damping(31)}>
+            <Animated.View entering={FadeInUp.delay(rowDelay).springify().damping(31).mass(1).stiffness(100)}>
               <Typography
                 variant="caption"
                 weight="semibold"
@@ -188,7 +188,7 @@ export default function SettingsScreen() {
         ))}
 
         <Animated.View
-          entering={FadeInUp.delay(rowDelay + 60).springify().damping(31)}
+          entering={FadeInUp.delay(rowDelay + 60).springify().damping(31).mass(1).stiffness(100)}
           style={styles.versionRow}
         >
           <Typography variant="caption" color={colors.textTertiary} style={{ textAlign: 'center' }}>

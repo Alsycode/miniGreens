@@ -43,8 +43,8 @@ function FilterChip({ label, selected, onPress, index }: FilterChipProps) {
   React.useEffect(() => {
     bgOpacity.value = withTiming(selected ? 1 : 0, { duration: 220 });
     if (selected) {
-      scale.value = withSpring(1.05, { damping: 15, stiffness: 200 });
-      scale.value = withSpring(1, { damping: 20, stiffness: 200 });
+      scale.value = withSpring(1.03, { damping: 27, stiffness: 200, mass: 1 });
+      scale.value = withSpring(1, { damping: 27, stiffness: 200, mass: 1 });
     }
   }, [selected]);
 
@@ -58,15 +58,15 @@ function FilterChip({ label, selected, onPress, index }: FilterChipProps) {
 
   return (
     <Animated.View
-      entering={ZoomIn.delay(index * 40).springify().damping(24)}
+      entering={ZoomIn.delay(index * 40).springify().damping(24).mass(1).stiffness(100)}
       style={[chipStyle, styles.chipOuter]}
     >
       <Pressable
         onPress={() => {
           Haptics.selectionAsync();
-          scale.value = withSpring(0.94, { damping: 31, stiffness: 300 });
+          scale.value = withSpring(0.96, { damping: 32, stiffness: 300, mass: 1 });
           setTimeout(() => {
-            scale.value = withSpring(1, { damping: 20, stiffness: 220 });
+            scale.value = withSpring(1, { damping: 28, stiffness: 220, mass: 1 });
           }, 80);
           onPress();
         }}
@@ -92,14 +92,14 @@ function SortChip({ label, selected, onPress, index }: FilterChipProps) {
 
   return (
     <Animated.View
-      entering={ZoomIn.delay(index * 40).springify().damping(24)}
+      entering={ZoomIn.delay(index * 40).springify().damping(24).mass(1).stiffness(100)}
       style={{ marginRight: spacing.sm, marginBottom: spacing.sm }}
     >
       <Pressable
         onPress={() => {
           Haptics.selectionAsync();
-          scale.value = withSpring(0.94, { damping: 31, stiffness: 300 });
-          setTimeout(() => { scale.value = withSpring(1, { damping: 20, stiffness: 220 }); }, 80);
+          scale.value = withSpring(0.96, { damping: 32, stiffness: 300, mass: 1 });
+          setTimeout(() => { scale.value = withSpring(1, { damping: 28, stiffness: 220, mass: 1 }); }, 80);
           onPress();
         }}
         style={[styles.sortChip, selected && styles.sortChipSelected]}
@@ -147,7 +147,7 @@ export default function ExploreScreen() {
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <Animated.View
-        entering={FadeInUp.springify().damping(31)}
+        entering={FadeInUp.springify().damping(31).mass(1).stiffness(100)}
         style={styles.header}
       >
         <Typography variant="h3" color={colors.accent}>
@@ -225,7 +225,7 @@ export default function ExploreScreen() {
           {sortedProducts.map((product, i) => (
             <Animated.View
               key={product.id}
-              entering={FadeInUp.delay(i * 60).springify().damping(31)}
+              entering={FadeInUp.delay(i * 60).springify().damping(31).mass(1).stiffness(100)}
               style={styles.productWrapper}
             >
               <ProductCard
@@ -284,7 +284,6 @@ const styles = StyleSheet.create({
   },
   gridCard: {
     width: '100%',
-    height: 280,
     marginRight: 0,
   },
   emptyState: {

@@ -3,7 +3,7 @@ import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { View, Pressable, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, spacing } from '../../theme';
+import { colors, spacing, borderRadius } from '../../theme';
 import { Typography } from '../../components/ui/Typography';
 
 const TABS: { name: string; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
@@ -18,7 +18,8 @@ function BottomTabBar({ state, navigation }: any) {
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 8) }]}>
+    <View style={styles.barWrap}>
+      <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 12) }]}>
       {TABS.map((tab, index) => {
         const focused = state.index === index;
         const onPress = () => {
@@ -35,17 +36,20 @@ function BottomTabBar({ state, navigation }: any) {
 
         return (
           <Pressable key={tab.name} onPress={onPress} style={styles.item}>
-            <Ionicons
-              name={focused ? tab.icon : (`${tab.icon}-outline` as any)}
-              size={22}
-              color={tint}
-            />
+            <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
+              <Ionicons
+                name={focused ? tab.icon : (`${tab.icon}-outline` as any)}
+                size={22}
+                color={tint}
+              />
+            </View>
             <Typography variant="caption" color={tint} weight={focused ? 'semibold' : 'regular'} style={styles.label}>
               {tab.label}
             </Typography>
           </Pressable>
         );
       })}
+      </View>
     </View>
   );
 }
@@ -63,18 +67,38 @@ export default function TabLayout() {
 }
 
 const styles = StyleSheet.create({
+  barWrap: {
+    position: 'relative',
+  },
   bar: {
     flexDirection: 'row',
-    backgroundColor: colors.surface,
+    // A defined dark layer that sits above the content — depth comes from the
+    // top hairline + soft upward shadow, not from being see-through.
+    backgroundColor: 'rgba(12,16,13,0.97)',
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.border,
-    paddingTop: spacing.sm,
+    borderTopColor: 'rgba(255,255,255,0.08)',
+    paddingTop: spacing.md,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.16,
+    shadowRadius: 12,
+    elevation: 12,
   },
   item: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 3,
+    gap: 4,
+  },
+  iconWrap: {
+    width: 46,
+    height: 30,
+    borderRadius: borderRadius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconWrapActive: {
+    backgroundColor: 'rgba(150,255,31,0.14)',
   },
   label: {
     fontSize: 10,

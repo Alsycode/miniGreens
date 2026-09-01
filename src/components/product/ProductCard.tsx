@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Image, StyleSheet, Pressable } from 'react-native';
+import { View, Image, StyleSheet, Pressable, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, {
@@ -26,18 +26,18 @@ interface ProductCardProps {
 function useSpringPress(to = 0.96) {
   const scale = useSharedValue(1);
   const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
-  const onPressIn = () => { scale.value = withSpring(to, { damping: 31, stiffness: 220 }); };
-  const onPressOut = () => { scale.value = withSpring(1, { damping: 31, stiffness: 220 }); };
+  const onPressIn = () => { scale.value = withSpring(to, { damping: 31, stiffness: 220, mass: 1 }); };
+  const onPressOut = () => { scale.value = withSpring(1, { damping: 31, stiffness: 220, mass: 1 }); };
   return { animStyle, onPressIn, onPressOut };
 }
 
-// Per-product accent (size badge + price), keyed off the slug so it's stable.
-const ACCENTS = ['#F472B6', '#FB923C', '#A78BFA', '#34D399', '#22D3EE', '#FBBF24'];
-function accentFor(slug: string) {
-  let h = 0;
-  for (let i = 0; i < slug.length; i++) h = (h * 31 + slug.charCodeAt(i)) >>> 0;
-  return ACCENTS[h % ACCENTS.length];
-}
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+// Hero "Best Sellers" card — image-led, one full card + a peek of the next.
+// Widened from the old 152 so the product photography can actually breathe
+// (the reference gets its richness from proportion, not a huge card).
+// Two cards + a peek of the third — the reference Home Screen's proportion.
+const FEATURE_CARD_W = Math.min(Math.round(SCREEN_WIDTH * 0.42), 190);
+
 
 // ─── Inline cart stepper ─────────────────────────────────────────────────────
 
@@ -58,14 +58,19 @@ function CartStepper({ slug, compact = false }: { slug: string; compact?: boolea
 
   return (
     <View style={[styles.stepper, compact && styles.stepperCompact]}>
-      <Pressable style={styles.stepperBtn} onPress={dec} hitSlop={6} disabled={qty === 0}>
-        <Ionicons name="remove" size={14} color={qty === 0 ? colors.textTertiary : colors.primary} />
+      <Pressable style={[styles.stepperBtn, compact && styles.stepperBtnCompact]} onPress={dec} hitSlop={8} disabled={qty === 0}>
+        <Ionicons name="remove" size={compact ? 11 : 14} color={colors.primary} style={qty === 0 && styles.stepperDisabled} />
       </Pressable>
-      <Typography variant="bodySmall" weight="bold" color={colors.accent} style={styles.stepperQty}>
+      <Typography
+        variant="bodySmall"
+        weight="bold"
+        color={colors.accent}
+        style={[styles.stepperQty, compact && styles.stepperQtyCompact]}
+      >
         {qty}
       </Typography>
-      <Pressable style={styles.stepperBtn} onPress={inc} hitSlop={6}>
-        <Ionicons name="add" size={14} color={colors.primary} />
+      <Pressable style={[styles.stepperBtn, compact && styles.stepperBtnCompact]} onPress={inc} hitSlop={8}>
+        <Ionicons name="add" size={compact ? 11 : 14} color={colors.primary} />
       </Pressable>
     </View>
   );
@@ -74,7 +79,6 @@ function CartStepper({ slug, compact = false }: { slug: string; compact?: boolea
 export function ProductCard({ product, onPress, variant = 'default', index = 0, style }: ProductCardProps) {
   const { animStyle, onPressIn, onPressOut } = useSpringPress();
   const [favorited, setFavorited] = useState(false);
-  const accent = accentFor(product.slug);
 
   const toggleFavorite = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -91,7 +95,7 @@ export function ProductCard({ product, onPress, variant = 'default', index = 0, 
   if (variant === 'horizontal') {
     return (
       <Animated.View
-        entering={FadeInUp.delay(index * 70).springify().damping(31)}
+        entering={FadeInUp.delay(index * 70).springify().damping(31).mass(1).stiffness(100)}
         style={[animStyle, style]}
       >
         <Pressable
@@ -137,7 +141,7 @@ export function ProductCard({ product, onPress, variant = 'default', index = 0, 
   if (variant === 'seasonal') {
     return (
       <Animated.View
-        entering={FadeInUp.delay(index * 70).springify().damping(31)}
+        entering={FadeInUp.delay(index * 70).springify().damping(31).mass(1).stiffness(100)}
         style={[styles.seasonalCard, animStyle, style]}
       >
         <Pressable onPress={handlePress} onPressIn={onPressIn} onPressOut={onPressOut} style={styles.seasonalInner}>
@@ -156,8 +160,8 @@ export function ProductCard({ product, onPress, variant = 'default', index = 0, 
 
           {product.isBestSeller && (
             <View style={styles.bestsellerBadge}>
-              <Ionicons name="star" size={9} color="#06130D" />
-              <Typography style={styles.badgeText} color="#06130D">BESTSELLER</Typography>
+              <Ionicons name="star" size={9} color={colors.accent} />
+              <Typography style={styles.badgeText} color={colors.accent}>BESTSELLER</Typography>
             </View>
           )}
 
@@ -209,7 +213,7 @@ export function ProductCard({ product, onPress, variant = 'default', index = 0, 
   if (variant === 'compact') {
     return (
       <Animated.View
-        entering={FadeInUp.delay(index * 60).springify().damping(31)}
+        entering={FadeInUp.delay(index * 60).springify().damping(31).mass(1).stiffness(100)}
         style={[styles.compactCard, animStyle, style]}
       >
         <Pressable onPress={handlePress} onPressIn={onPressIn} onPressOut={onPressOut} style={{ flex: 1 }}>
@@ -230,64 +234,69 @@ export function ProductCard({ product, onPress, variant = 'default', index = 0, 
     );
   }
 
-  // ─── Default variant — full-bleed image that fades from ~50% down ─────────
+  // ─── Default variant — compact card: image on top, details on the surface ──
+  //     below (matches the reference Home Screen's Best Sellers cards).
 
   return (
     <Animated.View
-      entering={FadeInUp.delay(index * 60).springify().damping(31)}
+      entering={FadeInUp.delay(index * 60).springify().damping(31).mass(1).stiffness(100)}
       style={[styles.card, animStyle, style]}
     >
       <Pressable onPress={handlePress} onPressIn={onPressIn} onPressOut={onPressOut} style={styles.cardInner}>
-        <Image
-          source={resolveImageSource(product.images[0])}
-          style={[StyleSheet.absoluteFill, { width: '100%', height: '100%' }]}
-          resizeMode="cover"
-        />
-        <LinearGradient
-          colors={['rgba(20,20,20,0)', 'rgba(20,20,20,0.6)', 'rgba(20,20,20,1)']}
-          locations={[0.32, 0.56, 0.86]}
-          style={StyleSheet.absoluteFill}
-          pointerEvents="none"
-        />
-
-        {product.isBestSeller && (
-          <View style={styles.bestsellerBadge}>
-            <Ionicons name="star" size={9} color="#06130D" />
-            <Typography style={styles.badgeText} color="#06130D">BESTSELLER</Typography>
-          </View>
-        )}
-
-        <Pressable style={styles.favouriteBtn} onPress={toggleFavorite} hitSlop={8}>
-          <Ionicons
-            name={favorited ? 'heart' : 'heart-outline'}
-            size={15}
-            color={favorited ? colors.error : colors.textInverse}
+        <View style={styles.imageArea}>
+          <Image
+            source={resolveImageSource(product.images[0])}
+            style={styles.image}
+            resizeMode="cover"
           />
-        </Pressable>
+          {/* Melt the photo into the card surface — no hard rectangle seam. */}
+          <LinearGradient
+            colors={['rgba(20,26,21,0)', 'rgba(20,26,21,0)', colors.surface]}
+            locations={[0, 0.62, 1]}
+            style={styles.imageFade}
+            pointerEvents="none"
+          />
 
-        <View style={styles.defaultOverlayBody}>
-          <View style={[styles.unitBadgeInline, { backgroundColor: accent }]}>
+          {product.isBestSeller && (
+            <View style={styles.bestsellerBadge}>
+              <Ionicons name="star" size={9} color={colors.accent} />
+              <Typography style={styles.badgeText} color={colors.accent}>BESTSELLER</Typography>
+            </View>
+          )}
+
+          <Pressable style={styles.favouriteBtn} onPress={toggleFavorite} hitSlop={8}>
+            <Ionicons
+              name={favorited ? 'heart' : 'heart-outline'}
+              size={15}
+              color={favorited ? colors.error : colors.textInverse}
+            />
+          </Pressable>
+
+          <View style={styles.unitBadgeOnImage}>
             <Typography style={styles.unitBadgeText} color="#06130D">
               {product.unit}
             </Typography>
           </View>
-          <Typography variant="body" weight="bold" color={colors.textInverse} numberOfLines={1}>
+        </View>
+
+        <View style={styles.content}>
+          <Typography variant="bodySmall" weight="bold" color={colors.text} numberOfLines={1} style={styles.name}>
             {product.name}
           </Typography>
           <Typography
             variant="caption"
-            color="rgba(255,255,255,0.75)"
+            color={colors.textSecondary}
             numberOfLines={2}
-            style={styles.description}
+            style={styles.cardDesc}
           >
             {product.description}
           </Typography>
 
           <View style={styles.bottomRow}>
-            <Typography variant="h4" weight="bold" color={colors.accent}>
+            <Typography variant="bodySmall" weight="bold" color={colors.accent} style={styles.price}>
               ₹{product.price.toFixed(0)}
             </Typography>
-            <CartStepper slug={product.slug} />
+            <CartStepper slug={product.slug} compact />
           </View>
         </View>
       </Pressable>
@@ -296,26 +305,54 @@ export function ProductCard({ product, onPress, variant = 'default', index = 0, 
 }
 
 const styles = StyleSheet.create({
-  // ── Default card ──────────────────────────────────────────────────────────
+  // ── Default card — compact, image-on-top (reference proportions) ──────────
   card: {
-    width: 230,
-    height: 300,
-    borderRadius: borderRadius['2xl'],
+    width: FEATURE_CARD_W,
+    borderRadius: borderRadius.card,
     marginRight: spacing.md,
     backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderFaint,
     overflow: 'hidden',
   },
   cardInner: {
     flex: 1,
   },
-  defaultOverlayBody: {
+  imageArea: {
+    position: 'relative',
+    width: '100%',
+    height: 140,
+    overflow: 'hidden',
+    backgroundColor: colors.surface,
+  },
+  imageFade: {
     position: 'absolute',
     left: 0,
     right: 0,
     bottom: 0,
-    padding: spacing.md,
+    height: '55%',
+  },
+  content: {
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.xs,
+    paddingBottom: spacing.sm,
+  },
+  name: {
+    fontSize: 12,
+    lineHeight: 15,
+  },
+  price: {
+    fontSize: 13,
+    lineHeight: 16,
+  },
+  unitBadgeOnImage: {
+    position: 'absolute',
+    left: spacing.sm,
+    bottom: spacing.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: borderRadius.badge,
+    backgroundColor: colors.primary,
   },
   imageWrap: {
     height: 150,
@@ -333,8 +370,10 @@ const styles = StyleSheet.create({
     right: spacing.sm,
     width: 30,
     height: 30,
-    borderRadius: 15,
-    backgroundColor: 'rgba(0,0,0,0.45)',
+    borderRadius: borderRadius.pill,
+    backgroundColor: 'rgba(6,13,10,0.45)',
+    borderWidth: 1,
+    borderColor: colors.borderSubtle,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -345,15 +384,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
-    backgroundColor: colors.primary,
-    paddingHorizontal: spacing.sm,
+    backgroundColor: 'rgba(6,19,13,0.62)',
+    borderWidth: 1,
+    borderColor: colors.borderAccent,
+    paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: borderRadius.full,
+    borderRadius: borderRadius.pill,
   },
   badgeText: {
     fontSize: 8,
     fontWeight: '700',
-    letterSpacing: 0.6,
+    letterSpacing: 0.5,
   },
   unitBadge: {
     position: 'absolute',
@@ -371,10 +412,10 @@ const styles = StyleSheet.create({
   seasonalCard: {
     flex: 1,
     height: 320,
-    borderRadius: borderRadius['2xl'],
+    borderRadius: borderRadius.card,
     backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderSubtle,
     overflow: 'hidden',
   },
   seasonalInner: {
@@ -418,8 +459,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: colors.primary,
-    borderRadius: borderRadius.full,
+    borderColor: colors.borderStrong,
+    borderRadius: borderRadius.pill,
     paddingHorizontal: 10,
     paddingVertical: 7,
   },
@@ -440,11 +481,18 @@ const styles = StyleSheet.create({
     lineHeight: 15,
     minHeight: 30,
   },
+  // Tighter description used by the compact default card (reference proportions)
+  cardDesc: {
+    marginTop: spacing.xs,
+    fontSize: 10,
+    lineHeight: 12,
+    minHeight: 22,
+  },
   bottomRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: spacing.md,
+    marginTop: spacing.xs,
   },
 
   // ── Inline stepper ───────────────────────────────────────────────────────
@@ -466,21 +514,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: colors.primary,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.control,
     paddingHorizontal: 4,
   },
+  stepperDisabled: {
+    opacity: 0.4,
+  },
   stepperCompact: {
-    paddingHorizontal: 2,
+    paddingHorizontal: 1,
+    borderRadius: borderRadius.sm,
   },
   stepperBtn: {
-    width: 26,
+    width: 28,
     height: 30,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  stepperBtnCompact: {
+    width: 18,
+    height: 20,
+  },
   stepperQty: {
     minWidth: 18,
     textAlign: 'center',
+  },
+  stepperQtyCompact: {
+    minWidth: 12,
+    fontSize: 11,
+    lineHeight: 14,
   },
 
   // ── Rating / price helpers ────────────────────────────────────────────────
@@ -506,10 +567,10 @@ const styles = StyleSheet.create({
     height: 116,
     padding: spacing.sm,
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.xl,
+    borderRadius: borderRadius.lg,
     marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderSubtle,
     overflow: 'hidden',
   },
   horizontalImage: {

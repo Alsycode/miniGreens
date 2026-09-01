@@ -66,7 +66,7 @@ export default function CheckoutSuccessScreen() {
   }, [orderId]);
 
   useEffect(() => {
-    iconScale.value = withDelay(180, withSpring(1, { damping: 15, stiffness: 160 }));
+    iconScale.value = withDelay(180, withSpring(1, { damping: 24, stiffness: 160, mass: 1 }));
     pulseScale.value = withDelay(400, withTiming(1.65, { duration: 850, easing: Easing.out(Easing.cubic) }));
     pulseOpacity.value = withDelay(400, withSequence(withTiming(0.35, { duration: 100 }), withTiming(0, { duration: 750 })));
   }, []);
@@ -147,7 +147,7 @@ export default function CheckoutSuccessScreen() {
           </Animated.View>
         </View>
 
-        <Animated.View entering={FadeInUp.delay(360).springify().damping(31)} style={styles.confirmTextBlock}>
+        <Animated.View entering={FadeInUp.delay(360).springify().damping(31).mass(1).stiffness(100)} style={styles.confirmTextBlock}>
           <Typography variant="h3" color={colors.text} align="center" style={{ marginBottom: spacing.xs }}>
             Payment Successful!
           </Typography>
@@ -158,7 +158,7 @@ export default function CheckoutSuccessScreen() {
       </View>
 
       <View style={styles.body}>
-        <Animated.View entering={FadeInUp.delay(500).springify().damping(31)}>
+        <Animated.View entering={FadeInUp.delay(500).springify().damping(31).mass(1).stiffness(100)}>
           <Card variant="outlined" padding="lg" style={styles.confirmCard}>
             <Typography variant="bodySmall" weight="semibold" style={{ marginBottom: spacing.md }}>
               Order Details
@@ -175,7 +175,7 @@ export default function CheckoutSuccessScreen() {
           </Card>
         </Animated.View>
 
-        <Animated.View entering={FadeInUp.delay(800).springify().damping(31)}>
+        <Animated.View entering={FadeInUp.delay(800).springify().damping(31).mass(1).stiffness(100)}>
           <Button
             title="View My Orders"
             variant="primary"

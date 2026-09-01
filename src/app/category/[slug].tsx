@@ -79,7 +79,7 @@ export default function CategoryScreen() {
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Category Hero */}
-        <Animated.View entering={FadeInUp.delay(60).springify().damping(34)}>
+        <Animated.View entering={FadeInUp.delay(60).springify().damping(34).mass(1).stiffness(100)}>
           <View style={styles.hero}>
             <Image source={resolveImageSource(category.image)} style={styles.heroImage} />
             <LinearGradient
@@ -89,7 +89,7 @@ export default function CategoryScreen() {
               end={{ x: 0, y: 1 }}
             />
             <Animated.View
-              entering={FadeInUp.delay(160).springify().damping(31)}
+              entering={FadeInUp.delay(160).springify().damping(31).mass(1).stiffness(100)}
               style={styles.heroContent}
             >
               <Typography variant="h3" color={colors.textInverse}>
@@ -113,7 +113,7 @@ export default function CategoryScreen() {
           {categoryProducts.map((product, i) => (
             <Animated.View
               key={product.id}
-              entering={FadeInUp.delay(200 + i * 60).springify().damping(31)}
+              entering={FadeInUp.delay(200 + i * 60).springify().damping(31).mass(1).stiffness(100)}
               style={styles.productWrapper}
             >
               <ProductCard
@@ -198,7 +198,6 @@ const styles = StyleSheet.create({
   },
   gridCard: {
     width: '100%',
-    height: 280,
     marginRight: 0,
   },
 });

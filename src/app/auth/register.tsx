@@ -88,7 +88,7 @@ export default function RegisterScreen() {
         contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + spacing['3xl'] }]}
         keyboardShouldPersistTaps="handled"
       >
-        <Animated.View entering={FadeInUp.delay(40).springify().damping(31)}>
+        <Animated.View entering={FadeInUp.delay(40).springify().damping(31).mass(1).stiffness(100)}>
           <Logo width={128} style={styles.logo} />
           <Typography variant="h2" color={colors.text} style={styles.title}>
             Create your account
@@ -98,7 +98,7 @@ export default function RegisterScreen() {
           </Typography>
         </Animated.View>
 
-        <Animated.View entering={FadeInUp.delay(120).springify().damping(31)} style={styles.form}>
+        <Animated.View entering={FadeInUp.delay(120).springify().damping(31).mass(1).stiffness(100)} style={styles.form}>
           <TextField
             label="Full Name"
             leftIcon="person-outline"
@@ -148,7 +148,7 @@ export default function RegisterScreen() {
           <Button title="Create Account" onPress={handleRegister} loading={loading} fullWidth size="lg" style={styles.submit} />
         </Animated.View>
 
-        <Animated.View entering={FadeInUp.delay(200).springify().damping(31)} style={styles.footer}>
+        <Animated.View entering={FadeInUp.delay(200).springify().damping(31).mass(1).stiffness(100)} style={styles.footer}>
           <Typography variant="bodySmall" color={colors.textSecondary}>
             Already have an account?
           </Typography>

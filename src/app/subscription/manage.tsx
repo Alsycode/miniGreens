@@ -115,7 +115,7 @@ export default function ManageSubscriptionScreen() {
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        <Animated.View entering={FadeInUp.delay(40).springify().damping(31)} style={styles.headerRow}>
+        <Animated.View entering={FadeInUp.delay(40).springify().damping(31).mass(1).stiffness(100)} style={styles.headerRow}>
           <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
             <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
@@ -125,7 +125,7 @@ export default function ManageSubscriptionScreen() {
           <View style={{ width: 24 }} />
         </Animated.View>
 
-        <Animated.View entering={FadeInUp.delay(100).springify().damping(31)}>
+        <Animated.View entering={FadeInUp.delay(100).springify().damping(31).mass(1).stiffness(100)}>
           <Card padding="xl" style={styles.planCard}>
             <View style={styles.statusRow}>
               <View style={[styles.statusDot, { backgroundColor: STATUS_COLORS[subscription.status] }]} />
@@ -155,7 +155,7 @@ export default function ManageSubscriptionScreen() {
           </Card>
         </Animated.View>
 
-        <Animated.View entering={FadeInUp.delay(180).springify().damping(31)} style={styles.actions}>
+        <Animated.View entering={FadeInUp.delay(180).springify().damping(31).mass(1).stiffness(100)} style={styles.actions}>
           {subscription.status === 'active' && (
             <Button title="Pause Subscription" variant="outline" fullWidth loading={updating} onPress={handlePause} />
           )}
