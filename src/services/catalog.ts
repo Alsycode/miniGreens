@@ -32,7 +32,7 @@ const LOCAL_IMAGE_BY_SLUG: Record<string, number> = {
   'beetroot': require('../assets/beetroot.png'),
   'pak-choi': require('../assets/bokchoy.png'),
   'sunflower': require('../assets/sunflowershoots.png'),
-  'mustard': require('../assets/mustard.png'),
+  'mustard': require('../assets/mustard-dark.png'),
   'fenugreek': require('../assets/fenugreek.png'),
   'broccoli': require('../assets/broccoli.png'),
   'arugula': require('../assets/arugula.png'),
