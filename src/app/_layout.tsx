@@ -92,7 +92,6 @@ export default function RootLayout() {
           <Stack.Screen name="cart" options={{ animation: 'slide_from_right' }} />
           <Stack.Screen name="preorder/[slug]" options={{ animation: 'slide_from_right' }} />
           <Stack.Screen name="checkout/index" options={{ animation: 'slide_from_right' }} />
-          <Stack.Screen name="checkout/pay" options={{ animation: 'slide_from_bottom' }} />
           <Stack.Screen name="checkout/success" options={{ animation: 'fade' }} />
           <Stack.Screen name="order/[id]" options={{ animation: 'slide_from_right' }} />
           <Stack.Screen name="profile/edit" options={{ animation: 'slide_from_right' }} />

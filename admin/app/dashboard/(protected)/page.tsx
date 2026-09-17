@@ -144,7 +144,7 @@ export default async function DashboardPage() {
           <p className="text-3xl font-bold tracking-tight text-[#0A2416] mb-1">
             ₹{(monthlyRevenue / 1000).toFixed(1)}k
           </p>
-          <p className="text-sm text-slate-500">Monthly Revenue</p>
+          <p className="text-sm text-slate-500">Monthly Order Value</p>
         </div>
 
         {/* Active Subscriptions */}
@@ -189,7 +189,7 @@ export default async function DashboardPage() {
         >
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-base font-semibold text-[#0A2416]">Revenue</h2>
+              <h2 className="text-base font-semibold text-[#0A2416]">Order Value</h2>
               <p className="text-xs text-slate-400 mt-0.5">Last 7 days</p>
             </div>
             <span className="text-xs font-medium px-3 py-1 rounded-full" style={{ backgroundColor: "#E8F3EC", color: "#3D7A52" }}>

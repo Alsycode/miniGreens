@@ -284,7 +284,7 @@ export default function CheckoutScreen() {
         delivery_date: deliveryDate || null,
         delivery_time: deliveryTime || null,
         notes: notes || null,
-        order_type: 'standard',
+        order_type: 'preorder',
         business_name: null,
         contact_person: null,
         discount_code: appliedCoupon?.code ?? null,
@@ -322,7 +322,7 @@ export default function CheckoutScreen() {
 
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     clearCart();
-    router.replace(`/checkout/pay?orderId=${order.id}`);
+    router.replace(`/checkout/success?orderId=${order.id}`);
   }
 
   const renderStep = () => {
@@ -512,7 +512,7 @@ export default function CheckoutScreen() {
             />
 
             <Button
-              title={placing ? 'Placing Order...' : 'Place Order'}
+              title={placing ? 'Placing Pre-order...' : 'Place Pre-order'}
               variant="primary"
               size="lg"
               fullWidth

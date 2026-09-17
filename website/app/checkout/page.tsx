@@ -5,7 +5,6 @@ import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { LeafDecor } from "@/components/LeafDecor";
-import { RazorpayCheckoutButton } from "@/components/RazorpayCheckoutButton";
 import { useAuth } from "@/context/AuthContext";
 import { useCartStore, cartSubtotal } from "@/store/useCartStore";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -103,7 +102,7 @@ export default function CheckoutPage() {
         delivery_date: details.deliveryDate || null,
         delivery_time: details.deliveryTime || null,
         notes: details.notes || null,
-        order_type: "standard",
+        order_type: "preorder",
         business_name: null,
         contact_person: null,
       })
@@ -148,13 +147,19 @@ export default function CheckoutPage() {
 
         {orderId ? (
           <div className="mt-10 rounded-2xl border border-(--color-border) bg-(--color-surface) p-6 md:p-8">
-            <h2 className="font-display text-2xl">Order placed</h2>
+            <h2 className="font-display text-2xl">Pre-order placed</h2>
             <p className="mt-2 text-sm text-(--color-muted)">
-              Complete payment to confirm your order.
+              You won&apos;t be charged now. We&apos;ll notify you when it&apos;s confirmed for delivery.
             </p>
-            <div className="mt-6">
-              <RazorpayCheckoutButton orderId={orderId} amountLabel={`₹${orderTotal.toFixed(2)}`} />
-            </div>
+            <p className="mt-6 text-sm text-(--color-cream)">
+              Total reserved: <span className="font-medium">₹{orderTotal.toFixed(2)}</span>
+            </p>
+            <Link
+              href="/orders"
+              className="mt-6 inline-flex rounded-full bg-(--color-olive) px-7 py-3.5 text-sm font-medium text-white transition-colors hover:bg-(--color-olive-dark)"
+            >
+              View my orders
+            </Link>
           </div>
         ) : authLoading ? null : !user ? (
           <div className="mt-10 rounded-2xl border border-(--color-border) bg-(--color-surface) p-10 text-center">
@@ -244,7 +249,7 @@ export default function CheckoutPage() {
               disabled={placing}
               className="mt-7 w-full rounded-full bg-(--color-olive) px-7 py-4 font-medium text-white transition-colors hover:bg-(--color-olive-dark) disabled:opacity-60"
             >
-              {placing ? "Placing order..." : "Place order & pay"}
+              {placing ? "Placing pre-order..." : "Place pre-order"}
             </button>
           </form>
         )}

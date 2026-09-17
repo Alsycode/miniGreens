@@ -8,6 +8,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { LeafDecor } from "@/components/LeafDecor";
 import { useCartStore, cartSubtotal } from "@/store/useCartStore";
+import { displayName } from "@/lib/productCopy";
 
 const DELIVERY_FEE = 35.49;
 
@@ -44,14 +45,16 @@ export default function CartPage() {
         ) : (
           <div className="mt-10 grid gap-6 lg:grid-cols-[1.3fr_minmax(0,1fr)]">
             <div className="space-y-4">
-              {items.map((item) => (
+              {items.map((item) => {
+                const name = displayName(item.name);
+                return (
                 <div
                   key={item.productId}
                   className="flex items-center gap-4 rounded-2xl border border-(--color-border) bg-(--color-surface) p-4"
                 >
                   <div className="relative size-16 shrink-0 overflow-hidden rounded-xl bg-black">
                     {item.image ? (
-                      <Image src={item.image} alt={item.name} fill className="object-cover" sizes="64px" />
+                      <Image src={item.image} alt={name} fill className="object-cover" sizes="64px" />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center bg-(--color-olive)/20">
                         <Leaf size={20} className="text-(--color-sage)" />
@@ -60,7 +63,7 @@ export default function CartPage() {
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium">{item.name}</p>
+                    <p className="font-medium">{name}</p>
                     <p className="text-sm text-(--color-muted)">₹{item.price} each</p>
                   </div>
 
@@ -88,13 +91,14 @@ export default function CartPage() {
 
                   <button
                     onClick={() => removeItem(item.productId)}
-                    aria-label={`Remove ${item.name}`}
+                    aria-label={`Remove ${name}`}
                     className="flex size-8 shrink-0 items-center justify-center rounded-full border border-(--color-border) text-(--color-muted) transition-colors hover:border-(--color-sage) hover:text-(--color-cream)"
                   >
                     <Trash size={14} />
                   </button>
                 </div>
-              ))}
+                );
+              })}
             </div>
 
             <aside className="h-fit rounded-2xl border border-(--color-border) bg-(--color-surface) p-6">

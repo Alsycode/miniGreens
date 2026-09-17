@@ -358,12 +358,7 @@ export default function CustomersClient({ customers }: { customers: Customer[] }
                         className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0"
                       >
                         <div>
-                          <p className="font-mono text-xs text-slate-500">
-                            {o.order_number}
-                            {o.order_type === "preorder" && (
-                              <span className="ml-2 text-[10px] font-semibold text-[#3D7A52]">PRE-ORDER</span>
-                            )}
-                          </p>
+                          <p className="font-mono text-xs text-slate-500">{o.order_number}</p>
                           <p className="text-xs text-slate-400">{fmtDate(o.created_at)}</p>
                         </div>
                         <div className="flex items-center gap-2">

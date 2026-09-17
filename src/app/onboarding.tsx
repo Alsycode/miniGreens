@@ -28,7 +28,7 @@ import { onboardingSlides, OnboardingFeature } from '../mock';
 
 // Slightly darker green than the theme chip colour so the dark-green product
 // photography on each slide melts into the canvas.
-const SLIDE_BG = '#0A2416';
+const SLIDE_BG = '#2f3d20';
 
 // ─── Brand lockup ─────────────────────────────────────────────────────────────
 

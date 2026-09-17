@@ -2,8 +2,8 @@
 // Uses colored backgrounds with text labels. Works in React Native (web/native).
 
 const COLORS = [
-  '#2E7D32', '#4CAF50', '#1B5E20', '#FF8F00', '#00BFA5',
-  '#388E3C', '#43A047', '#66BB6A', '#81C784', '#A5D6A7',
+  '#6f8f4a', '#6f8f4a', '#6f8f4a', '#FF8F00', '#00BFA5',
+  '#6f8f4a', '#6f8f4a', '#6f8f4a', '#6f8f4a', '#6f8f4a',
   '#E91E63', '#9C27B0', '#3F51B5', '#FF5722', '#795548',
 ];
 
@@ -43,16 +43,16 @@ export function getCategoryPlaceholder(name: string): string {
 }
 
 export function getProductPlaceholder(name: string): string {
-  return getPlaceholder(name, '#388E3C');
+  return getPlaceholder(name, '#6f8f4a');
 }
 
 export function getBannerPlaceholder(title: string): string {
-  const color = '#1B5E20';
+  const color = '#5a7539';
   const safeText = title.replace(/["<>&]/g, '');
   const width = 1200;
   const height = 600;
   const encoded = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
-    <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#1B5E20"/><stop offset="100%" stop-color="#4CAF50"/></linearGradient></defs>
+    <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#5a7539"/><stop offset="100%" stop-color="#6f8f4a"/></linearGradient></defs>
     <rect width="${width}" height="${height}" fill="url(#g)"/>
     <rect x="30" y="30" width="${width - 60}" height="${height - 60}" rx="24" fill="rgba(255,255,255,0.08)"/>
     <text x="60" y="${height / 2 - 10}" fill="rgba(255,255,255,0.15)" font-size="200" font-weight="bold" font-family="system-ui">🌿</text>

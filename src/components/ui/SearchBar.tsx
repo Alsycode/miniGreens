@@ -12,6 +12,8 @@ interface SearchBarProps {
   placeholder?: string;
   autoFocus?: boolean;
   onPress?: () => void;
+  /** Frosted style for placing over a dark photographic hero. */
+  onDark?: boolean;
 }
 
 export function SearchBar({
@@ -22,16 +24,31 @@ export function SearchBar({
   placeholder = 'Search products...',
   autoFocus = false,
   onPress,
+  onDark = false,
 }: SearchBarProps) {
   if (onPress) {
     return (
-      <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.85}>
-        <Ionicons name="search" size={18} color={colors.textTertiary} style={{ marginRight: 10 }} />
-        <Typography variant="bodySmall" color={colors.textTertiary} style={{ flex: 1 }} numberOfLines={1}>
+      <TouchableOpacity
+        style={[styles.container, onDark && styles.containerDark]}
+        onPress={onPress}
+        activeOpacity={0.85}
+      >
+        <Ionicons
+          name="search"
+          size={18}
+          color={onDark ? 'rgba(255,255,255,0.9)' : colors.textTertiary}
+          style={{ marginRight: 10 }}
+        />
+        <Typography
+          variant="bodySmall"
+          color={onDark ? 'rgba(255,255,255,0.65)' : colors.textTertiary}
+          style={{ flex: 1 }}
+          numberOfLines={1}
+        >
           {placeholder}
         </Typography>
-        <View style={styles.filterButton}>
-          <Ionicons name="options-outline" size={16} color={colors.accent} />
+        <View style={[styles.filterButton, onDark && styles.filterButtonDark]}>
+          <Ionicons name="options-outline" size={16} color={onDark ? colors.onAccent : colors.accent} />
         </View>
       </TouchableOpacity>
     );
@@ -72,6 +89,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.borderSubtle,
   },
+  containerDark: {
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderColor: 'rgba(255,255,255,0.22)',
+  },
   filterButton: {
     width: 40,
     height: 40,
@@ -81,6 +102,10 @@ const styles = StyleSheet.create({
     borderColor: colors.borderSubtle,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  filterButtonDark: {
+    backgroundColor: colors.accent,
+    borderColor: 'transparent',
   },
   input: {
     flex: 1,

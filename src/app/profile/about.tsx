@@ -76,7 +76,7 @@ export default function AboutScreen() {
         {/* Hero */}
         <Animated.View entering={FadeInUp.delay(40).springify().damping(31).mass(1).stiffness(100)}>
           <LinearGradient
-            colors={[colors.primaryDark, '#1a4a2e']}
+            colors={[colors.primaryDark, '#3c4f28']}
             style={styles.hero}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}

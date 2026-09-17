@@ -1,11 +1,35 @@
 import Image from "next/image";
-import { ArrowRight, Leaf, Package, Plant, Sparkle, Truck } from "@phosphor-icons/react/dist/ssr";
+import Link from "next/link";
+import {
+  ArrowRight,
+  Drop,
+  Leaf,
+  Plant,
+  ShieldCheck,
+  Timer,
+} from "@phosphor-icons/react/dist/ssr";
 
 const POINTS = [
-  { icon: Plant, label: "Sustainably Grown" },
-  { icon: Sparkle, label: "Rich in Nutrients" },
-  { icon: Package, label: "Carefully Packed" },
-  { icon: Truck, label: "Delivered Fresh" },
+  {
+    icon: Timer,
+    label: "Cut the morning it ships",
+    detail: "Harvested the day your box leaves us — never from cold storage.",
+  },
+  {
+    icon: ShieldCheck,
+    label: "No pesticides, ever",
+    detail: "Grown indoors in clean media. No sprays, no chemical runoff.",
+  },
+  {
+    icon: Drop,
+    label: "Naturally caffeine-free",
+    detail: "Every tea blend is microgreens and botanicals only — no additives.",
+  },
+  {
+    icon: Plant,
+    label: "Grown to order",
+    detail: "We plant against orders, so nothing sits in a warehouse.",
+  },
 ];
 
 export function WhyChooseUs() {
@@ -25,35 +49,45 @@ export function WhyChooseUs() {
       <div>
         <div className="mb-5 flex items-center gap-2 text-sm font-medium text-(--color-sage)">
           <Leaf size={16} weight="fill" />
-          Why Choose Us
+          Why Mini Greens
         </div>
 
         <h2 className="font-display text-4xl leading-[1.1] sm:text-5xl">
-          From Our Farm
+          Fresher Than
           <br />
-          <span className="text-(--color-sage)">To Your Table</span>
+          <span className="text-(--color-sage)">A Supermarket Shelf</span>
         </h2>
 
         <p className="mt-6 max-w-md text-(--color-muted)">
-          We ensure the highest quality &amp; freshness in every microgreen we
-          deliver.
+          No middlemen, no warehouse, no shelf life spent in transit. What we
+          grow goes straight from our farm to your kitchen.
         </p>
 
-        <ul className="mt-6 space-y-3">
-          {POINTS.map(({ icon: Icon, label }) => (
-            <li key={label} className="flex items-center gap-3 text-sm text-(--color-muted)">
-              <span className="flex size-7 items-center justify-center rounded-full border border-(--color-border) text-(--color-sage)">
-                <Icon size={14} weight="bold" />
+        <ul className="mt-8 space-y-5">
+          {POINTS.map(({ icon: Icon, label, detail }) => (
+            <li key={label} className="flex gap-3">
+              <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full border border-(--color-border) text-(--color-sage)">
+                <Icon size={15} weight="bold" />
               </span>
-              {label}
+              <span>
+                <span className="block text-sm font-medium text-(--color-cream)">
+                  {label}
+                </span>
+                <span className="block text-sm text-(--color-muted)">
+                  {detail}
+                </span>
+              </span>
             </li>
           ))}
         </ul>
 
-        <button className="mt-8 flex items-center gap-2 rounded-full bg-(--color-olive) px-7 py-3.5 font-medium text-white transition-colors hover:bg-(--color-olive-dark)">
-          Learn More
+        <Link
+          href="/about"
+          className="mt-8 inline-flex items-center gap-2 rounded-full bg-(--color-olive) px-7 py-3.5 font-medium text-white transition-colors hover:bg-(--color-olive-dark)"
+        >
+          Our Story
           <ArrowRight size={16} weight="bold" />
-        </button>
+        </Link>
       </div>
     </section>
   );

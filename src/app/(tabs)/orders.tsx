@@ -69,13 +69,6 @@ function OrderCard({ order, index }: { order: OrderWithItems; index: number }) {
               <Typography variant="bodySmall" weight="semibold" color={colors.text}>
                 {order.order_number}
               </Typography>
-              {order.order_type === 'preorder' && (
-                <View style={styles.preorderPill}>
-                  <Typography variant="caption" weight="bold" color={colors.primary} style={{ fontSize: 9, letterSpacing: 0.5 }}>
-                    PRE-ORDER
-                  </Typography>
-                </View>
-              )}
             </View>
             <View style={styles.badgeRow}>
               <Animated.View
@@ -129,9 +122,7 @@ function OrderCard({ order, index }: { order: OrderWithItems; index: number }) {
 
           <View style={styles.orderFooter}>
             <Typography variant="bodySmall" color={colors.textTertiary}>
-              {order.order_type === 'preorder' && order.expected_availability_date
-                ? `Expected ${formatDate(order.expected_availability_date)}`
-                : formatDate(order.created_at)}
+              {formatDate(order.created_at)}
             </Typography>
             <Typography variant="body" weight="bold" color={colors.accent}>
               ₹{order.total.toFixed(2)}
@@ -254,14 +245,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-  },
-  preorderPill: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.primaryBg,
-    borderWidth: 1,
-    borderColor: colors.primary,
   },
   badgeRow: {
     flexDirection: 'row',

@@ -54,8 +54,7 @@ export default function CheckoutSuccessScreen() {
           setOrder(data);
         }
       });
-    // Payment has already succeeded by the time we land here — never leave the
-    // user on an endless spinner if the order row is slow / blocked (RLS, bad id).
+    // Never leave the user on an endless spinner if the order row is slow / blocked (RLS, bad id).
     const timer = setTimeout(() => {
       if (!cancelled) setLoadFailed(true);
     }, 8000);
@@ -83,7 +82,7 @@ export default function CheckoutSuccessScreen() {
   }
 
   if (!order) {
-    // Payment succeeded but we couldn't load the order row. Don't trap the user.
+    // Pre-order placed but we couldn't load the order row. Don't trap the user.
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.confirmHeader}>
@@ -99,11 +98,11 @@ export default function CheckoutSuccessScreen() {
           </View>
           <View style={styles.confirmTextBlock}>
             <Typography variant="h3" color={colors.text} align="center" style={{ marginBottom: spacing.xs }}>
-              Payment Successful!
+              Pre-order Placed!
             </Typography>
             <Typography variant="body" color={colors.textSecondary} align="center">
-              Your order has been placed. We couldn't load the details here, but you can
-              find it in My Orders.
+              We couldn't load the details here, but you can find it in My Orders. We'll
+              notify you when it's confirmed for delivery.
             </Typography>
           </View>
         </View>
@@ -149,10 +148,10 @@ export default function CheckoutSuccessScreen() {
 
         <Animated.View entering={FadeInUp.delay(360).springify().damping(31).mass(1).stiffness(100)} style={styles.confirmTextBlock}>
           <Typography variant="h3" color={colors.text} align="center" style={{ marginBottom: spacing.xs }}>
-            Payment Successful!
+            Pre-order Placed!
           </Typography>
           <Typography variant="body" color={colors.textSecondary} align="center">
-            Your order has been placed. We'll notify you as it progresses.
+            You won't be charged now. We'll notify you as your order is confirmed and progresses.
           </Typography>
         </Animated.View>
       </View>

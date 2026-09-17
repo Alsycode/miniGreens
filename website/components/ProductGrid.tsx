@@ -2,15 +2,27 @@ import Link from "next/link";
 import { ArrowRight, CaretLeft, CaretRight, Leaf } from "@phosphor-icons/react/dist/ssr";
 import { ProductCard } from "@/components/ProductCard";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { resolveProductImage } from "@/lib/productImages";
 
 export async function ProductGrid() {
   const supabase = await createSupabaseServerClient();
-  const { data: products } = await supabase
+
+  const { data: category } = await supabase
+    .from("categories")
+    .select("id")
+    .eq("slug", "microgreens")
+    .maybeSingle();
+
+  const baseQuery = supabase
     .from("products")
-    .select("slug, name, description, price, images")
+    .select("slug, name, description, price, images, rating, review_count")
     .eq("is_available", true)
     .order("is_featured", { ascending: false })
     .limit(4);
+
+  const { data: products } = category
+    ? await baseQuery.eq("category_id", category.id)
+    : await baseQuery;
 
   return (
     <section id="microgreens" className="relative z-10 mx-auto max-w-7xl px-6 py-16 md:px-10">
@@ -49,7 +61,9 @@ export async function ProductGrid() {
                 name: product.name,
                 description: product.description,
                 price: Number(product.price),
-                image: product.images[0] ?? null,
+                image: resolveProductImage(product.slug, product.images),
+                rating: product.rating,
+                reviewCount: product.review_count,
               }}
             />
           ))}
@@ -58,7 +72,7 @@ export async function ProductGrid() {
 
       <div className="mt-8 flex justify-center">
         <Link
-          href="/shop"
+          href="/shop?category=microgreens"
           className="flex items-center gap-2 rounded-full border border-(--color-border) px-7 py-3.5 font-medium text-(--color-cream) transition-colors hover:border-(--color-sage)"
         >
           View All Microgreens

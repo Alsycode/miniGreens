@@ -19,35 +19,62 @@ interface CategoryCardProps {
   onPress: () => void;
   index?: number;
   active?: boolean;
+  /** `circle` = round thumbnail + label underneath (reference home). `tile` = legacy rect. */
+  variant?: 'circle' | 'tile';
+  /** Local asset (require id) to use instead of `category.image`. */
+  imageOverride?: number | null;
 }
 
-export function CategoryCard({ category, onPress, index = 0, active = false }: CategoryCardProps) {
+export function CategoryCard({
+  category,
+  onPress,
+  index = 0,
+  active = false,
+  variant = 'circle',
+  imageOverride = null,
+}: CategoryCardProps) {
+  const imgSource = imageOverride != null ? imageOverride : resolveImageSource(category.image);
   const scale = useSharedValue(1);
   const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+
+  const pressIn = () => { scale.value = withSpring(0.94, { damping: 31, stiffness: 220, mass: 1 }); };
+  const pressOut = () => { scale.value = withSpring(1, { damping: 31, stiffness: 220, mass: 1 }); };
+  const handlePress = () => { Haptics.selectionAsync(); onPress(); };
+
+  if (variant === 'circle') {
+    return (
+      <Animated.View
+        entering={FadeInUp.delay(index * 60).springify().damping(31).mass(1).stiffness(100)}
+        style={[styles.cWrap, animStyle]}
+      >
+        <Pressable onPress={handlePress} onPressIn={pressIn} onPressOut={pressOut} style={styles.cPress}>
+          <View style={[styles.cCircle, active && styles.cCircleActive]}>
+            <Image source={imgSource} style={styles.cImage} resizeMode="cover" />
+          </View>
+          <Typography
+            variant="caption"
+            weight={active ? 'bold' : 'medium'}
+            color={active ? colors.textPrimary : colors.textSecondary}
+            style={styles.cLabel}
+            numberOfLines={1}
+          >
+            {category.name}
+          </Typography>
+          <View style={[styles.cUnderline, active && styles.cUnderlineActive]} />
+        </Pressable>
+      </Animated.View>
+    );
+  }
 
   return (
     <Animated.View
       entering={FadeInUp.delay(index * 70).springify().damping(31).mass(1).stiffness(100)}
       style={[styles.wrap, animStyle]}
     >
-      <Pressable
-        onPress={() => {
-          Haptics.selectionAsync();
-          onPress();
-        }}
-        onPressIn={() => { scale.value = withSpring(0.96, { damping: 31, stiffness: 220, mass: 1 }); }}
-        onPressOut={() => { scale.value = withSpring(1, { damping: 31, stiffness: 220, mass: 1 }); }}
-        style={[styles.card, active && styles.cardActive]}
-      >
+      <Pressable onPress={handlePress} onPressIn={pressIn} onPressOut={pressOut} style={[styles.card, active && styles.cardActive]}>
         <Image source={resolveImageSource(category.image)} style={styles.image} resizeMode="cover" />
-        {/* Fade the image's left edge into the card surface so there's no hard
-            seam. Stop colours track the active/idle surface tokens. */}
         <LinearGradient
-          colors={
-            active
-              ? ['rgba(22,40,27,1)', 'rgba(22,40,27,0.94)', 'rgba(22,40,27,0)']
-              : ['rgba(20,26,21,1)', 'rgba(20,26,21,0.92)', 'rgba(20,26,21,0)']
-          }
+          colors={['rgba(255,255,255,1)', 'rgba(255,255,255,0.9)', 'rgba(255,255,255,0)']}
           locations={[0, 0.46, 1]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
@@ -55,19 +82,9 @@ export function CategoryCard({ category, onPress, index = 0, active = false }: C
           pointerEvents="none"
         />
         <View style={styles.iconChip}>
-          <Ionicons
-            name={(category.icon || 'leaf') as any}
-            size={13}
-            color={active ? colors.primary : colors.textTertiary}
-          />
+          <Ionicons name={(category.icon || 'leaf') as any} size={13} color={active ? colors.primary : colors.textTertiary} />
         </View>
-        <Typography
-          variant="caption"
-          weight="semibold"
-          color={colors.textInverse}
-          style={styles.label}
-          numberOfLines={1}
-        >
+        <Typography variant="caption" weight="semibold" color={colors.textPrimary} style={styles.label} numberOfLines={1}>
           {category.name}
         </Typography>
       </Pressable>
@@ -76,14 +93,59 @@ export function CategoryCard({ category, onPress, index = 0, active = false }: C
   );
 }
 
-// Size the tiles so ALL FOUR categories (incl. the local "Bowls" tile) fit fully
-// within the row at once — page padding on the left, one gap per tile.
 const ROW_W = Dimensions.get('window').width;
-const GAP = spacing.xs + 2; // 6
+const GAP = spacing.xs + 2;
 const CARD_W = Math.floor((ROW_W - spacing.lg - GAP * 4) / 4);
 const CARD_H = Math.round(CARD_W * 0.9);
+const CIRCLE = 66;
 
 const styles = StyleSheet.create({
+  // ── circle variant ──
+  cWrap: {
+    marginRight: spacing.lg,
+    alignItems: 'center',
+  },
+  cPress: {
+    alignItems: 'center',
+    width: CIRCLE + 14,
+  },
+  cCircle: {
+    width: CIRCLE,
+    height: CIRCLE,
+    borderRadius: CIRCLE / 2,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.borderSubtle,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cCircleActive: {
+    borderColor: colors.accent,
+    borderWidth: 2,
+  },
+  cImage: {
+    width: '100%',
+    height: '100%',
+  },
+  cLabel: {
+    marginTop: spacing.sm,
+    fontSize: 11,
+    lineHeight: 14,
+    textAlign: 'center',
+  },
+  cUnderline: {
+    marginTop: 5,
+    height: 3,
+    width: 18,
+    borderRadius: 2,
+    backgroundColor: 'transparent',
+  },
+  cUnderlineActive: {
+    backgroundColor: colors.accent,
+  },
+
+  // ── tile variant (legacy) ──
   wrap: {
     marginRight: GAP,
     alignItems: 'center',
@@ -113,7 +175,7 @@ const styles = StyleSheet.create({
     width: 18,
     height: 18,
     borderRadius: 9,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: 'rgba(30,45,25,0.06)',
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 2,

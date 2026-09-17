@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { DM_Serif_Display, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
+import { AnnouncementBar } from "@/components/AnnouncementBar";
+import { CartDrawer } from "@/components/CartDrawer";
 import { PreorderProvider } from "@/context/PreorderContext";
 import { AuthProvider } from "@/context/AuthContext";
 
@@ -27,9 +29,11 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${dmSerif.variable} ${jakarta.variable} h-full`}>
       <body className="h-full antialiased">
+        <AnnouncementBar />
         <AuthProvider>
           <PreorderProvider>{children}</PreorderProvider>
         </AuthProvider>
+        <CartDrawer />
       </body>
     </html>
   );

@@ -39,12 +39,25 @@ const LOCAL_IMAGE_BY_SLUG: Record<string, number> = {
   'turnip': require('../assets/turnip.png'),
   'red-amaranth': require('../assets/red-amaranth.png'),
   'red-cabbage': require('../assets/redcabbage.png'),
+
+  // Tea blends (assets/ at repo root — client-supplied artwork).
+  'green-vitality-bag': require('../../assets/Green Vitality (Bag).png'),
+  'green-lemon-bag': require('../../assets/Green Lemon (Bag).png'),
+  'green-detox-bag': require('../../assets/Green Detox (Bag).png'),
+  'green-masala-bag': require('../../assets/Green Masala (Bag).png'),
+  'mint-green-bag': require('../../assets/Mint Green (Bag).png'),
+  'green-apple-bag': require('../../assets/Green Apple (Bag).png'),
+  'ginger-green-bag': require('../../assets/Ginger Green (Bag).png'),
+  'green-hibiscus-bag': require('../../assets/Green Hibiscus (Bag).png'),
 };
 
 const LOCAL_CATEGORY_IMAGE_BY_SLUG: Record<string, number> = {
-  'smoothies': require('../assets/smoothie.jpeg'),
-  'juices': require('../assets/juice.jpeg'),
-  'microgreens': require('../assets/microgreens.jpeg'),
+  // Light-UI category art (pale-green studio shots), assets/ at repo root.
+  'smoothies': require('../../assets/cat-smoothies.png'),
+  'juices': require('../../assets/cat-juices.png'),
+  'bowls': require('../../assets/cat-bowls.png'),
+  'microgreens': require('../../assets/cat-microgreens.png'),
+  'tea-blends': require('../../assets/cat-tea-blends.png'),
 };
 
 function productImage(row: Pick<ProductRow, 'slug' | 'images' | 'name'>): any {
@@ -120,7 +133,7 @@ export function dbCategoryToUi(row: CategoryRow, productCount = 0): Category {
     image: categoryImage(row),
     icon: row.icon ?? 'leaf',
     productCount,
-    color: row.color ?? '#2E7D32',
+    color: row.color ?? '#6f8f4a',
   };
 }
 

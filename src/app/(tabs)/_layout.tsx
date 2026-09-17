@@ -72,16 +72,16 @@ const styles = StyleSheet.create({
   },
   bar: {
     flexDirection: 'row',
-    // A defined dark layer that sits above the content — depth comes from the
-    // top hairline + soft upward shadow, not from being see-through.
-    backgroundColor: 'rgba(12,16,13,0.97)',
+    // Light layer above the content — depth from the top hairline + soft
+    // upward shadow, matching the reference bottom nav.
+    backgroundColor: colors.surface,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(255,255,255,0.08)',
+    borderTopColor: colors.borderSubtle,
     paddingTop: spacing.md,
-    shadowColor: '#000',
+    shadowColor: '#26401F',
     shadowOffset: { width: 0, height: -3 },
-    shadowOpacity: 0.16,
-    shadowRadius: 12,
+    shadowOpacity: 0.08,
+    shadowRadius: 14,
     elevation: 12,
   },
   item: {
@@ -93,12 +93,12 @@ const styles = StyleSheet.create({
   iconWrap: {
     width: 46,
     height: 30,
-    borderRadius: borderRadius.pill,
+    borderRadius: borderRadius.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
   iconWrapActive: {
-    backgroundColor: 'rgba(150,255,31,0.14)',
+    backgroundColor: colors.accentSurface,
   },
   label: {
     fontSize: 10,

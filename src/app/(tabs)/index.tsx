@@ -48,9 +48,29 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 // Botanical environment asset — sits BEHIND all Home Screen content as part of
 // the background (never rendered as a normal image/card). See Phase 3.
 const LEAF_BG = require('../../../assets/leaf.png');
-// rgb() of colors.background (#0A0D0B) — used to build the readability scrim that
-// dissolves the foliage into the dark base before it reaches the content.
-const BG_RGB = '10,13,11';
+// rgb() of colors.background — readability scrim base. Tea-focus light theme:
+// matches the pale-green canvas (#F3F7EA). The foliage image itself is disabled
+// below for the light look.
+const BG_RGB = '243,247,234';
+
+// Hero card photo — glass cup of microgreen tea (assets/tea-hero.png).
+const TEA_HERO = require('../../../assets/tea-hero.png');
+// Promo card background — bright microgreen tray with pale space on the left.
+const PROMO_BG = require('../../../assets/bannerpic.png');
+
+// Local art for the circular category row, matched by category name. Falls back
+// to the Supabase `category.image` when nothing matches.
+const CATEGORY_ART: { re: RegExp; img: number }[] = [
+  { re: /tea\s*blend|blend/i, img: require('../../../assets/cat-tea-blends.png') },
+  { re: /loose|leaf/i, img: require('../../../assets/cat-loose-leaf.png') },
+  { re: /kit/i, img: require('../../../assets/cat-tea-kits.png') },
+  { re: /accessor/i, img: require('../../../assets/cat-accessories.png') },
+  { re: /tea|microgreen|green/i, img: require('../../../assets/cat-microgreens.png') },
+];
+function categoryArt(name: string): number | null {
+  for (const c of CATEGORY_ART) if (c.re.test(name)) return c.img;
+  return null;
+}
 
 // "Bowls" isn't a catalogue category in Supabase (no bowl products yet), but the
 // reference Home Screen shows it as a fourth tile. Render it locally from the
@@ -133,6 +153,76 @@ function BirthdayBanner() {
   );
 }
 
+// ─── Tea hero card ("Nature in a cup / Microgreen Tea") ──────────────────────
+
+const HERO_BENEFITS: { icon: keyof typeof Ionicons.glyphMap; label: string }[] = [
+  { icon: 'leaf', label: 'Rich in\nAntioxidants' },
+  { icon: 'heart', label: 'Supports\nImmunity' },
+  { icon: 'flash', label: 'Natural\nEnergy' },
+];
+
+function TeaHeroCard({ onPress }: { onPress: () => void }) {
+  return (
+    <View style={styles.hero}>
+      <Image
+        source={TEA_HERO}
+        style={[StyleSheet.absoluteFill, { width: '100%', height: '100%' }]}
+        resizeMode="cover"
+      />
+      <LinearGradient
+        colors={['rgba(228,238,202,0.8)', 'rgba(228,238,202,0.32)', 'rgba(228,238,202,0.04)', 'rgba(228,238,202,0)']}
+        locations={[0, 0.34, 0.58, 0.8]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={StyleSheet.absoluteFill}
+        pointerEvents="none"
+      />
+
+      <View style={styles.heroText}>
+        <Typography variant="caption" weight="bold" color={colors.accentSoft} style={styles.heroKicker}>
+          NATURE IN A CUP
+        </Typography>
+        <Typography variant="h3" color={colors.primary} style={styles.heroTitle}>
+          Microgreen Tea
+        </Typography>
+        <Typography variant="caption" color={colors.textSecondary} style={styles.heroSub}>
+          More nutrients.{'\n'}A calmer, healthier you.
+        </Typography>
+        <TouchableOpacity style={styles.heroBtn} onPress={onPress} activeOpacity={0.9}>
+          <Typography
+            variant="caption"
+            color={colors.textInverse}
+            weight="bold"
+            numberOfLines={1}
+            style={styles.heroBtnText}
+          >
+            Shop Microgreen Tea
+          </Typography>
+          <Ionicons name="arrow-forward" size={12} color={colors.textInverse} style={{ marginLeft: 5 }} />
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.heroBadges}>
+        {HERO_BENEFITS.map((b) => (
+          <View key={b.label} style={styles.heroBadge}>
+            <View style={styles.heroBadgeIcon}>
+              <Ionicons name={b.icon} size={15} color={colors.primary} />
+            </View>
+            <Typography
+              variant="caption"
+              color={colors.textSecondary}
+              align="center"
+              style={styles.heroBadgeLabel}
+            >
+              {b.label}
+            </Typography>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
+
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const [searchFocused, setSearchFocused] = useState(false);
@@ -194,34 +284,6 @@ export default function HomeScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      {/* ── Botanical environment ─────────────────────────────────────────────
-          Full-bleed background layer behind the ScrollView. pointerEvents="none"
-          so it never intercepts touches, scrolling or layout. Anchored to the
-          top so the large foliage reads in the upper/right region (as in the
-          reference), then a vertical scrim fades it into the dark base before it
-          reaches the category row / product cards. */}
-      <View
-        pointerEvents="none"
-        style={[styles.env, { top: -insets.top }]}
-      >
-        {/* Leaf asset fills the layer (its aspect ratio ~matches a phone screen,
-            so `cover` shows the whole image with the big top-right foliage up
-            top). The scrim then dissolves it into the dark base before the
-            category row / product cards. */}
-        <Image source={LEAF_BG} style={StyleSheet.absoluteFill} resizeMode="cover" />
-        <LinearGradient
-          colors={[
-            `rgba(${BG_RGB},0)`,
-            `rgba(${BG_RGB},0.06)`,
-            `rgba(${BG_RGB},0.55)`,
-            `rgba(${BG_RGB},1)`,
-            `rgba(${BG_RGB},1)`,
-          ]}
-          locations={[0, 0.12, 0.24, 0.34, 1]}
-          style={StyleSheet.absoluteFill}
-        />
-      </View>
-
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
@@ -229,22 +291,19 @@ export default function HomeScreen() {
         {/* Header */}
         <Animated.View style={[styles.header, headerStyle]}>
           <View style={styles.headerText}>
-            <Typography variant="bodySmall" color={colors.textSecondary}>
-              {greeting()},
-            </Typography>
             <View style={styles.headerNameRow}>
               <Typography
-                variant="h3"
-                color={colors.text}
+                variant="h2"
+                color={colors.textPrimary}
                 numberOfLines={1}
-                style={[styles.headerName, styles.headerNameText]}
+                style={[styles.brandName, styles.headerNameText]}
               >
-                {firstName}
+                MiniGreens
               </Typography>
-              <Typography variant="h3" color={colors.primary} style={styles.headerName}> 🌿</Typography>
+              <Typography variant="h4" color={colors.accent} style={styles.brandLeaf}> 🌿</Typography>
             </View>
-            <Typography variant="bodySmall" color={colors.textTertiary} style={{ marginTop: 6 }}>
-              Fuel your body. Refresh your mind. 🌿
+            <Typography variant="bodySmall" color={colors.textSecondary} style={{ marginTop: 4 }}>
+              Pure Microgreen Tea. A Healthier You.
             </Typography>
           </View>
           <View style={styles.headerActions}>
@@ -268,7 +327,7 @@ export default function HomeScreen() {
               <Ionicons name="bag-outline" size={20} color={colors.text} />
               {cartCount > 0 && (
                 <View style={styles.cartBadge}>
-                  <Typography variant="caption" color="#06130D" style={{ fontSize: 10, fontWeight: '700' }}>
+                  <Typography variant="caption" color={colors.onAccent} style={{ fontSize: 10, fontWeight: '700' }}>
                     {cartCount}
                   </Typography>
                 </View>
@@ -277,42 +336,41 @@ export default function HomeScreen() {
           </View>
         </Animated.View>
 
-        <BirthdayBanner />
-
         {/* Search */}
         <Animated.View style={[styles.searchContainer, searchStyle, searchAnimStyle]}>
-          <TouchableOpacity
-            activeOpacity={1}
+          <SearchBar
+            value=""
+            onChangeText={() => {}}
+            placeholder="Search microgreen tea blends..."
             onPress={handleSearchPress}
-            onPressIn={handleSearchFocus}
-            onPressOut={handleSearchBlur}
-          >
-            <SearchBar
-              value=""
-              onChangeText={() => {}}
-              placeholder="Search smoothies, juices, bowls..."
-              onPress={handleSearchPress}
-            />
-          </TouchableOpacity>
+          />
         </Animated.View>
 
-        {/* Featured Categories — chips directly under search, no header */}
+        {/* Tea hero card */}
+        <Animated.View style={[styles.heroWrap, section1Style]}>
+          <TeaHeroCard onPress={() => router.push('/(tabs)/explore')} />
+        </Animated.View>
+
+        <BirthdayBanner />
+
+        {/* Categories — circular tiles under the hero */}
         <Animated.View style={[styles.categoriesRow, section1Style]}>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.horizontalScroll}
           >
-            {[...categories, BOWLS_TILE].map((cat, i) => (
+            {categories.map((cat, i) => (
               <CategoryCard
                 key={cat.id}
                 category={cat}
+                variant="circle"
+                imageOverride={categoryArt(cat.name)}
                 index={i}
                 active={cat.id === selectedCat}
                 onPress={() => {
                   setActiveCat(cat.id);
-                  if (cat.slug === 'bowls') router.push('/(tabs)/explore');
-                  else handleCategoryPress(cat.slug);
+                  handleCategoryPress(cat.slug);
                 }}
               />
             ))}
@@ -322,15 +380,15 @@ export default function HomeScreen() {
         {/* Best Sellers */}
         <Animated.View style={[styles.section, section2Style]}>
           <View style={styles.sectionHeader}>
-            <View>
-              <Typography variant="h3" color={colors.text}>Best Sellers</Typography>
+            <View style={{ flex: 1, paddingRight: spacing.md }}>
+              <Typography variant="h3" color={colors.textPrimary}>Best Selling{'\n'}Microgreen Teas</Typography>
               <Typography variant="caption" color={colors.textTertiary} style={styles.sectionSub}>
-                Our most loved picks 💚
+                Customer favourites, brewed for a better you. 🌿
               </Typography>
             </View>
-            <TouchableOpacity style={styles.viewAll} onPress={() => router.push('/(tabs)/explore')}>
-              <Typography variant="bodySmall" color={colors.primary} weight="semibold">View all</Typography>
-              <Ionicons name="arrow-forward" size={14} color={colors.primary} />
+            <TouchableOpacity style={[styles.viewAll, { flexShrink: 0 }]} onPress={() => router.push('/(tabs)/explore')}>
+              <Typography variant="bodySmall" color={colors.accent} weight="semibold">View all</Typography>
+              <Ionicons name="arrow-forward" size={14} color={colors.accent} />
             </TouchableOpacity>
           </View>
           <ScrollView
@@ -349,30 +407,27 @@ export default function HomeScreen() {
           </ScrollView>
         </Animated.View>
 
-        {/* Spring Fresh Collection — promo card */}
+        {/* Microgreen benefits — dark promo card */}
         <Animated.View style={[section3Style, styles.section]}>
           <View style={styles.promoCard}>
             <Image
-              source={resolveImageSource(banners[0].image)}
+              source={PROMO_BG}
               style={[StyleSheet.absoluteFill, { width: '100%', height: '100%' }]}
               resizeMode="cover"
             />
             <LinearGradient
-              colors={['rgba(10,13,11,0.94)', 'rgba(10,13,11,0.4)', 'rgba(10,13,11,0)']}
-              locations={[0, 0.42, 0.78]}
+              colors={['rgba(30,52,34,0.96)', 'rgba(30,52,34,0.6)', 'rgba(30,52,34,0.12)']}
+              locations={[0, 0.5, 1]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={StyleSheet.absoluteFill}
             />
             <View style={styles.promoText}>
-              <Typography variant="caption" color={colors.accent} weight="bold" style={styles.promoKicker}>
-                LIMITED TIME ONLY
+              <Typography variant="caption" color={colors.secondaryLight} weight="bold" style={styles.promoKicker}>
+                SMALL GREENS. BIG BENEFITS.
               </Typography>
               <Typography variant="h3" color={colors.textInverse} style={styles.promoTitle}>
-                Spring Fresh{'\n'}Collection
-              </Typography>
-              <Typography variant="bodySmall" color="rgba(255,255,255,0.68)" style={styles.promoDesc}>
-                Harvest the best of the season in every sip.
+                Live Healthier{'\n'}with Microgreens
               </Typography>
               <TouchableOpacity
                 style={styles.promoBtn}
@@ -381,9 +436,25 @@ export default function HomeScreen() {
                   router.push('/(tabs)/explore');
                 }}
               >
-                <Typography variant="bodySmall" color="#06130D" weight="bold" numberOfLines={1} style={styles.promoBtnText}>Explore Collection</Typography>
-                <Ionicons name="arrow-forward" size={12} color="#06130D" style={{ marginLeft: 5 }} />
+                <Typography variant="bodySmall" color={colors.primary} weight="bold" numberOfLines={1} style={styles.promoBtnText}>Explore Teas</Typography>
+                <Ionicons name="arrow-forward" size={12} color={colors.primary} style={{ marginLeft: 5 }} />
               </TouchableOpacity>
+            </View>
+            <View style={styles.promoBadges}>
+              {[
+                { icon: 'shield-checkmark' as const, label: 'Detox Naturally' },
+                { icon: 'heart' as const, label: 'Boost Immunity' },
+                { icon: 'flash' as const, label: 'Stay Energized' },
+              ].map((b) => (
+                <View key={b.label} style={styles.promoBadgeRow}>
+                  <View style={styles.promoBadgeIcon}>
+                    <Ionicons name={b.icon} size={12} color={colors.textInverse} />
+                  </View>
+                  <Typography variant="caption" color="rgba(255,255,255,0.9)" style={styles.promoBadgeLabel} numberOfLines={1}>
+                    {b.label}
+                  </Typography>
+                </View>
+              ))}
             </View>
           </View>
         </Animated.View>
@@ -450,12 +521,12 @@ export default function HomeScreen() {
           style={styles.subscriptionBlock}
         >
           <LinearGradient
-            colors={['#0A2416', '#1A4028']}
+            colors={['#3c4f28', '#5a7539']}
             style={StyleSheet.absoluteFill}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
           />
-          <Typography variant="h1" color="rgba(139,224,75,0.12)" style={styles.subscriptionBigNum}>
+          <Typography variant="h1" color="rgba(111,143,74,0.12)" style={styles.subscriptionBigNum}>
             15%
           </Typography>
           <View style={styles.subscriptionContent}>
@@ -642,15 +713,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  // Botanical environment layer (behind all content)
-  env: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: 0,
-    bottom: 0,
-    overflow: 'hidden',
-  },
   scrollContent: {
     paddingBottom: 120,
   },
@@ -727,13 +789,118 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceDark,
     borderWidth: 1,
     borderColor: colors.borderFaint,
-    minHeight: 148,
+    minHeight: 176,
     justifyContent: 'center',
   },
   promoText: {
+    width: '62%',
+    padding: spacing.lg,
+    zIndex: 2,
+  },
+  promoBadges: {
+    position: 'absolute',
+    right: spacing.md,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    gap: spacing.md,
+    zIndex: 3,
+  },
+  promoBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+  },
+  promoBadgeIcon: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: 'rgba(255,255,255,0.16)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  promoBadgeLabel: {
+    fontSize: 10,
+  },
+
+  // ── Tea hero card (pale-green, cup on the right, benefit badges) ──
+  heroWrap: {
+    paddingHorizontal: spacing.lg,
+    marginTop: spacing.xl,
+  },
+  hero: {
+    borderRadius: borderRadius.cardLarge,
+    overflow: 'hidden',
+    minHeight: 186,
+    backgroundColor: '#E4EECE',
+    justifyContent: 'center',
+  },
+  heroText: {
     width: '60%',
     padding: spacing.lg,
     zIndex: 2,
+  },
+  heroKicker: {
+    letterSpacing: 1.4,
+    fontSize: 8.5,
+    marginBottom: 6,
+  },
+  heroTitle: {
+    fontSize: 23,
+    lineHeight: 26,
+    letterSpacing: -0.3,
+    marginBottom: 5,
+  },
+  heroSub: {
+    fontSize: 10.5,
+    lineHeight: 14,
+    marginBottom: spacing.md,
+  },
+  heroBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs + 3,
+    borderRadius: borderRadius.pill,
+  },
+  heroBtnText: {
+    fontSize: 10.5,
+  },
+  heroBadges: {
+    position: 'absolute',
+    right: 8,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    gap: spacing.sm,
+    zIndex: 3,
+  },
+  heroBadge: {
+    alignItems: 'center',
+    width: 54,
+  },
+  heroBadgeIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
+    ...shadows.sm,
+  },
+  heroBadgeLabel: {
+    fontSize: 8,
+    lineHeight: 10,
+  },
+  brandName: {
+    fontSize: 24,
+    lineHeight: 28,
+  },
+  brandLeaf: {
+    fontSize: 17,
   },
   promoKicker: {
     letterSpacing: 1.2,
@@ -756,9 +923,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    backgroundColor: colors.primary,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs + 2,
+    backgroundColor: colors.textInverse,
+    paddingHorizontal: spacing.md + 2,
+    paddingVertical: spacing.sm,
     borderRadius: borderRadius.pill,
   },
   promoBtnText: {
@@ -780,7 +947,7 @@ const styles = StyleSheet.create({
   },
   searchContainer: {
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing['2xl'],
+    paddingTop: spacing.lg,
   },
   section: {
     marginTop: spacing.sectionGap,
@@ -814,7 +981,7 @@ const styles = StyleSheet.create({
   },
   seasonalTag: {
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(139,224,75,0.12)',
+    backgroundColor: 'rgba(111,143,74,0.12)',
     borderRadius: borderRadius.full,
     paddingHorizontal: spacing.md,
     paddingVertical: 5,
@@ -865,7 +1032,7 @@ const styles = StyleSheet.create({
   },
   subscriptionTag: {
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(139,224,75,0.12)',
+    backgroundColor: 'rgba(111,143,74,0.12)',
     borderRadius: borderRadius.full,
     paddingHorizontal: spacing.md,
     paddingVertical: 5,

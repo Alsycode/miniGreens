@@ -28,7 +28,7 @@ const MARK_PATHS = [
 export function Logo({
   width = 140,
   color = '#FFFFFF',
-  accentColor = '#0C831F',
+  accentColor = '#6f8f4a',
   style,
 }: LogoProps) {
   return (
