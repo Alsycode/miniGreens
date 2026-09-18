@@ -2,9 +2,9 @@
 
 @theme inline {
   /* Navy — header, footer, headings, primary text on light */
-  --color-navy: #16215c;
-  --color-navy-dark: #0e1740;
-  --color-navy-light: #2a3a8c;
+  --color-navy: #5a7538;
+  --color-navy-dark: #485e2d;
+  --color-navy-light: #83986a;
 
   /* Yellow — primary CTA (Add to cart, checkout) */
   --color-accent: #f6c445;

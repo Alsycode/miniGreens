@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 
-const FRAME_COUNT = 492;
+const FRAME_COUNT = 604;
 const FRAME_SRC = (i: number) =>
   `/hero-sequence/f${String(i + 1).padStart(4, "0")}.webp`;
 

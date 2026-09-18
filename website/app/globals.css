@@ -35,3 +35,47 @@ body {
 .font-display {
   font-family: var(--font-dm-serif), Georgia, serif;
 }
+
+/* --- TeaCarousel ------------------------------------------------------- */
+
+/* Anton carries the carousel's ghost wordmark and its "Discover It" link. It is
+   deliberately not the site's --font-dm-serif: the condensed grotesque is what
+   gives the oversized backdrop text its weight. Swap this one declaration to
+   var(--font-dm-serif) to pull the carousel back to the house display face. */
+.font-carousel {
+  font-family: var(--font-anton), Impact, "Arial Narrow", sans-serif;
+  font-weight: 400;
+}
+
+.carousel-nav {
+  background-color: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  transition:
+    transform 150ms ease,
+    background-color 150ms ease;
+}
+
+.carousel-nav:hover {
+  transform: scale(1.08);
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+.carousel-link {
+  opacity: 0.95;
+  transition: opacity 200ms ease;
+}
+
+.carousel-link:hover {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .carousel-nav,
+  .carousel-link {
+    transition: none;
+  }
+
+  .carousel-nav:hover {
+    transform: none;
+  }
+}

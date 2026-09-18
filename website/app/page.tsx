@@ -1,7 +1,7 @@
 import { Navbar } from "@/components/Navbar";
 import { Hero } from "@/components/Hero";
 import { ScrollSequence } from "@/components/ScrollSequence";
-import { TeaGrid } from "@/components/TeaGrid";
+import { TeaCarousel } from "@/components/TeaCarousel";
 import { WhyChooseUs } from "@/components/WhyChooseUs";
 import { ProductGrid } from "@/components/ProductGrid";
 import { Testimonials } from "@/components/Testimonials";
@@ -14,13 +14,12 @@ export default function Home() {
   return (
     <div className="relative overflow-x-clip">
       <LeafDecor />
-      <div className="bg-black">
-        <Navbar />
-      </div>
+      <Navbar />
       <ScrollSequence />
       <div className="h-32 bg-gradient-to-b from-(--color-ink) to-transparent" />
+      <TeaCarousel />
+      <div className="h-16 sm:h-28" />
       <Hero />
-      <TeaGrid />
       <WhyChooseUs />
       <ProductGrid />
       <Testimonials />

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DM_Serif_Display, Plus_Jakarta_Sans } from "next/font/google";
+import { Anton, DM_Serif_Display, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { AnnouncementBar } from "@/components/AnnouncementBar";
 import { CartDrawer } from "@/components/CartDrawer";
@@ -17,6 +17,13 @@ const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
 });
 
+// Display face for the TeaCarousel only — see .font-carousel in globals.css.
+const anton = Anton({
+  variable: "--font-anton",
+  subsets: ["latin"],
+  weight: "400",
+});
+
 export const metadata: Metadata = {
   title: "Mini Greens Company | Premium Microgreens Direct From Farm",
   description:
@@ -27,7 +34,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${dmSerif.variable} ${jakarta.variable} h-full`}>
+    <html lang="en" className={`${dmSerif.variable} ${jakarta.variable} ${anton.variable} h-full`}>
       <body className="h-full antialiased">
         <AnnouncementBar />
         <AuthProvider>
