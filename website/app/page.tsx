@@ -14,7 +14,7 @@ export default function Home() {
   return (
     <div className="relative overflow-x-clip">
       <LeafDecor />
-      <Navbar />
+      <Navbar variant="overlay" />
       <ScrollSequence />
       <div className="h-32 bg-gradient-to-b from-(--color-ink) to-transparent" />
       <TeaCarousel />

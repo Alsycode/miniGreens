@@ -2,7 +2,10 @@
 
 import { useEffect, useRef } from "react";
 
-const FRAME_COUNT = 604;
+// The sequence has 604 frames of raw footage, but the animation should settle
+// and stop at the "Three minutes, that is all it takes" pose — frame 482 —
+// rather than playing through to the end.
+const PLAYBACK_FRAMES = 482;
 const FRAME_SRC = (i: number) =>
   `/hero-sequence/f${String(i + 1).padStart(4, "0")}.webp`;
 
@@ -57,7 +60,7 @@ export function ScrollSequence() {
     };
 
     const nearestLoaded = (index: number) => {
-      for (let d = 0; d < FRAME_COUNT; d++) {
+      for (let d = 0; d < PLAYBACK_FRAMES; d++) {
         const before = images.current[index - d];
         if (before?.complete && before.naturalWidth) return before;
         const after = images.current[index + d];
@@ -70,7 +73,7 @@ export function ScrollSequence() {
       const rect = section.getBoundingClientRect();
       const distance = section.offsetHeight - window.innerHeight;
       const progress = clamp(-rect.top / Math.max(distance, 1), 0, 1);
-      const index = Math.round(progress * (FRAME_COUNT - 1));
+      const index = Math.round(progress * (PLAYBACK_FRAMES - 1));
 
       if (index !== drawn.current) {
         const img = nearestLoaded(index);
@@ -118,9 +121,9 @@ export function ScrollSequence() {
       }
     };
 
-    images.current = new Array(FRAME_COUNT);
+    images.current = new Array(PLAYBACK_FRAMES);
     load(0, 40);
-    const idle = window.setTimeout(() => load(40, FRAME_COUNT), 600);
+    const idle = window.setTimeout(() => load(40, PLAYBACK_FRAMES), 600);
 
     resize();
     window.addEventListener("scroll", onScroll, { passive: true });
