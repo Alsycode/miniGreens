@@ -15,7 +15,7 @@ export type PartnerBusinessType =
   | 'fitness_wellness'
   | 'community';
 export type PartnerStatus = 'pending' | 'approved' | 'rejected';
-export type OrderType = 'standard' | 'business' | 'preorder';
+export type OrderType = 'standard' | 'business' | 'preorder' | 'subscription';
 export type DiscountType = 'percentage' | 'flat';
 export type DiscountTarget = 'all' | 'category' | 'product' | 'subscription_plan' | 'partner' | 'wholesale';
 export type PaymentStatus = 'pending' | 'paid' | 'failed';
@@ -164,16 +164,31 @@ export interface Database {
         Row: {
           id: string;
           profile_id: string;
-          plan_id: string;
+          plan_id: string | null;
           status: SubscriptionStatus;
           address_id: string | null;
           next_delivery_date: string | null;
           started_at: string;
           paused_at: string | null;
           cancelled_at: string | null;
+          last_order_generated_at: string | null;
+          terms_accepted: boolean;
+          sms_whatsapp_consent: boolean;
+          is_custom: boolean;
+          custom_frequency: 'weekly' | 'monthly' | null;
         };
-        Insert: Omit<Database['public']['Tables']['subscriptions']['Row'], 'id' | 'started_at'> & {
+        Insert: Omit<
+          Database['public']['Tables']['subscriptions']['Row'],
+          'id' | 'started_at' | 'last_order_generated_at' | 'paused_at' | 'cancelled_at' | 'terms_accepted' | 'sms_whatsapp_consent' | 'is_custom' | 'custom_frequency'
+        > & {
           id?: string;
+          last_order_generated_at?: string | null;
+          paused_at?: string | null;
+          cancelled_at?: string | null;
+          terms_accepted?: boolean;
+          sms_whatsapp_consent?: boolean;
+          is_custom?: boolean;
+          custom_frequency?: 'weekly' | 'monthly' | null;
         };
         Update: Partial<Database['public']['Tables']['subscriptions']['Insert']>;
         Relationships: [
@@ -200,6 +215,35 @@ export interface Database {
           },
         ];
       };
+      subscription_items: {
+        Row: {
+          id: string;
+          subscription_id: string;
+          product_id: string;
+          quantity: number;
+          created_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['subscription_items']['Row'], 'id' | 'created_at'> & {
+          id?: string;
+        };
+        Update: Partial<Database['public']['Tables']['subscription_items']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'subscription_items_subscription_id_fkey';
+            columns: ['subscription_id'];
+            isOneToOne: false;
+            referencedRelation: 'subscriptions';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'subscription_items_product_id_fkey';
+            columns: ['product_id'];
+            isOneToOne: false;
+            referencedRelation: 'products';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       orders: {
         Row: {
           id: string;
@@ -216,6 +260,8 @@ export interface Database {
           order_type: OrderType;
           business_name: string | null;
           contact_person: string | null;
+          business_phone: string | null;
+          business_address: string | null;
           razorpay_order_id: string | null;
           razorpay_payment_id: string | null;
           razorpay_signature: string | null;
@@ -301,6 +347,7 @@ export interface Database {
           reviewed_by: string | null;
           kyc_documents: KycDocument[];
           kyc_status: KycStatus;
+          payout_eligible: boolean;
         };
         Insert: Omit<
           Database['public']['Tables']['partners']['Row'],
@@ -312,12 +359,14 @@ export interface Database {
           | 'reviewed_by'
           | 'kyc_documents'
           | 'kyc_status'
+          | 'payout_eligible'
         > & {
           id?: string;
           status?: PartnerStatus;
           platform_fee_percent?: number;
           kyc_documents?: KycDocument[];
           kyc_status?: KycStatus;
+          payout_eligible?: boolean;
         };
         Update: Partial<Database['public']['Tables']['partners']['Insert']> & {
           reviewed_at?: string | null;
@@ -422,6 +471,24 @@ export interface Database {
           },
         ];
       };
+      contact_messages: {
+        Row: {
+          id: string;
+          full_name: string;
+          email: string;
+          phone: string | null;
+          reason: string;
+          message: string;
+          created_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['contact_messages']['Row'], 'id' | 'phone' | 'created_at'> & {
+          id?: string;
+          phone?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['contact_messages']['Insert']>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -458,6 +525,7 @@ export interface Database {
           paid_out?: number;
           pending?: number;
           available?: number;
+          payout_eligible?: boolean;
         };
       };
       request_payout: {
@@ -468,6 +536,33 @@ export interface Database {
           amount?: number;
           error?: string;
         };
+      };
+      wholesale_discount_for_partner: {
+        Args: { p_partner_id: string; p_subtotal: number };
+        Returns: {
+          applied: boolean;
+          discount_id?: string;
+          code?: string | null;
+          discount_amount: number;
+        };
+      };
+      generate_subscription_orders: {
+        Args: Record<string, never>;
+        Returns: {
+          subscription_id: string;
+          order_id: string | null;
+          order_number: string | null;
+          outcome: string;
+        }[];
+      };
+      admin_generate_subscription_orders: {
+        Args: Record<string, never>;
+        Returns: {
+          subscription_id: string;
+          order_id: string | null;
+          order_number: string | null;
+          outcome: string;
+        }[];
       };
     };
     Enums: {
