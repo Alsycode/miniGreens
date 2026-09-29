@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
 import { PageShell, Panel } from "@/components/PageShell";
 
-export const metadata: Metadata = { title: "Shipping Policy | Mini Greens Company" };
+export const metadata: Metadata = {
+  title: "Shipping & Delivery Policy | Mini Greens Company",
+  description:
+    "Delivery areas, time slots and shipping details for fresh Mini Greens Company orders.",
+  alternates: { canonical: "/shipping-policy" },
+};
 
 const SLOTS = ["08:00 – 10:00", "10:00 – 12:00", "12:00 – 14:00", "14:00 – 16:00"];
 
@@ -12,7 +17,7 @@ export default function ShippingPolicyPage() {
       title="How Your Greens Get To You"
       intro="We deliver with our own vans across the city, six days a week. Nothing is handed to a courier, because nothing survives a courier."
     >
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid items-start gap-4 lg:grid-cols-2">
         <Panel title="Delivery Slots">
           <p>
             Choose one of four windows when you place an order. We text you a
@@ -20,7 +25,7 @@ export default function ShippingPolicyPage() {
           </p>
           <ul className="flex flex-wrap gap-2 pt-1">
             {SLOTS.map((slot) => (
-              <li key={slot} className="rounded-full bg-(--color-bg-muted) px-3 py-1.5 text-xs text-(--color-ink)">
+              <li key={slot} className="rounded-full bg-(--color-cream) px-3 py-1.5 text-xs text-(--color-forest)">
                 {slot}
               </li>
             ))}
@@ -38,7 +43,7 @@ export default function ShippingPolicyPage() {
           </p>
           <p>
             We currently deliver within a 25 km radius of the farm. If you&apos;re
-            just outside it, message us — we sometimes add stops when there&apos;s
+            just outside it, message us. We sometimes add stops when there&apos;s
             enough demand on a route.
           </p>
         </Panel>

@@ -5,17 +5,20 @@ import type { Database } from "@mobile/database";
 import { PageShell } from "@/components/PageShell";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-export const metadata: Metadata = { title: "My Orders | Mini Greens Company" };
+export const metadata: Metadata = {
+  title: "My Orders | Mini Greens Company",
+  robots: { index: false, follow: false },
+};
 
 type OrderStatus = Database["public"]["Tables"]["orders"]["Row"]["status"];
 
 const STATUS_STYLES: Record<OrderStatus, string> = {
-  pending: "bg-(--color-bg-muted) text-(--color-muted)",
-  confirmed: "bg-(--color-bg-muted) text-(--color-muted)",
-  processing: "bg-(--color-navy)/10 text-(--color-navy)",
-  shipped: "bg-(--color-navy)/10 text-(--color-navy)",
-  delivered: "bg-(--color-success)/15 text-(--color-success)",
-  cancelled: "bg-(--color-bg-muted) text-(--color-muted) line-through",
+  pending: "bg-(--color-cream-dark) text-(--color-forest)/60",
+  confirmed: "bg-(--color-cream-dark) text-(--color-forest)/60",
+  processing: "bg-(--color-leaf)/15 text-(--color-leaf)",
+  shipped: "bg-(--color-leaf)/15 text-(--color-leaf)",
+  delivered: "bg-(--color-forest)/10 text-(--color-forest)",
+  cancelled: "bg-(--color-cream-dark) text-(--color-forest)/60 line-through",
 };
 
 export default async function OrdersPage() {
@@ -39,12 +42,20 @@ export default async function OrdersPage() {
       title="Everything You've Ordered So Far"
       intro="A record of every box we've cut for you, including anything currently on its way."
     >
+      <div className="mb-6">
+        <Link
+          href="/subscriptions/manage"
+          className="text-sm font-semibold text-(--color-forest) underline underline-offset-4 hover:text-(--color-leaf)"
+        >
+          Manage your subscriptions →
+        </Link>
+      </div>
       {(orders ?? []).length === 0 ? (
-        <div className="rounded-2xl border border-(--color-border) bg-white p-10 text-center">
-          <p className="text-(--color-muted)">You haven&apos;t placed any orders yet.</p>
+        <div className="rounded-2xl border border-black/[0.07] bg-white p-10 text-center shadow-[0_2px_14px_rgba(31,58,36,0.06)]">
+          <p className="text-(--color-forest)/70">You haven&apos;t placed any orders yet.</p>
           <Link
             href="/shop"
-            className="mt-6 inline-flex rounded-full bg-(--color-accent) px-7 py-3.5 text-sm font-semibold text-(--color-navy) transition-colors hover:bg-(--color-accent-dark)"
+            className="mt-6 inline-flex rounded-full bg-(--color-sun) px-7 py-3.5 text-sm font-semibold text-(--color-forest) transition-colors hover:bg-(--color-sun-dark)"
           >
             Browse microgreens
           </Link>
@@ -54,12 +65,12 @@ export default async function OrdersPage() {
           {(orders ?? []).map((order) => (
             <article
               key={order.id}
-              className="rounded-2xl border border-(--color-border) bg-white p-6 transition-colors hover:border-(--color-navy)"
+              className="rounded-2xl border border-black/[0.07] bg-white p-6 shadow-[0_2px_14px_rgba(31,58,36,0.06)] transition-colors hover:border-(--color-forest)/30"
             >
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
                   <div className="flex items-center gap-3">
-                    <h2 className="font-display text-lg font-semibold text-(--color-navy)">
+                    <h2 className="font-serif-display text-xl text-(--color-forest)">
                       {order.order_number}
                     </h2>
                     <span
@@ -68,7 +79,7 @@ export default async function OrdersPage() {
                       {order.status}
                     </span>
                   </div>
-                  <p className="mt-2 text-sm text-(--color-muted)">
+                  <p className="mt-2 text-sm text-(--color-forest)/60">
                     Placed{" "}
                     {new Date(order.created_at).toLocaleDateString("en-IN", {
                       day: "numeric",
@@ -78,11 +89,11 @@ export default async function OrdersPage() {
                     {order.delivery_date &&
                       ` · Delivery ${order.delivery_date}${order.delivery_time ? `, ${order.delivery_time}` : ""}`}
                   </p>
-                  <p className="mt-3 text-sm text-(--color-ink)">
+                  <p className="mt-3 text-sm text-(--color-forest)/80">
                     {order.order_items.map((i) => `${i.quantity} × ${i.product_name}`).join(", ")}
                   </p>
                 </div>
-                <p className="text-2xl font-bold text-(--color-ink)">₹{Number(order.total).toFixed(0)}</p>
+                <p className="font-display text-2xl font-semibold text-(--color-forest)">₹{Number(order.total).toFixed(0)}</p>
               </div>
             </article>
           ))}

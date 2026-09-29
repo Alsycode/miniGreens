@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
 import { PageShell, Panel } from "@/components/PageShell";
 
-export const metadata: Metadata = { title: "Returns | Mini Greens Company" };
+export const metadata: Metadata = {
+  title: "Returns & Refunds | Mini Greens Company",
+  description:
+    "Our returns and refund policy for perishable microgreens, juices and tea blends.",
+  alternates: { canonical: "/returns" },
+};
 
 export default function ReturnsPage() {
   return (
@@ -10,7 +15,7 @@ export default function ReturnsPage() {
       title="If It Isn't Right, We Make It Right"
       intro="Fresh produce can't be restocked, so we don't ask you to send anything back. If a box disappoints, tell us and we'll replace or refund it."
     >
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid items-start gap-4 lg:grid-cols-2">
         <Panel title="Tell Us Within 24 Hours">
           <p>
             Greens are at their best the day they arrive, so we need to hear
@@ -18,7 +23,7 @@ export default function ReturnsPage() {
             with your order number and a photo if you have one.
           </p>
           <p>
-            We don&apos;t need the produce back — please compost it rather than
+            We don&apos;t need the produce back. Please compost it rather than
             returning it to us.
           </p>
         </Panel>
@@ -42,7 +47,7 @@ export default function ReturnsPage() {
           </p>
           <p>
             If nobody was home and the delivery had to be aborted, get in touch
-            — we&apos;ll usually reschedule at no cost the first time.
+            and we&apos;ll usually reschedule at no cost the first time.
           </p>
         </Panel>
 
