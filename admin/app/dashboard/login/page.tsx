@@ -1,4 +1,5 @@
 import { login } from "./actions";
+import { PasswordInput } from "@/components/PasswordInput";
 
 const ERROR_MESSAGES: Record<string, string> = {
   invalid: "Incorrect email or password. Please try again.",
@@ -39,13 +40,11 @@ export default async function LoginPage({
             <label htmlFor="password" className="block text-sm font-medium text-foreground">
               Password
             </label>
-            <input
+            <PasswordInput
               id="password"
               name="password"
-              type="password"
               required
               autoComplete="current-password"
-              className="mt-1 w-full rounded-lg border border-brand-border bg-white px-3 py-2 text-sm outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary"
             />
           </div>
 

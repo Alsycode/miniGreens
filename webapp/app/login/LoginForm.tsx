@@ -68,7 +68,7 @@ export function LoginForm({ redirectTo, initialEmail = "" }: { redirectTo: strin
     return (
       <form onSubmit={sendCode} className="rounded-2xl border border-black/[0.07] bg-white p-6 shadow-[0_2px_14px_rgba(31,58,36,0.06)] md:p-8">
         <h2 className="font-serif-display text-2xl text-(--color-forest)">Sign in to continue</h2>
-        <p className="mt-2 text-sm text-(--color-forest)/70">We&apos;ll email you a 6-digit code. No password needed.</p>
+        <p className="mt-2 text-sm text-(--color-forest)/70">We&apos;ll email you an 8-digit code. No password needed.</p>
         <div className="mt-6">
           <label className={labelClass} htmlFor="email">Email</label>
           <input
@@ -97,7 +97,7 @@ export function LoginForm({ redirectTo, initialEmail = "" }: { redirectTo: strin
     <form onSubmit={verifyCode} className="rounded-2xl border border-black/[0.07] bg-white p-6 shadow-[0_2px_14px_rgba(31,58,36,0.06)] md:p-8">
       <CheckCircle size={32} weight="fill" className="text-(--color-leaf)" />
       <h2 className="font-serif-display mt-3 text-2xl text-(--color-forest)">Enter your code</h2>
-      <p className="mt-2 text-sm text-(--color-forest)/70">We sent a 6-digit code to {email}.</p>
+      <p className="mt-2 text-sm text-(--color-forest)/70">We sent an 8-digit code to {email}.</p>
       <div className="mt-6">
         <label className={labelClass} htmlFor="code">Code</label>
         <input
@@ -108,7 +108,7 @@ export function LoginForm({ redirectTo, initialEmail = "" }: { redirectTo: strin
           className={inputClass}
           value={code}
           onChange={(e) => setCode(e.target.value)}
-          placeholder="123456"
+          placeholder="12345678"
         />
       </div>
       {error && <p className="mt-3 text-sm text-(--color-sale)">{error}</p>}

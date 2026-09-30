@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { PasswordInput } from "@/components/PasswordInput";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -79,29 +80,25 @@ export default function ResetPasswordPage() {
               <label htmlFor="password" className="block text-sm font-medium text-foreground">
                 New password
               </label>
-              <input
+              <PasswordInput
                 id="password"
-                type="password"
                 required
                 autoFocus
                 autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-brand-border bg-white px-3 py-2 text-sm outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary"
               />
             </div>
             <div>
               <label htmlFor="confirm" className="block text-sm font-medium text-foreground">
                 Confirm password
               </label>
-              <input
+              <PasswordInput
                 id="confirm"
-                type="password"
                 required
                 autoComplete="new-password"
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-brand-border bg-white px-3 py-2 text-sm outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary"
               />
             </div>
 

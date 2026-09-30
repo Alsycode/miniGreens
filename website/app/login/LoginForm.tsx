@@ -54,7 +54,7 @@ export function LoginForm({ redirectTo }: { redirectTo: string }) {
       <form onSubmit={sendCode} className="rounded-2xl border border-(--color-border) bg-(--color-surface) p-6 md:p-8">
         <h2 className="font-display text-2xl">Sign in to continue</h2>
         <p className="mt-2 text-sm text-(--color-muted)">
-          We&apos;ll email you a 6-digit code — no password needed.
+          We&apos;ll email you an 8-digit code — no password needed.
         </p>
         <div className="mt-6">
           <label className={labelClass} htmlFor="email">Email</label>
@@ -85,7 +85,7 @@ export function LoginForm({ redirectTo }: { redirectTo: string }) {
       <CheckCircle size={32} weight="fill" className="text-(--color-sage)" />
       <h2 className="font-display mt-3 text-2xl">Enter your code</h2>
       <p className="mt-2 text-sm text-(--color-muted)">
-        We sent a 6-digit code to {email}.
+        We sent an 8-digit code to {email}.
       </p>
       <div className="mt-6">
         <label className={labelClass} htmlFor="code">Code</label>
@@ -97,7 +97,7 @@ export function LoginForm({ redirectTo }: { redirectTo: string }) {
           className={inputClass}
           value={code}
           onChange={(e) => setCode(e.target.value)}
-          placeholder="123456"
+          placeholder="12345678"
         />
       </div>
       {error && <p className="mt-3 text-sm text-red-400">{error}</p>}

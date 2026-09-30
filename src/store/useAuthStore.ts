@@ -12,13 +12,15 @@ interface AuthState {
   isLoading: boolean;
   initialize: () => () => void;
   fetchProfile: (userId: string) => Promise<void>;
-  signUp: (
+  sendCode: (email: string) => Promise<{ error: string | null }>;
+  verifyCode: (
     email: string,
-    password: string,
+    code: string,
+  ) => Promise<{ error: string | null; needsProfile: boolean }>;
+  completeProfile: (
     fullName: string,
     dateOfBirth?: string | null,
-  ) => Promise<{ error: string | null; needsConfirmation: boolean }>;
-  signIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  ) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -46,38 +48,52 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   fetchProfile: async (userId) => {
-    const { data } = await supabase.from('profiles').select('*').eq('id', userId).single();
-    if (data) set({ profile: data });
+    const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
+    if (data) {
+      set({ profile: data });
+    } else if (error) {
+      // The profile row may not exist yet if this races the on_auth_user_created
+      // DB trigger right after signup — retry once after a short delay instead
+      // of leaving `profile` stuck at null with no indication anything failed.
+      await new Promise((resolve) => setTimeout(resolve, 1200));
+      const retry = await supabase.from('profiles').select('*').eq('id', userId).single();
+      if (retry.data) set({ profile: retry.data });
+    }
     syncPushTokenForUser(userId).catch(() => {});
   },
 
-  signUp: async (email, password, fullName, dateOfBirth) => {
-    const { data, error } = await supabase.auth.signUp({
+  // Same passwordless flow as the webapp: email a 6-digit code, creating the account on first use.
+  sendCode: async (email) => {
+    const { error } = await supabase.auth.signInWithOtp({
       email,
-      password,
-      options: {
-        data: {
-          full_name: fullName,
-          ...(dateOfBirth ? { date_of_birth: dateOfBirth } : {}),
-        },
-      },
+      options: { shouldCreateUser: true },
     });
-    if (error) return { error: error.message, needsConfirmation: false };
-    // If a session exists immediately (email confirmation disabled), the profile row
-    // is already created by the on_auth_user_created trigger — persist DOB directly in
-    // case this project's trigger predates the raw_user_meta_data copy.
-    if (data.session && dateOfBirth) {
-      await supabase
-        .from('profiles')
-        .update({ date_of_birth: dateOfBirth })
-        .eq('id', data.session.user.id);
-    }
-    return { error: null, needsConfirmation: !data.session };
+    return { error: error?.message ?? null };
   },
 
-  signIn: async (email, password) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error: error?.message ?? null };
+  verifyCode: async (email, code) => {
+    const { data, error } = await supabase.auth.verifyOtp({ email, token: code, type: 'email' });
+    if (error || !data.user) {
+      return { error: error?.message ?? 'Could not verify the code.', needsProfile: false };
+    }
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('full_name')
+      .eq('id', data.user.id)
+      .single();
+    return { error: null, needsProfile: !profile?.full_name?.trim() };
+  },
+
+  completeProfile: async (fullName, dateOfBirth) => {
+    const userId = get().session?.user.id;
+    if (!userId) return { error: 'You are signed out. Please log in again.' };
+    const { error } = await supabase
+      .from('profiles')
+      .update({ full_name: fullName, ...(dateOfBirth ? { date_of_birth: dateOfBirth } : {}) })
+      .eq('id', userId);
+    if (error) return { error: error.message };
+    await get().fetchProfile(userId);
+    return { error: null };
   },
 
   signOut: async () => {

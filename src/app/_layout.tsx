@@ -80,7 +80,6 @@ export default function RootLayout() {
           <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="onboarding" options={{ headerShown: false, animation: 'fade' }} />
           <Stack.Screen name="auth/login" options={{ animation: 'fade' }} />
-          <Stack.Screen name="auth/register" options={{ animation: 'slide_from_right' }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="product/[id]" options={{ animation: 'slide_from_right' }} />
           <Stack.Screen name="category/[slug]" options={{ animation: 'slide_from_right' }} />
@@ -107,6 +106,7 @@ export default function RootLayout() {
           <Stack.Screen name="partner/dashboard" options={{ animation: 'slide_from_right' }} />
           <Stack.Screen name="partner/business-order" options={{ animation: 'slide_from_right' }} />
           <Stack.Screen name="subscription/manage" options={{ animation: 'slide_from_right' }} />
+          <Stack.Screen name="subscription/custom" options={{ animation: 'slide_from_right' }} />
         </Stack>
       </QueryClientProvider>
     </GestureHandlerRootView>

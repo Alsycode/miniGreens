@@ -229,7 +229,7 @@ secure_password_change = false
 # Controls the minimum amount of time that must pass before sending another signup confirmation or password reset email.
 max_frequency = "1s"
 # Number of characters used in the email OTP.
-otp_length = 6
+otp_length = 8
 # Number of seconds before the email OTP expires (defaults to 1 hour).
 otp_expiry = 3600
 
@@ -242,6 +242,15 @@ otp_expiry = 3600
 # pass = "env(SENDGRID_API_KEY)"
 # admin_email = "admin@email.com"
 # sender_name = "Admin"
+
+[auth.email.template.magic_link]
+subject = "Your MiniGreens sign-in code"
+content_path = "./supabase/templates/magic_link.html"
+
+# First-time sign-ups via OTP use the confirmation template
+[auth.email.template.confirmation]
+subject = "Your MiniGreens sign-in code"
+content_path = "./supabase/templates/confirmation.html"
 
 # Uncomment to customize email template
 # [auth.email.template.invite]
