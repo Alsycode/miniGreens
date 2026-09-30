@@ -107,7 +107,7 @@ export default function LoginScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <Animated.View entering={FadeInUp.delay(40).springify().damping(31).mass(1).stiffness(100)}>
-          <Logo width={128} style={styles.logo} />
+          <Logo width={128} color="#000000" style={styles.logo} />
           <Typography variant="h2" color={colors.text} style={styles.title}>
             {heading}
           </Typography>

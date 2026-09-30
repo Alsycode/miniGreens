@@ -26,11 +26,20 @@ interface MenuItem {
   route: string;
 }
 
-function getMenuSections(role: string | undefined): { title: string; items: MenuItem[] }[] {
-  const partnerItem: MenuItem =
-    role === 'partner'
-      ? { icon: 'briefcase-outline', label: 'Partner Dashboard', route: '/partner/dashboard' }
-      : { icon: 'briefcase-outline', label: 'Become an MGC Partner', route: '/partner/apply' };
+function getMenuSections(
+  role: string | undefined,
+  partnerStatus: string | null,
+): { title: string; items: MenuItem[] }[] {
+  // One partner row per profile (unique profile_id), so pending/rejected applicants
+  // can't re-apply — send them to their application status instead.
+  let partnerItem: MenuItem = { icon: 'briefcase-outline', label: 'Become an MGC Partner', route: '/partner/apply' };
+  if (role === 'partner' || partnerStatus === 'approved') {
+    partnerItem = { icon: 'briefcase-outline', label: 'Partner Dashboard', route: '/partner/dashboard' };
+  } else if (partnerStatus === 'pending') {
+    partnerItem = { icon: 'time-outline', label: 'Partner Application Under Review', route: '/partner/submitted' };
+  } else if (partnerStatus === 'rejected') {
+    partnerItem = { icon: 'briefcase-outline', label: 'Partner Application Status', route: '/partner/dashboard' };
+  }
 
   return [
     {
@@ -103,14 +112,16 @@ export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const authProfile = useAuthStore((s) => s.profile);
   const session = useAuthStore((s) => s.session);
+  const partnerStatus = useAuthStore((s) => s.partnerStatus);
   const signOut = useAuthStore((s) => s.signOut);
+  const isPartner = authProfile?.role === 'partner' || partnerStatus === 'approved';
   let itemDelay = 280;
 
   const displayName = authProfile?.full_name || mockProfile.fullName;
   const displayEmail = authProfile?.email || session?.user.email || mockProfile.email;
   // BUG-15: fall back to a generated initial avatar (the mock URL can 404).
   const displayAvatar = authProfile?.avatar || getAvatarPlaceholder(displayName);
-  const menuSections = getMenuSections(authProfile?.role);
+  const menuSections = getMenuSections(authProfile?.role, partnerStatus);
 
   const [orderCount, setOrderCount] = useState<number | null>(null);
   const [addressCount, setAddressCount] = useState<number | null>(null);
@@ -158,6 +169,14 @@ export default function ProfileScreen() {
             <Typography variant="body" color={colors.textSecondary}>
               {displayEmail}
             </Typography>
+            {isPartner && (
+              <View style={styles.partnerBadge}>
+                <Ionicons name="ribbon-outline" size={13} color={colors.primaryDark} />
+                <Typography variant="caption" color={colors.primaryDark} weight="bold">
+                  MGC Partner
+                </Typography>
+              </View>
+            )}
           </Animated.View>
         </Animated.View>
 
@@ -262,6 +281,17 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: 47,
     backgroundColor: colors.border,
+  },
+  partnerBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 4,
+    marginTop: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.primaryLight,
   },
   profileInfo: {
     alignItems: 'center',

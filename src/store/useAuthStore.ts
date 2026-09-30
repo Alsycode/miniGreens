@@ -1,14 +1,18 @@
 import { create } from 'zustand';
+import { AppState } from 'react-native';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { syncPushTokenForUser } from '../lib/notifications';
 import type { Database } from '../types/database';
 
 type ProfileRow = Database['public']['Tables']['profiles']['Row'];
+type PartnerStatus = Database['public']['Tables']['partners']['Row']['status'];
 
 interface AuthState {
   session: Session | null;
   profile: ProfileRow | null;
+  /** Latest partner application status, or null if the user never applied. */
+  partnerStatus: PartnerStatus | null;
   isLoading: boolean;
   initialize: () => () => void;
   fetchProfile: (userId: string) => Promise<void>;
@@ -27,6 +31,7 @@ interface AuthState {
 export const useAuthStore = create<AuthState>((set, get) => ({
   session: null,
   profile: null,
+  partnerStatus: null,
   isLoading: true,
 
   initialize: () => {
@@ -40,11 +45,21 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (session) {
         get().fetchProfile(session.user.id);
       } else {
-        set({ profile: null });
+        set({ profile: null, partnerStatus: null });
       }
     });
 
-    return () => subscription.unsubscribe();
+    // Pick up role / partner-approval changes made elsewhere (e.g. admin approves
+    // an application) whenever the app returns to the foreground.
+    const appStateSub = AppState.addEventListener('change', (state) => {
+      const userId = get().session?.user.id;
+      if (state === 'active' && userId) get().fetchProfile(userId);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+      appStateSub.remove();
+    };
   },
 
   fetchProfile: async (userId) => {
@@ -59,6 +74,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const retry = await supabase.from('profiles').select('*').eq('id', userId).single();
       if (retry.data) set({ profile: retry.data });
     }
+    const { data: partner } = await supabase
+      .from('partners')
+      .select('status')
+      .eq('profile_id', userId)
+      .maybeSingle();
+    set({ partnerStatus: partner?.status ?? null });
     syncPushTokenForUser(userId).catch(() => {});
   },
 
@@ -98,6 +119,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   signOut: async () => {
     await supabase.auth.signOut();
-    set({ session: null, profile: null });
+    set({ session: null, profile: null, partnerStatus: null });
   },
 }));
