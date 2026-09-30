@@ -18,7 +18,7 @@ interface ProductOption {
 
 export default function SubscribePage() {
   const { subscription, setSubscription, hydrated } = usePreorder();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const plan = subscriptionPlans.find((p) => p.id === subscription?.planId);
 
   const parsedItems = useMemo(() => (plan ? plan.items.map(parsePlanItem) : []), [plan]);
@@ -183,7 +183,19 @@ export default function SubscribePage() {
       </div>
 
       <main className="mx-auto max-w-7xl px-6 py-10 md:px-10">
-        {!hydrated ? null : !plan ? (
+        {!hydrated || authLoading ? null : !user && plan ? (
+          <div className="rounded-2xl bg-white p-10 text-center shadow-[0_4px_20px_rgba(31,58,36,0.08)]">
+            <p className="text-(--color-forest)/70">
+              Log in to start your {plan.name} subscription. Your plan stays selected.
+            </p>
+            <Link
+              href={`/login?redirect=${encodeURIComponent("/subscribe")}`}
+              className="mt-6 inline-flex rounded-full bg-(--color-sun) px-7 py-3.5 text-sm font-semibold text-(--color-forest) transition-colors hover:bg-(--color-sun-dark)"
+            >
+              Log in
+            </Link>
+          </div>
+        ) : !plan ? (
           <div className="rounded-2xl bg-white p-10 text-center shadow-[0_4px_20px_rgba(31,58,36,0.08)]">
             <p className="text-(--color-forest)/70">You haven&apos;t picked a plan yet.</p>
             <Link
