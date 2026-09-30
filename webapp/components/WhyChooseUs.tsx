@@ -1,12 +1,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Drop, Plant, ShieldCheck, Timer } from "@phosphor-icons/react/dist/ssr";
+import { BRAND_CLAIM } from "@/lib/brand";
 
 const POINTS = [
   {
     icon: Timer,
     label: "Cut the morning it ships",
-    detail: "Harvested the day your box leaves us — never from cold storage.",
+    detail: "Harvested the day your box leaves us, never from cold storage.",
   },
   {
     icon: ShieldCheck,
@@ -16,7 +17,7 @@ const POINTS = [
   {
     icon: Drop,
     label: "Naturally caffeine-free",
-    detail: "Every tea blend is microgreens and botanicals only — no additives.",
+    detail: "Every tea blend is microgreens and botanicals only, with no additives.",
   },
   {
     icon: Plant,
@@ -34,7 +35,7 @@ export function WhyChooseUs() {
             src="/images/dome-peashoot.png"
             alt="Fresh pea shoot microgreens under a glass dome"
             fill
-            unoptimized
+            loading="lazy"
             className="object-contain"
             sizes="(min-width: 1024px) 45vw, 90vw"
           />
@@ -49,7 +50,7 @@ export function WhyChooseUs() {
           </h2>
 
           <p className="mt-5 max-w-md text-(--color-muted)">
-            No middlemen, no warehouse, no shelf life spent in transit. What we
+            As {BRAND_CLAIM}, we keep it simple: no middlemen, no warehouse, no shelf life spent in transit. What we
             grow goes straight from our farm to your kitchen.
           </p>
 

@@ -6,13 +6,13 @@ import { CheckCircle } from "@phosphor-icons/react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 const inputClass =
-  "w-full rounded-xl border border-(--color-border) bg-white px-4 py-3 text-sm text-(--color-ink) outline-none transition-colors placeholder:text-(--color-muted) focus:border-(--color-navy)";
-const labelClass = "mb-2 block text-xs font-semibold tracking-wide text-(--color-muted) uppercase";
+  "w-full rounded-xl border border-black/[0.07] bg-white px-4 py-3 text-sm text-(--color-forest) outline-none transition-colors placeholder:text-(--color-forest)/70 focus:border-(--color-forest)";
+const labelClass = "mb-2 block text-xs font-semibold tracking-wide text-(--color-forest)/70 uppercase";
 
-export function LoginForm({ redirectTo }: { redirectTo: string }) {
+export function LoginForm({ redirectTo, initialEmail = "" }: { redirectTo: string; initialEmail?: string }) {
   const router = useRouter();
   const [stage, setStage] = useState<"email" | "code">("email");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(initialEmail);
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -51,9 +51,9 @@ export function LoginForm({ redirectTo }: { redirectTo: string }) {
 
   if (stage === "email") {
     return (
-      <form onSubmit={sendCode} className="rounded-2xl border border-(--color-border) bg-white p-6 md:p-8">
-        <h2 className="font-display text-xl font-semibold text-(--color-navy)">Sign in to continue</h2>
-        <p className="mt-2 text-sm text-(--color-muted)">We&apos;ll email you a 6-digit code — no password needed.</p>
+      <form onSubmit={sendCode} className="rounded-2xl border border-black/[0.07] bg-white p-6 shadow-[0_2px_14px_rgba(31,58,36,0.06)] md:p-8">
+        <h2 className="font-serif-display text-2xl text-(--color-forest)">Sign in to continue</h2>
+        <p className="mt-2 text-sm text-(--color-forest)/70">We&apos;ll email you a 6-digit code. No password needed.</p>
         <div className="mt-6">
           <label className={labelClass} htmlFor="email">Email</label>
           <input
@@ -70,7 +70,7 @@ export function LoginForm({ redirectTo }: { redirectTo: string }) {
         <button
           type="submit"
           disabled={loading}
-          className="mt-6 w-full rounded-full bg-(--color-accent) px-7 py-4 font-semibold text-(--color-navy) transition-colors hover:bg-(--color-accent-dark) disabled:opacity-60"
+          className="mt-6 w-full rounded-full bg-(--color-sun) px-7 py-4 font-semibold text-(--color-forest) transition-colors hover:bg-(--color-sun-dark) disabled:opacity-60"
         >
           {loading ? "Sending code..." : "Send code"}
         </button>
@@ -79,17 +79,17 @@ export function LoginForm({ redirectTo }: { redirectTo: string }) {
   }
 
   return (
-    <form onSubmit={verifyCode} className="rounded-2xl border border-(--color-border) bg-white p-6 md:p-8">
-      <CheckCircle size={32} weight="fill" className="text-(--color-success)" />
-      <h2 className="font-display mt-3 text-xl font-semibold text-(--color-navy)">Enter your code</h2>
-      <p className="mt-2 text-sm text-(--color-muted)">We sent a 6-digit code to {email}.</p>
+    <form onSubmit={verifyCode} className="rounded-2xl border border-black/[0.07] bg-white p-6 shadow-[0_2px_14px_rgba(31,58,36,0.06)] md:p-8">
+      <CheckCircle size={32} weight="fill" className="text-(--color-leaf)" />
+      <h2 className="font-serif-display mt-3 text-2xl text-(--color-forest)">Enter your code</h2>
+      <p className="mt-2 text-sm text-(--color-forest)/70">We sent a 6-digit code to {email}.</p>
       <div className="mt-6">
         <label className={labelClass} htmlFor="code">Code</label>
         <input
           id="code"
           required
           inputMode="numeric"
-          maxLength={6}
+          maxLength={10}
           className={inputClass}
           value={code}
           onChange={(e) => setCode(e.target.value)}
@@ -100,14 +100,14 @@ export function LoginForm({ redirectTo }: { redirectTo: string }) {
       <button
         type="submit"
         disabled={loading}
-        className="mt-6 w-full rounded-full bg-(--color-accent) px-7 py-4 font-semibold text-(--color-navy) transition-colors hover:bg-(--color-accent-dark) disabled:opacity-60"
+        className="mt-6 w-full rounded-full bg-(--color-sun) px-7 py-4 font-semibold text-(--color-forest) transition-colors hover:bg-(--color-sun-dark) disabled:opacity-60"
       >
         {loading ? "Verifying..." : "Verify & continue"}
       </button>
       <button
         type="button"
         onClick={() => setStage("email")}
-        className="mt-3 w-full text-center text-xs text-(--color-muted) underline"
+        className="mt-3 w-full text-center text-xs text-(--color-forest)/70 underline"
       >
         Use a different email
       </button>

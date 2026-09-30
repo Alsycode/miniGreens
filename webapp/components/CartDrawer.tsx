@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import Image from "next/image";
+import { productImageFit } from "@/lib/productImages";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Leaf, Minus, Plus, Trash, X, Truck } from "@phosphor-icons/react";
@@ -57,9 +58,9 @@ export function CartDrawer() {
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        <header className="flex items-center justify-between border-b border-(--color-border) bg-(--color-navy) px-5 py-4 text-white">
-          <h2 className="font-display text-lg font-semibold">
-            Your Cart{count > 0 ? ` (${count} items)` : ""}
+        <header className="flex items-center justify-between border-b border-black/[0.07] bg-(--color-forest) px-5 py-4 text-white">
+          <h2 className="font-serif-display text-xl">
+            Your Cart{count > 0 ? ` (${count} ${count === 1 ? "item" : "items"})` : ""}
           </h2>
           <button
             onClick={closeCart}
@@ -72,36 +73,36 @@ export function CartDrawer() {
 
         {items.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
-            <span className="flex size-14 items-center justify-center rounded-full bg-(--color-bg-muted) text-(--color-navy)">
+            <span className="flex size-14 items-center justify-center rounded-full bg-(--color-cream) text-(--color-forest)">
               <Leaf size={22} />
             </span>
-            <p className="text-sm text-(--color-muted)">Your cart is empty.</p>
+            <p className="text-sm text-(--color-forest)/70">Your cart is empty.</p>
             <Link
               href="/shop"
               onClick={closeCart}
-              className="rounded-full bg-(--color-accent) px-6 py-3 text-sm font-semibold text-(--color-navy) transition-colors hover:bg-(--color-accent-dark)"
+              className="rounded-full bg-(--color-sun) px-6 py-3 text-sm font-semibold text-(--color-forest) transition-colors hover:bg-(--color-sun-dark)"
             >
               Browse the shop
             </Link>
           </div>
         ) : (
           <>
-            <div className="border-b border-(--color-border) bg-(--color-bg-muted) px-5 py-3">
-              <p className="flex items-center gap-1.5 text-xs text-(--color-ink)">
-                <Truck size={14} className="text-(--color-success)" />
+            <div className="border-b border-black/[0.07] bg-(--color-cream) px-5 py-3">
+              <p className="flex items-center gap-1.5 text-xs text-(--color-forest)">
+                <Truck size={14} className="text-(--color-leaf)" />
                 {remaining > 0 ? (
                   <>
                     Add <span className="font-semibold">₹{Math.ceil(remaining)}</span> more for free delivery
                   </>
                 ) : (
-                  <span className="font-semibold text-(--color-success)">
+                  <span className="font-semibold text-(--color-leaf)">
                     You&rsquo;ve unlocked free delivery!
                   </span>
                 )}
               </p>
               <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white">
                 <div
-                  className="h-full rounded-full bg-(--color-success) transition-[width] duration-500"
+                  className="h-full rounded-full bg-(--color-leaf) transition-[width] duration-500"
                   style={{ width: `${progress}%` }}
                 />
               </div>
@@ -115,13 +116,13 @@ export function CartDrawer() {
                     <Link
                       href={`/shop/${item.slug}`}
                       onClick={closeCart}
-                      className="relative size-16 shrink-0 overflow-hidden rounded-xl border border-(--color-border) bg-(--color-bg-muted)"
+                      className="relative size-16 shrink-0 overflow-hidden rounded-xl border border-black/[0.07] bg-(--color-cream)"
                     >
                       {item.image ? (
-                        <Image src={item.image} alt={name} fill className="object-cover" sizes="64px" />
+                        <Image src={item.image} alt={name} fill className={productImageFit(item.image)} sizes="64px" />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center">
-                          <Leaf size={18} className="text-(--color-navy)/30" />
+                          <Leaf size={18} className="text-(--color-forest)/30" />
                         </div>
                       )}
                     </Link>
@@ -130,18 +131,18 @@ export function CartDrawer() {
                       <Link
                         href={`/shop/${item.slug}`}
                         onClick={closeCart}
-                        className="block truncate text-sm font-medium text-(--color-ink) transition-colors hover:text-(--color-navy)"
+                        className="block truncate text-sm font-medium text-(--color-forest) transition-colors hover:text-(--color-leaf)"
                       >
                         {name}
                       </Link>
-                      <p className="mt-0.5 text-xs text-(--color-muted)">₹{item.price} each</p>
+                      <p className="mt-0.5 text-xs text-(--color-forest)/70">₹{item.price} each</p>
 
                       <div className="mt-2 flex items-center gap-2">
-                        <div className="flex items-center gap-1 rounded-full border border-(--color-border) p-0.5">
+                        <div className="flex items-center gap-1 rounded-full border border-black/[0.07] p-0.5">
                           <button
                             onClick={() => updateQuantity(item.productId, item.quantity - 1)}
                             aria-label="Decrease quantity"
-                            className="flex size-6 items-center justify-center rounded-full text-(--color-ink) transition-colors hover:bg-(--color-bg-muted)"
+                            className="flex size-6 items-center justify-center rounded-full text-(--color-forest) transition-colors hover:bg-(--color-cream)"
                           >
                             <Minus size={11} weight="bold" />
                           </button>
@@ -149,7 +150,7 @@ export function CartDrawer() {
                           <button
                             onClick={() => updateQuantity(item.productId, item.quantity + 1)}
                             aria-label="Increase quantity"
-                            className="flex size-6 items-center justify-center rounded-full text-(--color-ink) transition-colors hover:bg-(--color-bg-muted)"
+                            className="flex size-6 items-center justify-center rounded-full text-(--color-forest) transition-colors hover:bg-(--color-cream)"
                           >
                             <Plus size={11} weight="bold" />
                           </button>
@@ -157,14 +158,14 @@ export function CartDrawer() {
                         <button
                           onClick={() => removeItem(item.productId)}
                           aria-label={`Remove ${name}`}
-                          className="flex size-6 items-center justify-center rounded-full text-(--color-muted) transition-colors hover:text-(--color-sale)"
+                          className="flex size-6 items-center justify-center rounded-full text-(--color-forest)/70 transition-colors hover:text-(--color-sale)"
                         >
                           <Trash size={13} />
                         </button>
                       </div>
                     </div>
 
-                    <p className="shrink-0 text-sm font-semibold text-(--color-ink)">
+                    <p className="shrink-0 text-sm font-semibold text-(--color-forest)">
                       ₹{item.price * item.quantity}
                     </p>
                   </div>
@@ -172,23 +173,23 @@ export function CartDrawer() {
               })}
             </div>
 
-            <footer className="border-t border-(--color-border) px-5 py-4">
+            <footer className="border-t border-black/[0.07] px-5 py-4">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-(--color-muted)">Subtotal</span>
-                <span className="font-semibold text-(--color-ink)">₹{subtotal.toFixed(2)}</span>
+                <span className="text-(--color-forest)/70">Subtotal</span>
+                <span className="font-semibold text-(--color-forest)">₹{subtotal.toFixed(2)}</span>
               </div>
-              <p className="mt-1 text-xs text-(--color-muted)">Delivery calculated at checkout.</p>
+              <p className="mt-1 text-xs text-(--color-forest)/70">Delivery calculated at checkout.</p>
               <Link
                 href="/checkout"
                 onClick={closeCart}
-                className="mt-4 block rounded-full bg-(--color-accent) px-7 py-3.5 text-center font-semibold text-(--color-navy) transition-colors hover:bg-(--color-accent-dark)"
+                className="mt-4 block rounded-full bg-(--color-sun) px-7 py-3.5 text-center font-semibold text-(--color-forest) transition-colors hover:bg-(--color-sun-dark)"
               >
                 Checkout
               </Link>
               <Link
                 href="/cart"
                 onClick={closeCart}
-                className="mt-2 block text-center text-xs font-medium text-(--color-navy) underline"
+                className="mt-2 block text-center text-xs font-medium text-(--color-forest) underline"
               >
                 View full cart
               </Link>

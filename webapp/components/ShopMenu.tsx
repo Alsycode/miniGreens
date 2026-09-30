@@ -80,8 +80,8 @@ export function ShopMenu() {
             return next;
           });
         }}
-        className={`flex items-center gap-1 transition-colors hover:text-(--color-accent-dark) ${
-          onShop ? "text-(--color-navy)" : ""
+        className={`flex items-center gap-1 transition-colors hover:text-(--color-leaf) ${
+          onShop ? "text-(--color-forest)" : ""
         }`}
       >
         Shop
@@ -95,7 +95,7 @@ export function ShopMenu() {
       {open && (
         <div
           role="menu"
-          className="absolute left-0 top-full z-30 mt-3 w-56 overflow-hidden rounded-xl border border-(--color-border) bg-white p-1.5 shadow-xl shadow-black/10"
+          className="absolute left-0 top-full z-30 mt-3 w-56 overflow-hidden rounded-xl border border-black/[0.07] bg-white p-1.5 shadow-xl shadow-black/10"
         >
           {SHOP_ITEMS.map((item) => {
             const isActive = activeCategory === item.href.split("category=")[1];
@@ -104,23 +104,23 @@ export function ShopMenu() {
                 key={item.href}
                 href={item.href}
                 role="menuitem"
-                className={`flex flex-col rounded-lg px-3 py-2 transition-colors hover:bg-(--color-bg-muted) ${
-                  isActive ? "bg-(--color-bg-muted) text-(--color-navy)" : "text-(--color-muted)"
+                className={`flex flex-col rounded-lg px-3 py-2 transition-colors hover:bg-(--color-cream) ${
+                  isActive ? "bg-(--color-cream) text-(--color-forest)" : "text-(--color-forest)/70"
                 }`}
               >
-                <span className="text-sm font-medium text-(--color-navy)">{item.label}</span>
-                <span className="text-xs text-(--color-muted)">{item.note}</span>
+                <span className="text-sm font-medium text-(--color-forest)">{item.label}</span>
+                <span className="text-xs text-(--color-forest)/70">{item.note}</span>
               </Link>
             );
           })}
 
-          <div className="my-1.5 h-px bg-(--color-border)" />
+          <div className="my-1.5 h-px bg-black/[0.07]" />
 
           <Link
             href="/shop"
             role="menuitem"
-            className={`block rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-(--color-bg-muted) ${
-              onShop && !activeCategory ? "bg-(--color-bg-muted) text-(--color-navy)" : "text-(--color-muted)"
+            className={`block rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-(--color-cream) ${
+              onShop && !activeCategory ? "bg-(--color-cream) text-(--color-forest)" : "text-(--color-forest)/70"
             }`}
           >
             All products

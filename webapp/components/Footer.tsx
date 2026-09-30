@@ -1,115 +1,123 @@
 import Link from "next/link";
 import {
   ArrowRight,
-  EnvelopeSimple,
   FacebookLogo,
   InstagramLogo,
-  MapPin,
-  Phone,
+  LinkedinLogo,
+  Plant,
   YoutubeLogo,
 } from "@phosphor-icons/react/dist/ssr";
+import { Logo } from "@/components/Logo";
+import { BRAND_CLAIM_SHORT } from "@/lib/brand";
 
-const QUICK_LINKS = [
-  { label: "Home", href: "/" },
-  { label: "Shop", href: "/shop" },
-  { label: "About Us", href: "/about" },
-  { label: "Blog", href: "/blog" },
-  { label: "Contact", href: "/contact" },
+const COLUMNS = [
+  {
+    title: "Shop",
+    links: [
+      { label: "All Products", href: "/shop" },
+      { label: "Tea Blends", href: "/shop?category=tea-blends" },
+      { label: "Fresh Microgreens", href: "/shop?category=microgreens" },
+      { label: "Subscriptions", href: "/subscriptions" },
+    ],
+  },
+  {
+    title: "Company",
+    links: [
+      { label: "Our Story", href: "/about" },
+      { label: "Journal", href: "/blog" },
+      { label: "Become a Partner", href: "/partner/apply" },
+      { label: "Contact", href: "/contact" },
+    ],
+  },
+  {
+    title: "Help",
+    links: [
+      { label: "My Orders", href: "/orders" },
+      { label: "Shipping Policy", href: "/shipping-policy" },
+      { label: "Returns", href: "/returns" },
+      { label: "Terms & Conditions", href: "/terms" },
+      { label: "Privacy Policy", href: "/privacy" },
+    ],
+  },
 ];
 
-const CUSTOMER_CARE = [
-  { label: "My Orders", href: "/orders" },
-  { label: "Returns", href: "/returns" },
-  { label: "Shipping Policy", href: "/shipping-policy" },
-  { label: "Terms & Conditions", href: "/terms" },
+const SOCIALS = [
+  { label: "Instagram", Icon: InstagramLogo },
+  { label: "Facebook", Icon: FacebookLogo },
+  { label: "YouTube", Icon: YoutubeLogo },
+  { label: "LinkedIn", Icon: LinkedinLogo },
 ];
 
 export function Footer() {
   return (
-    <footer className="relative z-10 bg-(--color-navy) text-white/80">
-      <div className="mx-auto max-w-7xl px-6 py-14 md:px-10">
-        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+    <footer className="relative z-10 bg-(--color-forest-deep) text-white/80">
+      <div className="mx-auto max-w-7xl px-6 pb-[max(2rem,env(safe-area-inset-bottom))] pt-14 md:px-10">
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.4fr_0.8fr_0.8fr_0.8fr_1.4fr]">
           <div>
-            <div className="flex items-center gap-2">
-              <span className="flex size-9 items-center justify-center rounded-full bg-white/10 text-sm font-bold text-white">
-                MG
-              </span>
-              <span className="font-display text-lg font-bold text-white">MINI GREENS</span>
-            </div>
-            <p className="mt-3 text-sm text-white/60">
-              Handpicked microgreens grown with care, delivered fresh to your doorstep.
+            <Logo width={116} color="#ffffff" accentColor="#ffffff" />
+            <p className="mt-4 max-w-56 text-xs leading-relaxed text-white/60">
+              {BRAND_CLAIM_SHORT}. Handpicked microgreens grown with care, delivered fresh to your doorstep.
             </p>
-            <form className="mt-4 flex items-center gap-2 rounded-full border border-white/15 bg-white/5 p-1.5">
+          </div>
+
+          {COLUMNS.map((col) => (
+            <div key={col.title}>
+              <h4 className="text-sm font-semibold text-white">{col.title}</h4>
+              <ul className="mt-4 space-y-2.5 text-xs text-white/60">
+                {col.links.map((link) => (
+                  <li key={link.label}>
+                    <Link href={link.href} className="transition-colors hover:text-white">
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+
+          <div>
+            <h4 className="text-sm font-semibold text-white">Join MGC</h4>
+            <p className="mt-2 text-xs leading-relaxed text-white/60">
+              Birthday rewards, order tracking and subscriptions in one account.
+            </p>
+            {/* Hands the email to the sign-in page, which sends a one-time code. */}
+            <form action="/login" method="get" className="mt-4 flex items-center gap-2 rounded-full border border-white/15 bg-white/5 p-1.5 pl-4">
               <input
                 type="email"
+                name="email"
+                required
                 placeholder="Enter your email"
-                className="w-full bg-transparent px-3 text-sm text-white outline-none placeholder:text-white/40"
+                aria-label="Email address"
+                className="w-full bg-transparent text-xs text-white outline-none placeholder:text-white/40"
               />
               <button
                 type="submit"
-                aria-label="Subscribe"
-                className="flex size-9 shrink-0 items-center justify-center rounded-full bg-(--color-accent) text-(--color-navy)"
+                aria-label="Create account"
+                className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white text-(--color-forest) transition-colors hover:bg-(--color-sun)"
               >
                 <ArrowRight size={16} weight="bold" />
               </button>
             </form>
-          </div>
-
-          <div>
-            <h4 className="text-sm font-semibold uppercase tracking-wide text-white">Explore</h4>
-            <ul className="mt-4 space-y-2 text-sm text-white/60">
-              {QUICK_LINKS.map((link) => (
-                <li key={link.label}>
-                  <Link href={link.href} className="transition-colors hover:text-white">
-                    {link.label}
-                  </Link>
-                </li>
+            <div className="mt-5 flex gap-5">
+              {SOCIALS.map(({ label, Icon }) => (
+                <span
+                  key={label}
+                  aria-label={label}
+                  className="text-white/85 transition-colors hover:text-(--color-sun)"
+                >
+                  <Icon size={20} weight="fill" />
+                </span>
               ))}
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="text-sm font-semibold uppercase tracking-wide text-white">Policies</h4>
-            <ul className="mt-4 space-y-2 text-sm text-white/60">
-              {CUSTOMER_CARE.map((link) => (
-                <li key={link.label}>
-                  <Link href={link.href} className="transition-colors hover:text-white">
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="text-sm font-semibold uppercase tracking-wide text-white">Contact Us</h4>
-            <ul className="mt-4 space-y-3 text-sm text-white/60">
-              <li className="flex items-center gap-2">
-                <Phone size={16} className="text-(--color-accent)" /> +91 98765 43210
-              </li>
-              <li className="flex items-center gap-2">
-                <EnvelopeSimple size={16} className="text-(--color-accent)" /> hello@minigreenscompany.com
-              </li>
-              <li className="flex items-start gap-2">
-                <MapPin size={16} className="mt-0.5 text-(--color-accent)" />
-                123 Green Farm Road, Bangalore, Karnataka 560001
-              </li>
-            </ul>
+            </div>
           </div>
         </div>
 
-        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 text-sm text-white/50 sm:flex-row">
+        <div className="mt-14 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 text-xs text-white/50 sm:flex-row">
           <p>© 2026 Mini Greens Company. All rights reserved.</p>
-          <div className="flex gap-3">
-            {[InstagramLogo, FacebookLogo, YoutubeLogo].map((Icon, i) => (
-              <span
-                key={i}
-                className="flex size-9 items-center justify-center rounded-full border border-white/15 text-white transition-colors hover:border-(--color-accent) hover:text-(--color-accent)"
-              >
-                <Icon size={16} />
-              </span>
-            ))}
-          </div>
+          <p className="flex items-center gap-2 text-sm text-white/85">
+            <Plant size={20} weight="fill" className="text-[#9cc56b]" />
+            Small Greens. Bigger Tomorrows
+          </p>
         </div>
       </div>
     </footer>

@@ -1,19 +1,19 @@
 @import "tailwindcss";
 
 @theme inline {
-  /* Navy — header, footer, headings, primary text on light */
-  --color-navy: #5a7538;
-  --color-navy-dark: #485e2d;
-  --color-navy-light: #83986a;
+  /* Navy: header, footer, headings, primary text on light */
+  --color-navy: #6f8f4a;
+  --color-navy-dark: #59723b;
+  --color-navy-light: #93ac72;
 
-  /* Yellow — primary CTA (Add to cart, checkout) */
+  /* Yellow: primary CTA (Add to cart, checkout) */
   --color-accent: #f6c445;
   --color-accent-dark: #e6ad1f;
 
-  /* Red — sale price, discount badges */
+  /* Red: sale price, discount badges */
   --color-sale: #d81f26;
 
-  /* Green — success states, free-shipping unlocked */
+  /* Green: success states, free-shipping unlocked */
   --color-success: #1b8a4c;
 
   /* Surfaces */
@@ -23,12 +23,26 @@
   --color-ink: #1a1f36;
   --color-muted: #6b7186;
 
+  /* Home redesign: forest / cream / serif palette */
+  --color-forest: #1f3a24;
+  --color-forest-deep: #17301c;
+  --color-leaf: #5f8a3c;
+  --color-cream: #f8f6ee;
+  --color-cream-dark: #efeadb;
+  --color-sun: #f5c138;
+  --color-sun-dark: #e8ad16;
+
   --font-display: var(--font-poppins);
   --font-sans: var(--font-inter);
 }
 
 * {
   box-sizing: border-box;
+}
+
+:root {
+  /* Navbar height; the home hero pulls itself up by this much to sit under it. */
+  --nav-h: 72px;
 }
 
 html,
@@ -41,6 +55,15 @@ body {
   color: var(--color-ink);
   font-family: var(--font-inter), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
+}
+
+.font-serif-display {
+  font-family: var(--font-playfair), Georgia, serif;
+  letter-spacing: -0.01em;
+}
+
+.font-script {
+  font-family: var(--font-caveat), cursive;
 }
 
 .font-display {

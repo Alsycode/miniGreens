@@ -1,6 +1,7 @@
 import { Star } from "@phosphor-icons/react/dist/ssr";
+import { FOREST, condensed, roughMaskStyle, serif } from "@/components/story/primitives";
 
-// Approximates a star-distribution from the aggregate rating — we only store
+// Approximates a star-distribution from the aggregate rating; we only store
 // rating/review_count on products (no per-review rows), so this renders the
 // same "breakdown bars" visual as the reference without inventing reviewers.
 function estimateDistribution(rating: number, total: number) {
@@ -19,37 +20,38 @@ export function RatingSummary({ rating, reviewCount }: { rating: number; reviewC
   const dist = estimateDistribution(rating, reviewCount);
 
   return (
-    <section className="mt-14 max-w-2xl border-t border-(--color-border) pt-10">
-      <h2 className="font-display text-2xl font-semibold text-(--color-navy)">Customer Reviews</h2>
-      <div className="mt-5 flex flex-col gap-6 sm:flex-row sm:items-center">
-        <div className="flex items-center gap-3">
-          <span className="font-display text-4xl font-bold text-(--color-navy)">
+    <div className="drop-shadow-[0_12px_18px_rgba(34,44,24,0.14)]" style={{ transform: "rotate(0.6deg)" }}>
+      <div className="h-full bg-[#faf8f0] p-8" style={roughMaskStyle(463)}>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#3f6b36]">What people say</p>
+        <h2 className={`${serif.className} mt-2 text-[2rem] font-semibold leading-tight`} style={{ ...condensed, color: FOREST }}>
+          Customer Reviews
+        </h2>
+
+        <div className="mt-6 flex items-center gap-4">
+          <span className={`${serif.className} text-6xl font-semibold leading-none`} style={{ ...condensed, color: FOREST }}>
             {rating.toFixed(1)}
           </span>
           <div>
-            <div className="flex gap-0.5 text-(--color-accent-dark)">
+            <div className="flex gap-0.5 text-[#3f6b36]">
               {Array.from({ length: 5 }).map((_, i) => (
                 <Star key={i} size={16} weight={rating >= i + 1 ? "fill" : "regular"} />
               ))}
             </div>
-            <p className="mt-1 text-xs text-(--color-muted)">Based on {reviewCount} reviews</p>
+            <p className="mt-1 text-xs text-[#3a4135]">Based on {reviewCount} reviews</p>
           </div>
         </div>
 
-        <div className="flex-1 space-y-1.5">
-          {[5, 4, 3, 2, 1].map((star, i) => {
+        <div className="mt-6 space-y-2 border-t border-dashed border-[#2c4a26]/25 pt-6">
+          {[5, 4, 3, 2, 1].map((star) => {
             const count = dist[star - 1];
             const pct = reviewCount ? (count / reviewCount) * 100 : 0;
             return (
-              <div key={star} className="flex items-center gap-2 text-xs text-(--color-muted)">
-                <span className="flex w-8 items-center gap-0.5">
-                  {star} <Star size={10} weight="fill" className="text-(--color-accent-dark)" />
+              <div key={star} className="flex items-center gap-2 text-xs text-[#3a4135]">
+                <span className="flex w-8 items-center gap-0.5 font-semibold">
+                  {star} <Star size={10} weight="fill" className="text-[#3f6b36]" />
                 </span>
-                <div className="h-2 flex-1 overflow-hidden rounded-full bg-(--color-bg-muted)">
-                  <div
-                    className="h-full rounded-full bg-(--color-accent-dark)"
-                    style={{ width: `${pct}%` }}
-                  />
+                <div className="h-2 flex-1 overflow-hidden rounded-full bg-[#e7e2d3]">
+                  <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: FOREST }} />
                 </div>
                 <span className="w-6 text-right">{count}</span>
               </div>
@@ -57,6 +59,6 @@ export function RatingSummary({ rating, reviewCount }: { rating: number; reviewC
           })}
         </div>
       </div>
-    </section>
+    </div>
   );
 }

@@ -12,9 +12,9 @@ export function ShopFilterChips({
   categories: Cat[];
   active: string | null;
 }) {
-  const base = "rounded-full border px-5 py-2 text-sm font-medium transition-colors";
-  const on = "border-(--color-navy) bg-(--color-navy) text-white";
-  const off = "border-(--color-border) text-(--color-ink) hover:border-(--color-navy)";
+  const base = "rounded-full border px-5 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] transition-colors";
+  const on = "border-[#1d3a1b] bg-[#1d3a1b] text-white";
+  const off = "border-[#1d3a1b]/25 bg-[#faf8f0] text-[#1d3a1b] hover:border-[#1d3a1b]";
 
   return (
     <div className="flex flex-wrap gap-2">

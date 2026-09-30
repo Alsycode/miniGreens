@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 import type { Database } from "@mobile/database";
 
-// Cookie-scoped client — respects RLS as the signed-in user (or anonymous, if none).
+// Cookie-scoped client: respects RLS as the signed-in user (or anonymous, if none).
 export async function createSupabaseServerClient() {
   const cookieStore = await cookies();
 
@@ -18,7 +18,7 @@ export async function createSupabaseServerClient() {
               cookieStore.set(name, value, options),
             );
           } catch {
-            // setAll called from a Server Component — ignore, proxy.ts refreshes sessions.
+            // setAll called from a Server Component; ignore it, proxy.ts refreshes sessions.
           }
         },
       },

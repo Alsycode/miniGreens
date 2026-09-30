@@ -17,23 +17,23 @@ export function AddToCartPanel({ slug, price }: { slug: string; price: number })
   }
 
   return (
-    <div className="mt-8 border-t border-(--color-border) pt-6">
+    <div className="mt-8 border-t border-dashed border-[#2c4a26]/30 pt-6">
       <div className="flex flex-wrap items-center gap-4">
-        <div className="flex items-center gap-1 rounded-full border border-(--color-border) p-1">
+        <div className="flex items-center gap-1 rounded-full border border-[#1d3a1b]/25 bg-[#faf8f0] p-1">
           <button
             type="button"
             onClick={() => setQty((q) => Math.max(1, q - 1))}
             aria-label="Decrease quantity"
-            className="flex size-9 items-center justify-center rounded-full text-(--color-ink) transition-colors hover:bg-(--color-bg-muted)"
+            className="flex size-9 items-center justify-center rounded-full text-[#1d3a1b] transition-colors hover:bg-[#efeadb]"
           >
             <Minus size={14} weight="bold" />
           </button>
-          <span className="min-w-8 text-center text-sm font-medium">{qty}</span>
+          <span className="min-w-8 text-center text-sm font-semibold text-[#1d3a1b]">{qty}</span>
           <button
             type="button"
             onClick={() => setQty((q) => q + 1)}
             aria-label="Increase quantity"
-            className="flex size-9 items-center justify-center rounded-full text-(--color-ink) transition-colors hover:bg-(--color-bg-muted)"
+            className="flex size-9 items-center justify-center rounded-full text-[#1d3a1b] transition-colors hover:bg-[#efeadb]"
           >
             <Plus size={14} weight="bold" />
           </button>
@@ -43,7 +43,7 @@ export function AddToCartPanel({ slug, price }: { slug: string; price: number })
           type="button"
           onClick={handleAdd}
           disabled={status === "adding"}
-          className="flex flex-1 items-center justify-center gap-2 rounded-full bg-(--color-accent) px-7 py-3.5 font-semibold text-(--color-navy) transition-colors hover:bg-(--color-accent-dark) disabled:opacity-60"
+          className="flex flex-1 items-center justify-center gap-2 rounded-full bg-[#1d3a1b] px-7 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-[#2c4a26] disabled:opacity-60"
         >
           {status === "added" ? (
             <>
@@ -53,7 +53,7 @@ export function AddToCartPanel({ slug, price }: { slug: string; price: number })
           ) : (
             <>
               <ShoppingCart size={16} weight="bold" />
-              Add to cart — ₹{price * qty}
+              Add to cart · ₹{price * qty}
             </>
           )}
         </button>

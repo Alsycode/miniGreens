@@ -1,4 +1,4 @@
-// Shared category ordering — mirrors the mobile app's CATEGORY_ORDER in
+// Shared category ordering; mirrors the mobile app's CATEGORY_ORDER in
 // `src/app/(tabs)/explore.tsx`. Tea-first, then the fresh lines; anything else
 // trails. Keep the two in sync.
 
@@ -25,7 +25,7 @@ export const SHOP_COPY: Record<
     title: "Real Greens.",
     accent: "By the Cup.",
     blurb:
-      "Functional microgreen tea blends — brewed fresh, naturally caffeine-free. 15 sachets a box.",
+      "Functional microgreen tea blends, brewed fresh and naturally caffeine-free. 15 sachets a box.",
   },
   microgreens: {
     eyebrow: "Microgreens",
@@ -53,5 +53,5 @@ export const SHOP_COPY_DEFAULT = {
   title: "Everything We Grow,",
   accent: "In One Place",
   blurb:
-    "Tea blends, microgreens, cold-pressed juices and smoothies — all farm-fresh from Mini Greens.",
+    "Tea blends, microgreens, cold-pressed juices and smoothies, all farm-fresh from Mini Greens.",
 };

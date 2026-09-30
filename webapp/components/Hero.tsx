@@ -63,7 +63,6 @@ export function Hero() {
             alt="A glass cup of microgreen tea beside a Mini Greens Microgreen Tea box"
             fill
             priority
-            unoptimized
             className="rounded-3xl object-cover shadow-xl"
             sizes="(min-width: 1024px) 52vw, 90vw"
           />
