@@ -275,11 +275,13 @@ export interface Database {
           discount_code: string | null;
           discount_amount: number;
           expected_availability_date: string | null;
+          oversold: boolean;
           created_at: string;
           updated_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['orders']['Row'], 'id' | 'created_at' | 'updated_at' | 'razorpay_order_id' | 'razorpay_payment_id' | 'razorpay_signature' | 'payment_status' | 'discount_code' | 'discount_amount' | 'expected_availability_date'> & {
+        Insert: Omit<Database['public']['Tables']['orders']['Row'], 'id' | 'created_at' | 'updated_at' | 'razorpay_order_id' | 'razorpay_payment_id' | 'razorpay_signature' | 'payment_status' | 'discount_code' | 'discount_amount' | 'expected_availability_date' | 'oversold'> & {
           id?: string;
+          oversold?: boolean;
           razorpay_order_id?: string | null;
           razorpay_payment_id?: string | null;
           razorpay_signature?: string | null;

@@ -213,6 +213,14 @@ export default function OrdersClient({ orders }: { orders: OrderRow[] }) {
                 >
                   <td className="px-6 py-4 font-mono text-xs text-slate-500">
                     {o.order_number}
+                    {o.oversold && (
+                      <span
+                        title="Confirming this order took stock below zero. Check inventory."
+                        className="ml-2 inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700"
+                      >
+                        Oversold
+                      </span>
+                    )}
                     {o.order_type !== "standard" && (
                       <span className="ml-2 inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
                         {o.order_type}
