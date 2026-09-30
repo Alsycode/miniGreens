@@ -99,6 +99,7 @@ export function ProfileForm({ redirectTo, submitLabel }: { redirectTo?: string; 
   return (
     <form
       onSubmit={onSubmit}
+      onChange={() => setSaved(false)}
       className="rounded-2xl border border-black/[0.07] bg-white p-6 shadow-[0_2px_14px_rgba(31,58,36,0.06)] md:p-8"
     >
       <div className="space-y-5">
@@ -155,14 +156,12 @@ export function ProfileForm({ redirectTo, submitLabel }: { redirectTo?: string; 
           {error}
         </p>
       )}
-      {saved && <p className="mt-5 text-sm text-(--color-leaf)">Saved.</p>}
-
       <button
         type="submit"
         disabled={saving}
         className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-(--color-sun) px-7 py-3.5 text-sm font-semibold text-(--color-forest) transition-colors hover:bg-(--color-sun-dark) disabled:opacity-60"
       >
-        {saving ? "Saving…" : submitLabel}
+        {saving ? "Saving…" : saved ? "Saved ✓" : submitLabel}
       </button>
     </form>
   );

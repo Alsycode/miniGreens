@@ -12,6 +12,7 @@ const BADGES = [
 ];
 
 const HERO_SRC = "/images/hero/hero-flatlay-cream.png";
+const HERO_MOBILE_SRC = "/images/hero/hero-tube-mobile.webp";
 const HERO_ALT = "Mini Greens Green Detox microgreen tea tube with a glass of tea and fresh microgreens";
 
 export function HomeHero() {
@@ -40,8 +41,8 @@ export function HomeHero() {
       />
 
       {/* Mobile: product photo first, at full strength, then the copy. */}
-      <div className="relative aspect-[5/4] md:hidden">
-        <Image src={HERO_SRC} alt={HERO_ALT} fill priority sizes="100vw" className="object-cover object-[72%_center]" />
+      <div className="relative aspect-square md:hidden">
+        <Image src={HERO_MOBILE_SRC} alt={HERO_ALT} fill priority sizes="100vw" className="object-cover object-[center_68%]" />
         <div className="absolute inset-x-0 bottom-0 h-16 bg-linear-to-t from-(--color-cream) to-transparent" />
       </div>
 

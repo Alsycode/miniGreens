@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { List, MagnifyingGlass, Package, ShoppingCart, Tag, User, X } from "@phosphor-icons/react";
+import { List, MagnifyingGlass, Package, ShoppingCart, SignOut, Tag, User, X } from "@phosphor-icons/react";
 import { usePreorder } from "@/context/PreorderContext";
 import { useCartStore } from "@/store/useCartStore";
 import { useAuth } from "@/context/AuthContext";
@@ -21,14 +21,14 @@ const LINKS = [
 export function Navbar() {
   const router = useRouter();
   const { subscription } = usePreorder();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const cartCount = useCartStore((s) => s.items.reduce((sum, i) => sum + i.quantity, 0));
   const openCart = useCartStore((s) => s.openCart);
   const activeCount = cartCount + (subscription ? 1 : 0);
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const accountHref = user ? "/orders" : "/login";
+  const accountHref = user ? "/account" : "/login";
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
 
@@ -114,6 +114,11 @@ export function Navbar() {
           <Link href="/offers" aria-label="My offers" className={iconBtn}>
             <Tag size={18} />
           </Link>
+          {user && (
+            <button type="button" onClick={signOut} aria-label="Log out" title="Log out" className={iconBtn}>
+              <SignOut size={18} />
+            </button>
+          )}
           <button
             type="button"
             onClick={openCart}
@@ -200,6 +205,20 @@ export function Navbar() {
                 <Tag size={15} /> Offers
               </Link>
             </li>
+            {user && (
+              <li>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    void signOut();
+                  }}
+                  className="flex w-full items-center justify-center gap-2 rounded-full border border-black/[0.07] px-4 py-2.5 text-xs font-semibold uppercase tracking-wide"
+                >
+                  <SignOut size={15} /> Log out
+                </button>
+              </li>
+            )}
           </ul>
         </nav>
       )}

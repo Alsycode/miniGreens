@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { Session, User } from "@supabase/supabase-js";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
@@ -8,6 +9,7 @@ interface AuthState {
   session: Session | null;
   user: User | null;
   loading: boolean;
+  signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthState | null>(null);
@@ -15,6 +17,7 @@ const AuthContext = createContext<AuthState | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
@@ -31,8 +34,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.subscription.unsubscribe();
   }, []);
 
+  const signOut = useCallback(async () => {
+    await createSupabaseBrowserClient().auth.signOut();
+    router.push("/");
+    // Server-rendered pages (orders, offers…) read the session cookie, so re-fetch them.
+    router.refresh();
+  }, [router]);
+
   return (
-    <AuthContext.Provider value={{ session, user: session?.user ?? null, loading }}>
+    <AuthContext.Provider value={{ session, user: session?.user ?? null, loading, signOut }}>
       {children}
     </AuthContext.Provider>
   );

@@ -5,7 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { ProfileForm } from "@/components/ProfileForm";
 
 export function AccountGate() {
-  const { user, loading } = useAuth();
+  const { user, loading, signOut } = useAuth();
   if (loading) return null;
   if (!user) {
     return (
@@ -20,5 +20,17 @@ export function AccountGate() {
       </div>
     );
   }
-  return <ProfileForm submitLabel="Save changes" />;
+  return (
+    <>
+      <ProfileForm submitLabel="Save changes" />
+      <p className="mt-4 text-center text-xs text-(--color-forest)/50">Signed in as {user.email}</p>
+      <button
+        type="button"
+        onClick={signOut}
+        className="mt-3 w-full rounded-full border border-(--color-forest)/20 px-7 py-3 text-sm font-semibold text-(--color-forest) transition-colors hover:border-(--color-forest)"
+      >
+        Log out
+      </button>
+    </>
+  );
 }
