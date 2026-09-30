@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useMemo, useTransition } from "react";
+import { useState, useMemo, useRef, useTransition } from "react";
 import { X, Plus, Trash } from "@phosphor-icons/react";
 import type { Database } from "@mobile/database";
 import { createProduct, updateProduct, deleteProduct } from "@/app/dashboard/(protected)/products/actions";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type Product = Database["public"]["Tables"]["products"]["Row"];
 type Category = Database["public"]["Tables"]["categories"]["Row"];
@@ -33,8 +34,17 @@ const emptyForm = {
   category_id: "",
   unit: "",
   stock: "0",
-  images: "",
 };
+
+function slugify(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/'/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
+type ImageDraft = { file: File; preview: string };
 
 export default function ProductsClient({
   products,
@@ -48,6 +58,12 @@ export default function ProductsClient({
   const [editFields, setEditFields] = useState({ price: "", stock: "" });
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState(emptyForm);
+  const [slugTouched, setSlugTouched] = useState(false);
+  const [imageDrafts, setImageDrafts] = useState<ImageDraft[]>([]);
+  const [ingredients, setIngredients] = useState<string[]>([]);
+  const [ingredientInput, setIngredientInput] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [isPending, startTransition] = useTransition();
 
   const categoryById = useMemo(
@@ -93,37 +109,91 @@ export default function ProductsClient({
     });
   }
 
+  function handleAddImages(files: FileList | null) {
+    if (!files || files.length === 0) return;
+    const drafts = Array.from(files).map((file) => ({ file, preview: URL.createObjectURL(file) }));
+    setImageDrafts((prev) => [...prev, ...drafts]);
+  }
+
+  function removeImageDraft(index: number) {
+    setImageDrafts((prev) => {
+      URL.revokeObjectURL(prev[index].preview);
+      return prev.filter((_, i) => i !== index);
+    });
+  }
+
+  function resetAddForm() {
+    imageDrafts.forEach((d) => URL.revokeObjectURL(d.preview));
+    setImageDrafts([]);
+    setIngredients([]);
+    setIngredientInput("");
+    setForm(emptyForm);
+    setSlugTouched(false);
+    setShowAdd(false);
+  }
+
+  function addIngredient() {
+    const value = ingredientInput.trim();
+    if (!value) return;
+    setIngredients((prev) => (prev.includes(value) ? prev : [...prev, value]));
+    setIngredientInput("");
+  }
+
+  function removeIngredient(index: number) {
+    setIngredients((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  async function uploadProductImages(): Promise<string[]> {
+    if (imageDrafts.length === 0) return [];
+    const supabase = createSupabaseBrowserClient();
+    const urls: string[] = [];
+    for (const { file } of imageDrafts) {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `${crypto.randomUUID()}.${ext}`;
+      const { error } = await supabase.storage.from("product-images").upload(path, file);
+      if (error) throw error;
+      const { data } = supabase.storage.from("product-images").getPublicUrl(path);
+      urls.push(data.publicUrl);
+    }
+    return urls;
+  }
+
   function handleCreate() {
     const price = Number(form.price);
     if (!form.name.trim() || !form.slug.trim() || Number.isNaN(price)) return;
+    setIsUploading(true);
     startTransition(async () => {
-      await createProduct({
-        name: form.name.trim(),
-        slug: form.slug.trim(),
-        description: null,
-        price,
-        original_price: form.original_price ? Number(form.original_price) : null,
-        category_id: form.category_id || null,
-        images: form.images ? form.images.split(",").map((s) => s.trim()).filter(Boolean) : [],
-        unit: form.unit || null,
-        weight: null,
-        nutrition: null,
-        benefits: [],
-        ingredients: null,
-        storage: null,
-        consumption_tips: [],
-        is_featured: false,
-        is_seasonal: false,
-        is_best_seller: false,
-        rating: 0,
-        review_count: 0,
-        stock: Number(form.stock) || 0,
-        is_available: true,
-        is_preorder: false,
-        tags: [],
-      });
-      setForm(emptyForm);
-      setShowAdd(false);
+      try {
+        const images = await uploadProductImages();
+        await createProduct({
+          name: form.name.trim(),
+          slug: form.slug.trim(),
+          description: null,
+          price,
+          original_price: form.original_price ? Number(form.original_price) : null,
+          category_id: form.category_id || null,
+          images,
+          unit: form.unit || null,
+          weight: null,
+          nutrition: null,
+          benefits: [],
+          ingredients: ingredients.length > 0 ? ingredients : null,
+          storage: null,
+          consumption_tips: [],
+          is_featured: false,
+          is_seasonal: false,
+          is_best_seller: false,
+          rating: 0,
+          review_count: 0,
+          stock: Number(form.stock) || 0,
+          is_available: true,
+          is_preorder: false,
+          tags: [],
+        });
+        resetAddForm();
+      } finally {
+        setIsUploading(false);
+      }
     });
   }
 
@@ -299,7 +369,7 @@ export default function ProductsClient({
               <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 sticky top-0 bg-white">
                 <h2 className="text-base font-semibold text-[#0A2416]">Add Product</h2>
                 <button
-                  onClick={() => setShowAdd(false)}
+                  onClick={resetAddForm}
                   className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 transition-colors active:scale-[0.97]"
                 >
                   <X size={16} />
@@ -309,13 +379,21 @@ export default function ProductsClient({
                 <input
                   placeholder="Name"
                   value={form.name}
-                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value, slug: f.slug || e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") }))}
+                  onChange={(e) => {
+                    const name = e.target.value;
+                    setForm((f) => ({ ...f, name, slug: slugTouched ? f.slug : slugify(name) }));
+                  }}
                   className="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-[#3D7A52]"
                 />
                 <input
                   placeholder="Slug"
                   value={form.slug}
-                  onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value }))}
+                  onChange={(e) => {
+                    setSlugTouched(true);
+                    const raw = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-");
+                    setForm((f) => ({ ...f, slug: raw }));
+                  }}
+                  onBlur={(e) => setForm((f) => ({ ...f, slug: slugify(e.target.value) }))}
                   className="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-[#3D7A52]"
                 />
                 <div className="grid grid-cols-2 gap-3">
@@ -359,19 +437,84 @@ export default function ProductsClient({
                     className="px-3 py-2.5 text-sm border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-[#3D7A52]"
                   />
                 </div>
-                <input
-                  placeholder="Image URL(s), comma-separated"
-                  value={form.images}
-                  onChange={(e) => setForm((f) => ({ ...f, images: e.target.value }))}
-                  className="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-[#3D7A52]"
-                />
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Images</label>
+                  <div className="flex flex-wrap gap-2">
+                    {imageDrafts.map((draft, i) => (
+                      <div key={draft.preview} className="relative w-16 h-16 rounded-lg overflow-hidden border border-slate-200 group">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={draft.preview} alt="" className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => removeImageDraft(i)}
+                          className="absolute top-0.5 right-0.5 w-5 h-5 flex items-center justify-center rounded-full bg-black/60 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X size={11} weight="bold" />
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="w-16 h-16 flex items-center justify-center rounded-lg border-2 border-dashed border-slate-300 text-slate-400 hover:border-[#3D7A52] hover:text-[#3D7A52] transition-colors"
+                    >
+                      <Plus size={20} />
+                    </button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                      onChange={(e) => {
+                        handleAddImages(e.target.files);
+                        e.target.value = "";
+                      }}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Ingredients</label>
+                  <input
+                    placeholder="Type an ingredient and press Enter"
+                    value={ingredientInput}
+                    onChange={(e) => setIngredientInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === ",") {
+                        e.preventDefault();
+                        addIngredient();
+                      }
+                    }}
+                    onBlur={addIngredient}
+                    className="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-[#3D7A52]"
+                  />
+                  {ingredients.length > 0 && (
+                    <div className="mt-2.5 flex flex-wrap gap-1.5">
+                      {ingredients.map((ing, i) => (
+                        <span
+                          key={ing}
+                          className="inline-flex items-center gap-1 pl-2.5 pr-1.5 py-1 text-xs font-medium rounded-full bg-emerald-50 text-[#3D7A52] border border-emerald-200"
+                        >
+                          {ing}
+                          <button
+                            type="button"
+                            onClick={() => removeIngredient(i)}
+                            className="w-3.5 h-3.5 flex items-center justify-center rounded-full hover:bg-emerald-100 transition-colors"
+                          >
+                            <X size={10} weight="bold" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 <button
-                  disabled={isPending || !form.name.trim() || !form.slug.trim() || !form.price}
+                  disabled={isPending || isUploading || !form.name.trim() || !form.slug.trim() || !form.price}
                   onClick={handleCreate}
                   className="w-full py-2.5 text-sm font-semibold rounded-xl transition-all active:scale-[0.97] disabled:opacity-40"
                   style={{ backgroundColor: "#CAEF61", color: "#0A2416" }}
                 >
-                  Create Product
+                  {isUploading ? "Uploading…" : "Create Product"}
                 </button>
               </div>
             </div>

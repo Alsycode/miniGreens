@@ -5,7 +5,9 @@ export default async function SubscriptionsPage() {
   const supabase = await createSupabaseServerClient();
   const { data: subscriptions } = await supabase
     .from("subscriptions")
-    .select("*, profiles(full_name, email), subscription_plans(name, price)")
+    .select(
+      "*, profiles(full_name, email), subscription_plans(name, price), subscription_items(quantity, products(name, price))",
+    )
     .order("started_at", { ascending: false });
 
   return (

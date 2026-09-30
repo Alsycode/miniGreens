@@ -11,6 +11,24 @@ type OrderRow = Database["public"]["Tables"]["orders"]["Row"] & {
   addresses: Database["public"]["Tables"]["addresses"]["Row"] | null;
 };
 type OrderStatus = OrderRow["status"];
+type OrderType = OrderRow["order_type"];
+
+// A business order's "customer" is the café/shop, not a profile — profiles.full_name
+// is usually blank for a partner's business row, so read the columns the order
+// actually carries instead of falling through to a profile that isn't the point of contact.
+function customerLabel(o: OrderRow): string {
+  if (o.order_type === "business") {
+    return o.business_name || o.contact_person || "—";
+  }
+  return o.profiles?.full_name || o.profiles?.email || "—";
+}
+
+const TYPE_LABEL: Record<OrderType, string> = {
+  standard: "Standard",
+  business: "Business",
+  preorder: "Preorder",
+  subscription: "Subscription",
+};
 
 const STATUS_BADGE: Record<OrderStatus, { label: string; classes: string }> = {
   pending: { label: "Pending", classes: "bg-amber-50 text-amber-700 border-amber-200" },
@@ -37,23 +55,32 @@ const tabCount = (orders: OrderRow[], key: TabKey) =>
 
 export default function OrdersClient({ orders }: { orders: OrderRow[] }) {
   const [tab, setTab] = useState<TabKey>("all");
+  const [typeFilter, setTypeFilter] = useState<OrderType | "all">("all");
   const [search, setSearch] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<OrderRow | null>(null);
   const [drawerStatus, setDrawerStatus] = useState<OrderStatus | "">("");
   const [isPending, startTransition] = useTransition();
 
+  const typesPresent = useMemo(
+    () => Array.from(new Set(orders.map((o) => o.order_type))) as OrderType[],
+    [orders],
+  );
+
   const filtered = useMemo(() => {
     let result = tab === "all" ? orders : orders.filter((o) => o.status === tab);
+    if (typeFilter !== "all") {
+      result = result.filter((o) => o.order_type === typeFilter);
+    }
     if (search.trim()) {
       const q = search.toLowerCase();
       result = result.filter(
         (o) =>
           o.order_number.toLowerCase().includes(q) ||
-          (o.profiles?.full_name ?? "").toLowerCase().includes(q)
+          customerLabel(o).toLowerCase().includes(q)
       );
     }
     return result;
-  }, [orders, tab, search]);
+  }, [orders, tab, typeFilter, search]);
 
   function openDrawer(order: OrderRow) {
     setSelectedOrder(order);
@@ -96,9 +123,9 @@ export default function OrdersClient({ orders }: { orders: OrderRow[] }) {
         ))}
       </div>
 
-      {/* Search */}
-      <div className="px-6 py-4 animate-fade-up" style={{ "--i": 2 } as React.CSSProperties}>
-        <div className="relative max-w-sm">
+      {/* Search + type filter */}
+      <div className="px-6 py-4 flex flex-wrap items-center gap-3 animate-fade-up" style={{ "--i": 2 } as React.CSSProperties}>
+        <div className="relative max-w-sm flex-1 min-w-[200px]">
           <MagnifyingGlass
             size={16}
             className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
@@ -120,6 +147,34 @@ export default function OrdersClient({ orders }: { orders: OrderRow[] }) {
             </button>
           )}
         </div>
+
+        {typesPresent.length > 1 && (
+          <div className="flex flex-wrap gap-1.5">
+            <button
+              onClick={() => setTypeFilter("all")}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition-colors
+                ${typeFilter === "all"
+                  ? "bg-[#0A2416] border-[#0A2416] text-white"
+                  : "bg-white border-slate-200 text-slate-500 hover:border-slate-300"
+                }`}
+            >
+              All types
+            </button>
+            {typesPresent.map((t) => (
+              <button
+                key={t}
+                onClick={() => setTypeFilter(t)}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition-colors
+                  ${typeFilter === t
+                    ? "bg-[#0A2416] border-[#0A2416] text-white"
+                    : "bg-white border-slate-200 text-slate-500 hover:border-slate-300"
+                  }`}
+              >
+                {TYPE_LABEL[t]}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Table */}
@@ -156,9 +211,16 @@ export default function OrdersClient({ orders }: { orders: OrderRow[] }) {
                   onClick={() => openDrawer(o)}
                   className="hover:bg-emerald-50/50 transition-colors duration-150 cursor-pointer group"
                 >
-                  <td className="px-6 py-4 font-mono text-xs text-slate-500">{o.order_number}</td>
+                  <td className="px-6 py-4 font-mono text-xs text-slate-500">
+                    {o.order_number}
+                    {o.order_type !== "standard" && (
+                      <span className="ml-2 inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                        {o.order_type}
+                      </span>
+                    )}
+                  </td>
                   <td className="px-6 py-4 font-medium text-slate-800">
-                    {o.profiles?.full_name ?? "—"}
+                    {customerLabel(o)}
                   </td>
                   <td className="px-6 py-4 text-slate-500 text-xs max-w-[200px] truncate">
                     {itemSummary}
@@ -199,7 +261,7 @@ export default function OrdersClient({ orders }: { orders: OrderRow[] }) {
               <div>
                 <p className="font-mono text-xs text-slate-400">{selectedOrder.order_number}</p>
                 <h2 className="text-base font-semibold text-[#0A2416] mt-0.5">
-                  {selectedOrder.profiles?.full_name ?? "—"}
+                  {customerLabel(selectedOrder)}
                 </h2>
               </div>
               <button
@@ -282,6 +344,25 @@ export default function OrdersClient({ orders }: { orders: OrderRow[] }) {
                   <p className="text-sm font-bold text-[#0A2416]">₹{selectedOrder.total.toFixed(0)}</p>
                 </div>
               </div>
+
+              {/* Business contact (business orders only — no delivery_address_id) */}
+              {selectedOrder.order_type === "business" && (
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                    Business Contact
+                  </p>
+                  <div className="rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-700 space-y-0.5">
+                    <p className="font-medium">{selectedOrder.business_name ?? "—"}</p>
+                    <p className="text-slate-500">{selectedOrder.contact_person}</p>
+                    {selectedOrder.business_phone && (
+                      <p className="text-slate-500">{selectedOrder.business_phone}</p>
+                    )}
+                    {selectedOrder.business_address && (
+                      <p className="text-slate-500">{selectedOrder.business_address}</p>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Delivery address */}
               {selectedOrder.addresses && (

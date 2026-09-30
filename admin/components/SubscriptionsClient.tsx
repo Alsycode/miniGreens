@@ -1,13 +1,28 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useTransition } from "react";
 import type { Database } from "@mobile/database";
+import { generateSubscriptionOrdersNow } from "@/app/dashboard/(protected)/subscriptions/actions";
 
 type SubscriptionRow = Database["public"]["Tables"]["subscriptions"]["Row"] & {
   profiles: { full_name: string; email: string | null } | null;
   subscription_plans: { name: string; price: number } | null;
+  subscription_items: { quantity: number; products: { name: string; price: number } | null }[];
 };
 type Status = SubscriptionRow["status"];
+
+function planLabel(s: SubscriptionRow): string {
+  if (!s.is_custom) return s.subscription_plans?.name ?? "—";
+  return `Custom (${s.custom_frequency === "monthly" ? "Monthly" : "Weekly"})`;
+}
+
+function planPrice(s: SubscriptionRow): number {
+  if (!s.is_custom) return Number(s.subscription_plans?.price ?? 0);
+  return s.subscription_items.reduce(
+    (sum, item) => sum + Number(item.products?.price ?? 0) * item.quantity,
+    0,
+  );
+}
 
 type Tab = "all" | Status;
 
@@ -26,6 +41,20 @@ const STATUS_BADGE: Record<Status, string> = {
 
 export default function SubscriptionsClient({ subscriptions }: { subscriptions: SubscriptionRow[] }) {
   const [tab, setTab] = useState<Tab>("all");
+  const [isPending, startTransition] = useTransition();
+  const [result, setResult] = useState<string | null>(null);
+
+  function handleGenerateNow() {
+    setResult(null);
+    startTransition(async () => {
+      const res = await generateSubscriptionOrdersNow();
+      if ("error" in res) {
+        setResult(`Error: ${res.error}`);
+      } else {
+        setResult(`${res.created} order(s) created${res.skipped ? `, ${res.skipped} skipped` : ""}.`);
+      }
+    });
+  }
 
   const filtered = useMemo(
     () => (tab === "all" ? subscriptions : subscriptions.filter((s) => s.status === tab)),
@@ -36,7 +65,7 @@ export default function SubscriptionsClient({ subscriptions }: { subscriptions: 
     () =>
       subscriptions
         .filter((s) => s.status === "active")
-        .reduce((sum, s) => sum + Number(s.subscription_plans?.price ?? 0), 0),
+        .reduce((sum, s) => sum + planPrice(s), 0),
     [subscriptions],
   );
 
@@ -62,11 +91,25 @@ export default function SubscriptionsClient({ subscriptions }: { subscriptions: 
             </button>
           ))}
         </div>
-        <div className="mr-6 text-right">
-          <p className="text-[10px] font-semibold tracking-widest uppercase text-slate-400">Active Revenue</p>
-          <p className="text-sm font-bold text-[#0A2416]">₹{activeRevenue.toLocaleString("en-IN")}/cycle</p>
+        <div className="flex items-center gap-4 mr-6">
+          <div className="text-right">
+            <p className="text-[10px] font-semibold tracking-widest uppercase text-slate-400">Active Revenue</p>
+            <p className="text-sm font-bold text-[#0A2416]">₹{activeRevenue.toLocaleString("en-IN")}/cycle</p>
+          </div>
+          <button
+            onClick={handleGenerateNow}
+            disabled={isPending}
+            className="rounded-lg bg-[#3D7A52] px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-[#2F5F40] disabled:opacity-60"
+          >
+            {isPending ? "Generating…" : "Generate orders now"}
+          </button>
         </div>
       </div>
+      {result && (
+        <p className="px-6 pt-3 text-xs text-slate-500 animate-fade-up" style={{ "--i": 1 } as React.CSSProperties}>
+          {result}
+        </p>
+      )}
 
       <div className="overflow-x-auto animate-fade-up" style={{ "--i": 2 } as React.CSSProperties}>
         <table className="w-full text-sm">
@@ -93,8 +136,8 @@ export default function SubscriptionsClient({ subscriptions }: { subscriptions: 
                   <p className="font-medium text-slate-800">{s.profiles?.full_name ?? "—"}</p>
                   <p className="text-xs text-slate-400">{s.profiles?.email ?? ""}</p>
                 </td>
-                <td className="px-6 py-4 text-slate-600">{s.subscription_plans?.name ?? "—"}</td>
-                <td className="px-6 py-4 font-semibold text-slate-800">₹{Number(s.subscription_plans?.price ?? 0)}</td>
+                <td className="px-6 py-4 text-slate-600">{planLabel(s)}</td>
+                <td className="px-6 py-4 font-semibold text-slate-800">₹{planPrice(s)}</td>
                 <td className="px-6 py-4">
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${STATUS_BADGE[s.status]}`}>
                     {s.status[0].toUpperCase() + s.status.slice(1)}

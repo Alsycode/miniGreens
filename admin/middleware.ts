@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
 const LOGIN_PATH = "/dashboard/login";
+const RESET_PASSWORD_PATH = "/dashboard/reset-password";
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -25,7 +26,7 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser();
 
-  if (request.nextUrl.pathname === LOGIN_PATH) {
+  if (request.nextUrl.pathname === LOGIN_PATH || request.nextUrl.pathname === RESET_PASSWORD_PATH) {
     return response;
   }
 

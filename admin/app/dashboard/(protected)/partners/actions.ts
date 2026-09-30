@@ -29,15 +29,3 @@ export async function updateKycStatus(
   await supabase.from("partners").update({ kyc_status: kycStatus }).eq("id", partnerId);
   revalidatePath("/dashboard/partners");
 }
-
-export async function updatePayoutStatus(
-  payoutId: string,
-  status: "processing" | "paid" | "rejected",
-) {
-  const supabase = await createSupabaseServerClient();
-  await supabase
-    .from("payouts")
-    .update({ status, paid_at: status === "paid" ? new Date().toISOString() : null })
-    .eq("id", payoutId);
-  revalidatePath("/dashboard/partners");
-}
