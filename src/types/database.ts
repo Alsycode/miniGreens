@@ -42,6 +42,9 @@ export interface Database {
           date_of_birth: string | null;
           preferences: string[];
           push_token: string | null;
+          whatsapp_number: string | null;
+          whatsapp_verified_at: string | null;
+          whatsapp_opt_in: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -55,6 +58,9 @@ export interface Database {
           date_of_birth?: string | null;
           preferences?: string[];
           push_token?: string | null;
+          whatsapp_number?: string | null;
+          whatsapp_verified_at?: string | null;
+          whatsapp_opt_in?: boolean;
         };
         Update: Partial<Database['public']['Tables']['profiles']['Insert']>;
         Relationships: [];
@@ -470,6 +476,23 @@ export interface Database {
             referencedColumns: ['id'];
           },
         ];
+      };
+      consent_log: {
+        Row: {
+          id: string;
+          profile_id: string;
+          channel: 'whatsapp';
+          granted: boolean;
+          source: string;
+          terms_version: string;
+          created_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['consent_log']['Row'], 'id' | 'created_at'> & {
+          id?: string;
+          created_at?: string;
+        };
+        Update: Partial<Database['public']['Tables']['consent_log']['Insert']>;
+        Relationships: [];
       };
       contact_messages: {
         Row: {

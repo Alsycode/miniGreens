@@ -6,6 +6,7 @@ import { CheckCircle, MapPin, Plus, Trash } from "@phosphor-icons/react";
 import type { Database } from "@mobile/database";
 import { useAuth } from "@/context/AuthContext";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { useProfile } from "@/lib/useProfile";
 
 type Address = Database["public"]["Tables"]["addresses"]["Row"];
 
@@ -44,6 +45,16 @@ const EMPTY: DeliveryDetails = {
 const inputClass =
   "w-full rounded-xl border border-(--color-forest)/15 bg-white px-4 py-3 text-sm text-(--color-forest) outline-none transition-colors placeholder:text-(--color-forest)/40 focus:border-(--color-forest)";
 
+// Harvest + delivery takes at least a week, so the first delivery can't be sooner.
+const MIN_LEAD_DAYS = 7;
+
+function earliestDeliveryDate(): string {
+  const d = new Date();
+  d.setDate(d.getDate() + MIN_LEAD_DAYS);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
 const labelClass = "mb-2 block text-xs font-semibold tracking-wide text-(--color-forest)/60 uppercase";
 
 interface Props {
@@ -56,6 +67,7 @@ interface Props {
 
 export function CheckoutForm({ submitLabel, dateLabel, confirmationTitle, confirmationBody, onConfirm }: Props) {
   const { user } = useAuth();
+  const { profile } = useProfile();
   const [details, setDetails] = useState<DeliveryDetails>(EMPTY);
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [addressChoice, setAddressChoice] = useState<string>(NEW_ADDRESS);
@@ -82,6 +94,18 @@ export function CheckoutForm({ submitLabel, dateLabel, confirmationTitle, confir
         if (rows.length > 0) setAddressChoice(rows[0].id);
       });
   }, [user]);
+
+  // Prefill what we already know so returning customers aren't asked again: name, phone
+  // (only until they pick a saved address, which overrides it) and the WhatsApp opt-in.
+  useEffect(() => {
+    if (!profile) return;
+    setDetails((prev) => ({
+      ...prev,
+      fullName: prev.fullName || profile.full_name,
+      phone: prev.phone || (profile.whatsapp_number ?? ""),
+      smsWhatsappConsent: prev.smsWhatsappConsent || profile.whatsapp_opt_in,
+    }));
+  }, [profile]);
 
   // Keep `details` in sync with whichever address is selected, so the confirmation
   // message and the parent's onConfirm still see a name/phone/street to work with.
@@ -185,6 +209,10 @@ export function CheckoutForm({ submitLabel, dateLabel, confirmationTitle, confir
     <form
       onSubmit={async (e) => {
         e.preventDefault();
+        if (details.deliveryDate < earliestDeliveryDate()) {
+          setError(`Delivery takes at least ${MIN_LEAD_DAYS} days. Please pick a date on or after ${earliestDeliveryDate()}.`);
+          return;
+        }
         setSubmitting(true);
         setError(null);
         try {
@@ -278,10 +306,12 @@ export function CheckoutForm({ submitLabel, dateLabel, confirmationTitle, confir
             </div>
           </>
         )}
-        <div className={usingSavedAddress ? "sm:col-span-2" : ""}>
-          <label className={labelClass} htmlFor="dateOfBirth">Date of birth (optional)</label>
-          <input id="dateOfBirth" type="date" className={inputClass} value={details.dateOfBirth} onChange={update("dateOfBirth")} />
-        </div>
+        {!profile?.date_of_birth && (
+          <div className={usingSavedAddress ? "sm:col-span-2" : ""}>
+            <label className={labelClass} htmlFor="dateOfBirth">Date of birth (optional)</label>
+            <input id="dateOfBirth" type="date" className={inputClass} value={details.dateOfBirth} onChange={update("dateOfBirth")} />
+          </div>
+        )}
         {!usingSavedAddress && (
           <>
             <div className="sm:col-span-2">
@@ -304,7 +334,8 @@ export function CheckoutForm({ submitLabel, dateLabel, confirmationTitle, confir
         )}
         <div>
           <label className={labelClass} htmlFor="deliveryDate">{dateLabel}</label>
-          <input id="deliveryDate" required type="date" className={inputClass} value={details.deliveryDate} onChange={update("deliveryDate")} />
+          <input id="deliveryDate" required type="date" min={earliestDeliveryDate()} className={inputClass} value={details.deliveryDate} onChange={update("deliveryDate")} />
+          <p className="mt-1.5 text-xs text-(--color-forest)/50">Earliest delivery is {MIN_LEAD_DAYS} days from today.</p>
         </div>
         <div className="sm:col-span-2">
           <label className={labelClass} htmlFor="notes">Delivery notes (optional)</label>

@@ -39,13 +39,28 @@ export function LoginForm({ redirectTo, initialEmail = "" }: { redirectTo: strin
     setLoading(true);
     setError(null);
     const supabase = createSupabaseBrowserClient();
-    const { error } = await supabase.auth.verifyOtp({ email, token: code, type: "email" });
-    setLoading(false);
+    const { data, error } = await supabase.auth.verifyOtp({ email, token: code, type: "email" });
     if (error) {
+      setLoading(false);
       setError(error.message);
       return;
     }
-    router.push(redirectTo);
+
+    // First login (or an old account with no contact number): collect name + WhatsApp
+    // number once before anything else, then continue to where they were headed.
+    let destination = redirectTo;
+    if (data.user) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name, whatsapp_number")
+        .eq("id", data.user.id)
+        .single();
+      if (!profile?.full_name.trim() || !profile.whatsapp_number) {
+        destination = `/welcome?redirect=${encodeURIComponent(redirectTo)}`;
+      }
+    }
+    setLoading(false);
+    router.push(destination);
     router.refresh();
   }
 
