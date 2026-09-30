@@ -89,7 +89,7 @@ export default async function ReportsPage() {
   const planAgg = new Map<string, { count: number; revenue: number }>();
   for (const s of subscriptions ?? []) {
     if (s.status !== "active") continue;
-    const plan = planById.get(s.plan_id);
+    const plan = s.plan_id ? planById.get(s.plan_id) : undefined;
     const name = plan?.name ?? "Unknown plan";
     const cur = planAgg.get(name) ?? { count: 0, revenue: 0 };
     cur.count += 1;
