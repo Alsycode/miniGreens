@@ -107,6 +107,7 @@ export default function RootLayout() {
           <Stack.Screen name="partner/business-order" options={{ animation: 'slide_from_right' }} />
           <Stack.Screen name="subscription/manage" options={{ animation: 'slide_from_right' }} />
           <Stack.Screen name="subscription/custom" options={{ animation: 'slide_from_right' }} />
+          <Stack.Screen name="subscription/plan" options={{ animation: 'slide_from_right' }} />
         </Stack>
       </QueryClientProvider>
     </GestureHandlerRootView>

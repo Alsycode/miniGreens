@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { CheckCircle, MapPin, Clock } from "@phosphor-icons/react";
+import { CheckCircle, MapPin } from "@phosphor-icons/react";
 import type { Database } from "@mobile/database";
 import { markOrderDelivered } from "@/app/dashboard/(protected)/delivery/actions";
 
@@ -10,8 +10,6 @@ type OrderRow = Database["public"]["Tables"]["orders"]["Row"] & {
   profiles: { full_name: string; email: string | null } | null;
   addresses: Database["public"]["Tables"]["addresses"]["Row"] | null;
 };
-
-type DeliverySlot = { time: string; deliveries: OrderRow[] };
 
 function DeliveryRow({ order, onDeliver }: {
   order: OrderRow;
@@ -85,24 +83,18 @@ function DeliveryRow({ order, onDeliver }: {
   );
 }
 
-export default function DeliveryQueueClient({ slots }: { slots: DeliverySlot[] }) {
-  const [localSlots, setLocalSlots] = useState(slots);
+export default function DeliveryQueueClient({ deliveries }: { deliveries: OrderRow[] }) {
+  const [localDeliveries, setLocalDeliveries] = useState(deliveries);
 
   function handleDeliver(id: string) {
-    setLocalSlots((prev) =>
-      prev.map((slot) => ({
-        ...slot,
-        deliveries: slot.deliveries.map((o) => (o.id === id ? { ...o, status: "delivered" as const } : o)),
-      }))
+    setLocalDeliveries((prev) =>
+      prev.map((o) => (o.id === id ? { ...o, status: "delivered" as const } : o))
     );
     markOrderDelivered(id);
   }
 
-  const totalDeliveries = localSlots.reduce((acc, s) => acc + s.deliveries.length, 0);
-  const completedCount = localSlots.reduce(
-    (acc, s) => acc + s.deliveries.filter((o) => o.status === "delivered").length,
-    0
-  );
+  const totalDeliveries = localDeliveries.length;
+  const completedCount = localDeliveries.filter((o) => o.status === "delivered").length;
   const remaining = totalDeliveries - completedCount;
 
   return (
@@ -124,37 +116,15 @@ export default function DeliveryQueueClient({ slots }: { slots: DeliverySlot[] }
         ))}
       </div>
 
-      {/* Time slots */}
-      <div className="divide-y divide-slate-100 animate-fade-up" style={{ "--i": 2 } as React.CSSProperties}>
-        {localSlots.length === 0 && (
+      {/* Today's deliveries */}
+      <div className="divide-y divide-slate-50 animate-fade-up" style={{ "--i": 2 } as React.CSSProperties}>
+        {localDeliveries.length === 0 && (
           <div className="px-6 py-16 text-center text-slate-400 text-sm">
             No deliveries scheduled for today.
           </div>
         )}
-        {localSlots.map((slot) => (
-          <div key={slot.time}>
-            {/* Slot header */}
-            <div className="flex items-center gap-2 px-6 py-3 bg-slate-50/80">
-              <Clock size={14} className="text-slate-400 flex-shrink-0" />
-              <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
-                {slot.time}
-              </p>
-              <span className="text-xs text-slate-400">
-                · {slot.deliveries.length} {slot.deliveries.length === 1 ? "delivery" : "deliveries"}
-              </span>
-            </div>
-
-            {/* Rows */}
-            <div className="divide-y divide-slate-50">
-              {slot.deliveries.map((order) => (
-                <DeliveryRow
-                  key={order.id}
-                  order={order}
-                  onDeliver={handleDeliver}
-                />
-              ))}
-            </div>
-          </div>
+        {localDeliveries.map((order) => (
+          <DeliveryRow key={order.id} order={order} onDeliver={handleDeliver} />
         ))}
       </div>
     </div>

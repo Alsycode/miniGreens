@@ -1,8 +1,6 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import DeliveryQueueClient from "@/components/DeliveryQueueClient";
 
-const KNOWN_SLOTS = ["08:00 - 10:00", "10:00 - 12:00", "12:00 - 14:00", "14:00 - 16:00"];
-
 function todayDateString() {
   const now = new Date();
   const y = now.getFullYear();
@@ -19,18 +17,8 @@ export default async function DeliveryPage() {
     .from("orders")
     .select("*, order_items(*), profiles(full_name, email), addresses(*)")
     .eq("delivery_date", today)
-    .neq("status", "cancelled");
-
-  const grouped = new Map<string, typeof orders>();
-  for (const order of orders ?? []) {
-    const key = order.delivery_time ?? "Unscheduled";
-    if (!grouped.has(key)) grouped.set(key, []);
-    grouped.get(key)!.push(order);
-  }
-
-  const otherKeys = [...grouped.keys()].filter((k) => !KNOWN_SLOTS.includes(k)).sort();
-  const orderedKeys = [...KNOWN_SLOTS.filter((k) => grouped.has(k)), ...otherKeys];
-  const slots = orderedKeys.map((time) => ({ time, deliveries: grouped.get(time)! }));
+    .neq("status", "cancelled")
+    .order("created_at", { ascending: true });
 
   return (
     <div className="px-6 py-8 md:px-10 max-w-[1400px]">
@@ -43,7 +31,7 @@ export default async function DeliveryPage() {
       </div>
 
       <div className="bg-white rounded-2xl border border-slate-200/50 shadow-sm overflow-hidden">
-        <DeliveryQueueClient slots={slots} />
+        <DeliveryQueueClient deliveries={orders ?? []} />
       </div>
     </div>
   );

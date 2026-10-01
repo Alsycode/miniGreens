@@ -13,6 +13,7 @@ import { Typography } from '../../components/ui/Typography';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { Loading } from '../../components/ui/Loading';
+import { ErrorNotice } from '../../components/ui/ErrorNotice';
 import { useAuthStore } from '../../store/useAuthStore';
 import { supabase } from '../../lib/supabase';
 import type { Database } from '../../types/database';
@@ -28,6 +29,7 @@ export default function SubscriptionsScreen() {
   const [activeSubscription, setActiveSubscription] = useState<SubscriptionRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [subscribingId, setSubscribingId] = useState<string | null>(null);
+  const [subscribeError, setSubscribeError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const { data: planData } = await supabase
@@ -65,18 +67,7 @@ export default function SubscriptionsScreen() {
       router.push('/subscription/manage');
       return;
     }
-    setSubscribingId(plan.id);
-    await supabase.from('subscriptions').insert({
-      profile_id: session.user.id,
-      plan_id: plan.id,
-      status: 'active',
-      address_id: null,
-      next_delivery_date: null,
-      paused_at: null,
-      cancelled_at: null,
-    });
-    setSubscribingId(null);
-    router.push('/subscription/manage');
+    router.push({ pathname: '/subscription/plan', params: { planId: plan.id } });
   };
 
   if (loading) {
@@ -98,6 +89,8 @@ export default function SubscriptionsScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
+        <ErrorNotice message={subscribeError} onDismiss={() => setSubscribeError(null)} />
+
         {/* Hero */}
         <Animated.View entering={FadeInUp.delay(80).springify().damping(31).mass(1).stiffness(100)} style={styles.hero}>
           <Animated.View
@@ -205,6 +198,32 @@ export default function SubscriptionsScreen() {
             </Card>
           </Animated.View>
         ))}
+
+        {/* Build your own */}
+        <Animated.View
+          entering={FadeInUp.delay(400).springify().damping(31).mass(1).stiffness(100)}
+        >
+          <Card style={styles.buildOwnCard} variant="outlined" padding="xl">
+            <Typography variant="body" weight="semibold" color={colors.text}>
+              Don&apos;t see a fit?
+            </Typography>
+            <Typography variant="bodySmall" color={colors.textSecondary} style={styles.inquiryText}>
+              Build your own subscription — pick your products, quantities, and weekly or monthly delivery.
+            </Typography>
+            <Button
+              title="Build Your Own"
+              variant="outline"
+              fullWidth
+              onPress={() => {
+                if (!session) {
+                  router.push('/auth/login');
+                  return;
+                }
+                router.push('/subscription/custom');
+              }}
+            />
+          </Card>
+        </Animated.View>
 
         {/* Inquiry */}
         <Animated.View
@@ -328,6 +347,9 @@ const styles = StyleSheet.create({
   },
   planButton: {
     marginTop: spacing.xl,
+  },
+  buildOwnCard: {
+    marginTop: spacing.lg,
   },
   inquiryCard: {
     marginTop: spacing.lg,
