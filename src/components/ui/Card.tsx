@@ -22,6 +22,7 @@ const paddingMap = {
   md: spacing.md,
   lg: spacing.lg,
   xl: spacing.xl,
+  '2xl': spacing['2xl'],
 };
 
 export function Card({
@@ -60,7 +61,6 @@ export function Card({
             scale.value = withSpring(1, { damping: 31, stiffness: 220, mass: 1 });
           }}
         >
-          <View style={styles.glassEdge} pointerEvents="none" />
           {children}
         </Pressable>
       </Animated.View>
@@ -68,16 +68,13 @@ export function Card({
   }
 
   return (
-    <View style={cardStyles}>
-      <View style={styles.glassEdge} pointerEvents="none" />
-      {children}
-    </View>
+    <View style={cardStyles}>{children}</View>
   );
 }
 
 const styles = StyleSheet.create({
   base: {
-    borderRadius: borderRadius.xl,
+    borderRadius: borderRadius.card,
     backgroundColor: colors.surface,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.border,
@@ -93,12 +90,5 @@ const styles = StyleSheet.create({
   flat: {
     shadowOpacity: 0,
     elevation: 0,
-  },
-  glassEdge: {
-    ...StyleSheet.absoluteFill,
-    borderRadius: borderRadius.xl,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.04)',
-    pointerEvents: 'none',
   },
 });

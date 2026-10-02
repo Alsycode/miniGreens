@@ -1,10 +1,11 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { View, Pressable, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing, borderRadius } from '../../theme';
 import { Typography } from '../../components/ui/Typography';
+import { PressableScale } from '../../components/ui/PressableScale';
 
 const TABS: { name: string; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { name: 'index',         label: 'Home',    icon: 'home' },
@@ -35,7 +36,7 @@ function BottomTabBar({ state, navigation }: any) {
         const tint = focused ? colors.primary : colors.textTertiary;
 
         return (
-          <Pressable key={tab.name} onPress={onPress} style={styles.item}>
+          <PressableScale key={tab.name} onPress={onPress} scaleTo={0.94} wrapperStyle={styles.itemWrap} style={styles.item} accessibilityLabel={tab.label}>
             <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
               <Ionicons
                 name={focused ? tab.icon : (`${tab.icon}-outline` as any)}
@@ -46,7 +47,7 @@ function BottomTabBar({ state, navigation }: any) {
             <Typography variant="caption" color={tint} weight={focused ? 'semibold' : 'regular'} style={styles.label}>
               {tab.label}
             </Typography>
-          </Pressable>
+          </PressableScale>
         );
       })}
       </View>
@@ -84,8 +85,10 @@ const styles = StyleSheet.create({
     shadowRadius: 14,
     elevation: 12,
   },
-  item: {
+  itemWrap: {
     flex: 1,
+  },
+  item: {
     alignItems: 'center',
     justifyContent: 'center',
     gap: 4,

@@ -1,7 +1,8 @@
 import React from 'react';
-import { TouchableOpacity, StyleSheet, ViewStyle } from 'react-native';
+import { StyleSheet, ViewStyle } from 'react-native';
 import { colors, spacing, borderRadius, typography } from '../../theme';
 import { Typography } from './Typography';
+import { PressableScale } from './PressableScale';
 
 interface ChipProps {
   label: string;
@@ -26,7 +27,8 @@ export function Chip({
   const borderColor = variant === 'outlined' ? color : 'transparent';
 
   return (
-    <TouchableOpacity
+    <PressableScale
+      scaleTo={0.96}
       style={[
         styles.base,
         {
@@ -36,7 +38,6 @@ export function Chip({
         style,
       ]}
       onPress={onPress}
-      activeOpacity={0.7}
     >
       <Typography
         variant="bodySmall"
@@ -45,7 +46,7 @@ export function Chip({
       >
         {label}
       </Typography>
-    </TouchableOpacity>
+    </PressableScale>
   );
 }
 

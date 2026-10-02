@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { View, Image, StyleSheet, ImageStyle, ViewStyle, Text } from 'react-native';
+import { View, Image, StyleSheet, ImageStyle, ViewStyle } from 'react-native';
 import { colors, borderRadius } from '../../theme';
-import { getPlaceholder, getEmoji } from '../../utils/placeholders';
+import { getPlaceholder } from '../../utils/placeholders';
 
 interface SafeImageProps {
   uri?: string;
@@ -9,7 +9,6 @@ interface SafeImageProps {
   style?: ImageStyle;
   containerStyle?: ViewStyle;
   fallbackColor?: string;
-  emoji?: string;
   size?: 'cover' | 'contain' | 'stretch';
 }
 
@@ -19,7 +18,6 @@ export function SafeImage({
   style,
   containerStyle,
   fallbackColor,
-  emoji: forcedEmoji,
   size = 'cover',
 }: SafeImageProps) {
   const [failed, setFailed] = useState(false);

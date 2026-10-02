@@ -138,7 +138,7 @@ function BirthdayBanner() {
       </View>
       <View style={{ flex: 1 }}>
         <Typography variant="bodySmall" weight="bold" color={colors.textInverse}>
-          Happy Birthday! 🎉
+          Happy Birthday!
         </Typography>
         <Typography variant="caption" color="rgba(255,255,255,0.75)">
           {offer?.code
@@ -300,7 +300,7 @@ export default function HomeScreen() {
               >
                 MiniGreens
               </Typography>
-              <Typography variant="h4" color={colors.accent} style={styles.brandLeaf}> 🌿</Typography>
+              <Ionicons name="leaf" size={20} color={colors.accent} style={styles.brandLeaf} />
             </View>
             <Typography variant="bodySmall" color={colors.textSecondary} style={{ marginTop: 4 }}>
               Pure Microgreen Tea. A Healthier You.
@@ -383,7 +383,7 @@ export default function HomeScreen() {
             <View style={{ flex: 1, paddingRight: spacing.md }}>
               <Typography variant="h3" color={colors.textPrimary}>Best Selling{'\n'}Microgreen Teas</Typography>
               <Typography variant="caption" color={colors.textTertiary} style={styles.sectionSub}>
-                Customer favourites, brewed for a better you. 🌿
+                Customer favourites, brewed for a better you.
               </Typography>
             </View>
             <TouchableOpacity style={[styles.viewAll, { flexShrink: 0 }]} onPress={() => router.push('/(tabs)/explore')}>
@@ -900,7 +900,7 @@ const styles = StyleSheet.create({
     lineHeight: 28,
   },
   brandLeaf: {
-    fontSize: 17,
+    marginLeft: 6,
   },
   promoKicker: {
     letterSpacing: 1.2,
