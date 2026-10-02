@@ -22,8 +22,10 @@ import * as Haptics from 'expo-haptics';
 import { colors, spacing, borderRadius, shadows } from '../../theme';
 import { Typography } from '../../components/ui/Typography';
 import { EmptyState } from '../../components/ui/EmptyState';
-import { Loading } from '../../components/ui/Loading';
 import { ErrorNotice } from '../../components/ui/ErrorNotice';
+import { Skeleton } from '../../components/ui/Skeleton';
+import { PressableScale } from '../../components/ui/PressableScale';
+import { HeaderIconButton } from '../../components/layout/ScreenHeader';
 import { useProducts, useCategories } from '../../services/catalog';
 import { useCartStore, cartSubtotal } from '../../store/useCartStore';
 import { resolveImageSource } from '../../utils/placeholders';
@@ -145,6 +147,26 @@ function FilterChip({ label, selected, onPress, index }: ChipProps) {
 
 // ─── Blend row ───────────────────────────────────────────────────────────────
 
+function BlendRowSkeleton({ index }: { index: number }) {
+  return (
+    <Animated.View
+      entering={FadeInUp.delay(index * 45).springify().damping(31).mass(1).stiffness(100)}
+      style={styles.row}
+    >
+      <Skeleton width={56} height={56} borderRadiusVal={borderRadius.control} />
+      <View style={[styles.rowBody, { marginLeft: spacing.md }]}>
+        <Skeleton width="60%" height={14} />
+        <Skeleton width="85%" height={11} style={{ marginTop: spacing.xs }} />
+        <Skeleton width="40%" height={11} style={{ marginTop: spacing.xs }} />
+      </View>
+      <View style={styles.rowRight}>
+        <Skeleton width={40} height={14} />
+        <Skeleton width={64} height={26} borderRadiusVal={borderRadius.control} />
+      </View>
+    </Animated.View>
+  );
+}
+
 function BlendRow({ product, index, categorySlug }: { product: Product; index: number; categorySlug?: string }) {
   const items = useCartStore((s) => s.items);
   const addItemBySlug = useCartStore((s) => s.addItemBySlug);
@@ -157,9 +179,10 @@ function BlendRow({ product, index, categorySlug }: { product: Product; index: n
   const accent = blendAccent(product.name);
   const tags = useMemo(() => productTags(product, categorySlug), [product.id, categorySlug]);
 
-  const add = () => {
+  const add = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    addItemBySlug(product.slug, 1);
+    const ok = await addItemBySlug(product.slug, 1);
+    if (!ok) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
   };
   const dec = () => {
     Haptics.selectionAsync();
@@ -208,10 +231,10 @@ function BlendRow({ product, index, categorySlug }: { product: Product; index: n
           ₹{product.price}
         </Typography>
         {qty === 0 ? (
-          <TouchableOpacity style={styles.addBtn} onPress={add} activeOpacity={0.9}>
+          <PressableScale style={styles.addBtn} onPress={add} scaleTo={0.94} haptic={false} accessibilityLabel={`Add ${name}`}>
             <Ionicons name="add" size={14} color={colors.textInverse} />
             <Typography variant="caption" color={colors.textInverse} weight="bold" style={styles.addBtnText}>Add</Typography>
-          </TouchableOpacity>
+          </PressableScale>
         ) : (
           <View style={styles.stepper}>
             <TouchableOpacity onPress={dec} hitSlop={8} style={styles.stepBtn}>
@@ -293,9 +316,9 @@ export default function ExploreScreen() {
             Tea blends, microgreens, juices & smoothies — fresh from MiniGreens.
           </Typography>
         </View>
-        <TouchableOpacity onPress={handleSearch} style={styles.searchBtn}>
-          <Ionicons name="search" size={20} color={colors.textPrimary} />
-        </TouchableOpacity>
+        <View style={styles.searchBtn}>
+          <HeaderIconButton icon="search" onPress={handleSearch} label="Search" />
+        </View>
       </Animated.View>
 
       <ScrollView
@@ -324,7 +347,11 @@ export default function ExploreScreen() {
             <ErrorNotice message={(error as Error)?.message ?? 'Could not load products.'} onDismiss={() => refetch()} />
           </View>
         )}
-        {isLoading && <Loading message="Loading products..." />}
+        {isLoading && (
+          <View style={styles.group}>
+            {[0, 1, 2, 3, 4].map((i) => <BlendRowSkeleton key={i} index={i} />)}
+          </View>
+        )}
 
         {groups.map((g) => (
           <View key={g.family || 'flat'} style={styles.group}>
@@ -388,14 +415,6 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   searchBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: borderRadius.pill,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.borderSubtle,
-    alignItems: 'center',
-    justifyContent: 'center',
     marginLeft: spacing.md,
   },
   chipsScroll: {
@@ -465,7 +484,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   thumbFallback: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -1,107 +1,57 @@
 import React, { useCallback, useState } from 'react';
-import { View, ScrollView, StyleSheet, Pressable, Image } from 'react-native';
+import { View, StyleSheet, Image } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-  FadeInUp,
-  ZoomIn,
-} from 'react-native-reanimated';
-import * as Haptics from 'expo-haptics';
-import { colors, spacing, borderRadius, shadows } from '../../theme';
+import Animated, { FadeInUp } from 'react-native-reanimated';
+import { colors, spacing, borderRadius } from '../../theme';
 import { Typography } from '../../components/ui/Typography';
 import { Card } from '../../components/ui/Card';
 import { EmptyState } from '../../components/ui/EmptyState';
-import { Loading } from '../../components/ui/Loading';
+import { Skeleton } from '../../components/ui/Skeleton';
+import { PressableScale } from '../../components/ui/PressableScale';
+import { StatusPill } from '../../components/ui/StatusPill';
+import { Screen } from '../../components/layout/Screen';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../store/useAuthStore';
 import { resolveImageSource, getProductPlaceholder } from '../../utils/placeholders';
-import type { Database, OrderStatus, PaymentStatus } from '../../types/database';
+import type { Database, PaymentStatus } from '../../types/database';
 
 type OrderRow = Database['public']['Tables']['orders']['Row'];
 type OrderItemRow = Database['public']['Tables']['order_items']['Row'];
 type OrderWithItems = OrderRow & { order_items: OrderItemRow[] };
 
-const statusColors: Record<OrderStatus, string> = {
-  pending: colors.warning,
-  confirmed: colors.info,
-  processing: colors.info,
-  shipped: colors.primary,
-  delivered: colors.success,
-  cancelled: colors.error,
+const MAX_ITEMS_SHOWN = 3;
+
+const paymentLabel: Record<PaymentStatus, string> = {
+  pending: 'Pay on delivery',
+  paid: 'Paid',
+  failed: 'Payment failed',
 };
 
-const paymentStatusColors: Record<PaymentStatus, string> = {
-  pending: colors.warning,
-  paid: colors.success,
-  failed: colors.error,
-};
+const formatDate = (dateStr: string) =>
+  new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
-const formatDate = (dateStr: string) => {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-};
-
-// ─── Pressable Order Card ─────────────────────────────────────────────────────
+// ─── Order card ───────────────────────────────────────────────────────────────
 
 function OrderCard({ order, index }: { order: OrderWithItems; index: number }) {
-  const scale = useSharedValue(1);
-  const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+  const shown = order.order_items.slice(0, MAX_ITEMS_SHOWN);
+  const hidden = order.order_items.length - shown.length;
 
   return (
     <Animated.View
       entering={FadeInUp.delay(index * 80).springify().damping(31).mass(1).stiffness(100)}
-      style={animStyle}
+      style={styles.cardWrap}
     >
-      <Pressable
-        onPress={() => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-          router.push(`/order/${order.id}`);
-        }}
-        onPressIn={() => { scale.value = withSpring(0.97, { damping: 31, stiffness: 220, mass: 1 }); }}
-        onPressOut={() => { scale.value = withSpring(1, { damping: 31, stiffness: 220, mass: 1 }); }}
-      >
-        <Card style={styles.orderCard} padding="lg">
+      <PressableScale onPress={() => router.push(`/order/${order.id}`)} accessibilityLabel={`Order ${order.order_number}`}>
+        <Card padding="lg">
           <View style={styles.orderHeader}>
-            <View style={styles.orderNumberRow}>
-              <Typography variant="bodySmall" weight="semibold" color={colors.text}>
-                {order.order_number}
-              </Typography>
-            </View>
-            <View style={styles.badgeRow}>
-              <Animated.View
-                entering={ZoomIn.delay(index * 80 + 100).springify().damping(19).mass(1).stiffness(100)}
-                style={[styles.statusBadge, { backgroundColor: paymentStatusColors[order.payment_status] + '20' }]}
-              >
-                <Typography
-                  variant="caption"
-                  weight="semibold"
-                  color={paymentStatusColors[order.payment_status]}
-                  style={{ textTransform: 'capitalize' }}
-                >
-                  {order.payment_status}
-                </Typography>
-              </Animated.View>
-              <Animated.View
-                entering={ZoomIn.delay(index * 80 + 120).springify().damping(19).mass(1).stiffness(100)}
-                style={[styles.statusBadge, { backgroundColor: statusColors[order.status] + '20' }]}
-              >
-                <Typography
-                  variant="caption"
-                  weight="semibold"
-                  color={statusColors[order.status]}
-                  style={{ textTransform: 'capitalize' }}
-                >
-                  {order.status}
-                </Typography>
-              </Animated.View>
-            </View>
+            <Typography variant="bodySmall" weight="semibold" color={colors.text}>
+              {order.order_number}
+            </Typography>
+            <StatusPill label={order.status} status={order.status} />
           </View>
 
           <View style={styles.orderItems}>
-            {order.order_items.map((item) => (
+            {shown.map((item) => (
               <View key={item.id} style={styles.orderItem}>
                 <Image
                   source={resolveImageSource(item.image || getProductPlaceholder(item.product_name))}
@@ -109,27 +59,64 @@ function OrderCard({ order, index }: { order: OrderWithItems; index: number }) {
                   resizeMode="cover"
                 />
                 <View style={styles.orderItemInfo}>
-                  <Typography variant="bodySmall" weight="semibold">
+                  <Typography variant="bodySmall" weight="semibold" numberOfLines={1}>
                     {item.product_name}
                   </Typography>
                   <Typography variant="caption" color={colors.textSecondary}>
-                    Qty: {item.quantity} × ₹{item.price.toFixed(2)}
+                    Qty {item.quantity} × ₹{item.price.toFixed(2)}
                   </Typography>
                 </View>
               </View>
             ))}
+            {hidden > 0 ? (
+              <Typography variant="caption" color={colors.textTertiary} style={styles.more}>
+                +{hidden} more {hidden === 1 ? 'item' : 'items'}
+              </Typography>
+            ) : null}
           </View>
 
           <View style={styles.orderFooter}>
-            <Typography variant="bodySmall" color={colors.textTertiary}>
-              {formatDate(order.created_at)}
-            </Typography>
+            <View>
+              <Typography variant="bodySmall" color={colors.textTertiary}>
+                {formatDate(order.created_at)}
+              </Typography>
+              <Typography variant="caption" color={colors.textTertiary}>
+                {paymentLabel[order.payment_status]}
+              </Typography>
+            </View>
             <Typography variant="body" weight="bold" color={colors.accent}>
               ₹{order.total.toFixed(2)}
             </Typography>
           </View>
         </Card>
-      </Pressable>
+      </PressableScale>
+    </Animated.View>
+  );
+}
+
+function OrderCardSkeleton({ index }: { index: number }) {
+  return (
+    <Animated.View
+      entering={FadeInUp.delay(index * 80).springify().damping(31).mass(1).stiffness(100)}
+      style={styles.cardWrap}
+    >
+      <Card padding="lg">
+        <View style={styles.orderHeader}>
+          <Skeleton width={110} height={14} />
+          <Skeleton width={72} height={22} borderRadiusVal={borderRadius.pill} />
+        </View>
+        <View style={styles.orderItem}>
+          <Skeleton width={44} height={44} borderRadiusVal={borderRadius.md} />
+          <View style={[styles.orderItemInfo, { marginLeft: spacing.md }]}>
+            <Skeleton width="65%" height={13} />
+            <Skeleton width="40%" height={11} style={{ marginTop: spacing.xs }} />
+          </View>
+        </View>
+        <View style={styles.orderFooter}>
+          <Skeleton width={90} height={13} />
+          <Skeleton width={60} height={16} />
+        </View>
+      </Card>
     </Animated.View>
   );
 }
@@ -137,8 +124,8 @@ function OrderCard({ order, index }: { order: OrderWithItems; index: number }) {
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 
 export default function OrdersScreen() {
-  const insets = useSafeAreaInsets();
   const profile = useAuthStore((s) => s.profile);
+  const session = useAuthStore((s) => s.session);
   const [orders, setOrders] = useState<OrderWithItems[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -152,7 +139,7 @@ export default function OrdersScreen() {
         .select('*, order_items(*)')
         .eq('profile_id', profile.id)
         // Business orders placed via the partner flow are fulfilled through
-        // Admin and have no self-serve payment — keep them out of the
+        // Admin and have no self-serve payment, so keep them out of the
         // customer Orders tab (BUG-05).
         .neq('order_type', 'business')
         .order('created_at', { ascending: false })
@@ -162,29 +149,45 @@ export default function OrdersScreen() {
             setLoading(false);
           }
         });
-      return () => { cancelled = true; };
+      return () => {
+        cancelled = true;
+      };
     }, [profile])
   );
 
-  if (loading) {
+  // Signed out: there is nothing to load, so don't leave the spinner running.
+  if (!session && !profile) {
     return (
-      <View style={[styles.container, { paddingTop: insets.top }]}>
-        <Loading fullScreen />
-      </View>
+      <Screen title="Orders" subtitle="Track everything you have ordered." largeTitle showBack={false} scroll={false} hasTabBar>
+        <EmptyState
+          icon="receipt-outline"
+          title="Log in to see your orders"
+          message="Your order history and delivery status show up here."
+          actionLabel="Log In"
+          onAction={() => router.push('/auth/login')}
+        />
+      </Screen>
     );
   }
 
-  if (orders.length === 0) {
-    return (
-      <View style={[styles.container, { paddingTop: insets.top }]}>
-        <Animated.View
-          entering={FadeInUp.springify().damping(31).mass(1).stiffness(100)}
-          style={styles.header}
-        >
-          <Typography variant="h3" color={colors.accent}>
-            Orders
-          </Typography>
-        </Animated.View>
+  const isEmpty = !loading && orders.length === 0;
+
+  return (
+    <Screen
+      title="Orders"
+      subtitle="Track everything you have ordered."
+      largeTitle
+      showBack={false}
+      scroll={!isEmpty}
+      hasTabBar
+    >
+      {loading ? (
+        <View style={styles.list}>
+          {[0, 1, 2].map((i) => (
+            <OrderCardSkeleton key={i} index={i} />
+          ))}
+        </View>
+      ) : isEmpty ? (
         <EmptyState
           icon="receipt-outline"
           title="No Orders Yet"
@@ -192,47 +195,22 @@ export default function OrdersScreen() {
           actionLabel="Start Shopping"
           onAction={() => router.push('/(tabs)/explore')}
         />
-      </View>
-    );
-  }
-
-  return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <Animated.View
-        entering={FadeInUp.springify().damping(31).mass(1).stiffness(100)}
-        style={styles.header}
-      >
-        <Typography variant="h3" color={colors.accent}>
-          Orders
-        </Typography>
-      </Animated.View>
-
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
-        {orders.map((order, i) => (
-          <OrderCard key={order.id} order={order} index={i} />
-        ))}
-      </ScrollView>
-    </View>
+      ) : (
+        <View style={styles.list}>
+          {orders.map((order, i) => (
+            <OrderCard key={order.id} order={order} index={i} />
+          ))}
+        </View>
+      )}
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
+  list: {
+    paddingTop: spacing.sm,
   },
-  header: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.lg,
-  },
-  scrollContent: {
-    padding: spacing.lg,
-    paddingBottom: spacing['8xl'],
-  },
-  orderCard: {
+  cardWrap: {
     marginBottom: spacing.md,
   },
   orderHeader: {
@@ -240,20 +218,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: spacing.md,
-  },
-  orderNumberRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  badgeRow: {
-    flexDirection: 'row',
-    gap: spacing.xs,
-  },
-  statusBadge: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.full,
   },
   orderItems: {
     borderTopWidth: 1,
@@ -274,6 +238,9 @@ const styles = StyleSheet.create({
   },
   orderItemInfo: {
     flex: 1,
+  },
+  more: {
+    marginBottom: spacing.xs,
   },
   orderFooter: {
     flexDirection: 'row',

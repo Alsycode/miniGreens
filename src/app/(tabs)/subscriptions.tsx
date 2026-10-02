@@ -1,9 +1,7 @@
 import React, { useCallback, useState } from 'react';
-import { View, ScrollView, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   FadeInUp,
   ZoomIn,
@@ -12,7 +10,9 @@ import { colors, spacing, borderRadius } from '../../theme';
 import { Typography } from '../../components/ui/Typography';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
-import { Loading } from '../../components/ui/Loading';
+import { Skeleton } from '../../components/ui/Skeleton';
+import { PressableScale } from '../../components/ui/PressableScale';
+import { Screen } from '../../components/layout/Screen';
 import { ErrorNotice } from '../../components/ui/ErrorNotice';
 import { useAuthStore } from '../../store/useAuthStore';
 import { supabase } from '../../lib/supabase';
@@ -22,7 +22,6 @@ type SubscriptionPlanRow = Database['public']['Tables']['subscription_plans']['R
 type SubscriptionRow = Database['public']['Tables']['subscriptions']['Row'];
 
 export default function SubscriptionsScreen() {
-  const insets = useSafeAreaInsets();
   const session = useAuthStore((s) => s.session);
 
   const [plans, setPlans] = useState<SubscriptionPlanRow[]>([]);
@@ -71,56 +70,44 @@ export default function SubscriptionsScreen() {
   };
 
   if (loading) {
-    return <Loading />;
+    return (
+      <Screen title="Subscriptions" subtitle="Fresh on a schedule. Skip or cancel anytime." largeTitle showBack={false} hasTabBar>
+        {[0, 1].map((i) => (
+          <Card key={i} style={styles.planCard} padding="xl">
+            <Skeleton width="45%" height={18} />
+            <Skeleton width="80%" height={12} style={{ marginTop: spacing.sm }} />
+            <Skeleton width="60%" height={12} style={{ marginTop: spacing.xl }} />
+            <Skeleton width="100%" height={48} borderRadiusVal={borderRadius.control} style={{ marginTop: spacing.xl }} />
+          </Card>
+        ))}
+      </Screen>
+    );
   }
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <Animated.View
-        entering={FadeInUp.springify().damping(31).mass(1).stiffness(100)}
-        style={styles.header}
-      >
-        <Typography variant="h3" color={colors.accent}>
-          Subscriptions
-        </Typography>
-      </Animated.View>
+    <Screen title="Subscriptions" subtitle="Fresh on a schedule. Skip or cancel anytime." largeTitle showBack={false} hasTabBar>
+      <ErrorNotice message={subscribeError} onDismiss={() => setSubscribeError(null)} />
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
-        <ErrorNotice message={subscribeError} onDismiss={() => setSubscribeError(null)} />
-
-        {/* Hero */}
-        <Animated.View entering={FadeInUp.delay(80).springify().damping(31).mass(1).stiffness(100)} style={styles.hero}>
-          <Animated.View
-            entering={ZoomIn.delay(160).springify().damping(19).mass(1).stiffness(100)}
-            style={styles.heroIconContainer}
-          >
-            <LinearGradient
-              colors={[colors.primaryBg, colors.green[100]]}
-              style={styles.heroIconGradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-            >
-              <Ionicons name="calendar" size={32} color={colors.primary} />
-            </LinearGradient>
-          </Animated.View>
-          <Typography variant="h4" color={colors.text} style={styles.heroTitle}>
-            Never Miss Freshness
-          </Typography>
-          <Typography variant="body" color={colors.textSecondary} align="center">
-            Subscribe to regular deliveries and save up to 15%. Skip or cancel anytime.
-          </Typography>
-          {activeSubscription && (
-            <Button
-              title="Manage My Subscription"
-              variant="outline"
-              onPress={() => router.push('/subscription/manage')}
-              style={styles.manageButton}
-            />
-          )}
+      {activeSubscription && (
+        <Animated.View entering={FadeInUp.delay(80).springify().damping(31).mass(1).stiffness(100)}>
+          <PressableScale onPress={() => router.push('/subscription/manage')} accessibilityLabel="Manage my subscription">
+            <View style={styles.activeBanner}>
+              <View style={styles.activeIcon}>
+                <Ionicons name="calendar" size={20} color={colors.primaryDark} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Typography variant="body" weight="bold" color={colors.text}>
+                  You have an active subscription
+                </Typography>
+                <Typography variant="caption" color={colors.textSecondary}>
+                  Skip a delivery, change items or cancel.
+                </Typography>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
+            </View>
+          </PressableScale>
         </Animated.View>
+      )}
 
         {/* Plans */}
         {plans.map((plan, i) => (
@@ -244,45 +231,27 @@ export default function SubscriptionsScreen() {
             />
           </Card>
         </Animated.View>
-      </ScrollView>
-    </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  header: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.lg,
-  },
-  scrollContent: {
-    paddingBottom: spacing['8xl'],
-    paddingHorizontal: spacing.lg,
-  },
-  hero: {
+  activeBanner: {
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: spacing['2xl'],
-  },
-  heroIconContainer: {
+    gap: spacing.md,
+    padding: spacing.md,
     marginBottom: spacing.lg,
+    borderRadius: borderRadius.card,
+    backgroundColor: colors.accentSurface,
   },
-  heroIconGradient: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+  activeIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  heroTitle: {
-    marginBottom: spacing.sm,
-    textAlign: 'center',
-  },
-  manageButton: {
-    marginTop: spacing.lg,
-    alignSelf: 'stretch',
+    backgroundColor: colors.surface,
   },
   planCard: {
     marginBottom: spacing.lg,

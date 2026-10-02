@@ -86,12 +86,12 @@ Screens that need a logged-in user can only be fully checked once someone is sig
 ### Group A — Tab screens
 | Screen | File | Status | Notes |
 |---|---|---|---|
-| Home (reference; only the corrections in F10) | `(tabs)/index.tsx` | [ ] | |
-| Tab bar | `(tabs)/_layout.tsx` | [ ] | |
-| Search / Explore tab | `(tabs)/explore.tsx` | [ ] | |
-| Orders tab | `(tabs)/orders.tsx` | [ ] | |
-| Rewards / Subscriptions tab | `(tabs)/subscriptions.tsx` | [ ] | |
-| Profile tab | `(tabs)/profile.tsx` | [ ] | partner badge lives here |
+| Home (reference; only the corrections in F10) | `(tabs)/index.tsx` | [x] | Emojis removed; header leaf icon verified at 375px |
+| Tab bar | `(tabs)/_layout.tsx` | [x] | `PressableScale` items, verified |
+| Search / Explore tab | `(tabs)/explore.tsx` | [x] | Already on-DNA. Search button now `HeaderIconButton`, Add button `PressableScale`; fixed `absoluteFillObject` type error. Verified at 375px |
+| Orders tab | `(tabs)/orders.tsx` | [x]* | Rewritten on `Screen` with large serif title; `StatusPill`; layout-matched skeleton cards; fixed guest bug (spinner forever when logged out) with a log-in empty state; shows up to 3 items + "+N more"; payment line says "Pay on delivery". *Guest state verified; order cards need a logged-in check |
+| Rewards / Subscriptions tab | `(tabs)/subscriptions.tsx` | [x]* | On `Screen` (large title), centered hero removed, skeleton plan cards, new active-subscription banner. Plan cards verified. *Active banner needs a logged-in check |
+| Profile tab | `(tabs)/profile.tsx` | [x]* | Guest state added (no more fake placeholder identity "Riya Kapoor" for logged-out users), partner badge centered, Sign Out uses `PressableScale`. *Logged-in view needs a check |
 
 ### Group B — Browse and buy
 | Screen | File | Status | Notes |
@@ -157,4 +157,5 @@ Not UI (no work): `_layout.tsx` (root), `index.tsx` (redirect), `(tabs)/_layout.
 | Date | What changed | Commit |
 |---|---|---|
 | 2026-10-02 | Tracker created; Home design DNA written; 35 screens inventoried | — |
+| 2026-10-02 | Group A done (Explore, Orders, Rewards, Profile). Orders/Profile guest bugs fixed | — |
 | 2026-10-02 | Phase 1 complete (F1 to F10): added PressableScale, StatusPill, ScreenHeader, SectionHeader, BottomActionBar, Screen; Card aligned; emojis removed from Home/placeholders/SafeImage. tsc clean for `src/` | — |

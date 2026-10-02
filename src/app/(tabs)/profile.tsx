@@ -15,7 +15,9 @@ import * as Haptics from 'expo-haptics';
 import { colors, spacing, borderRadius, shadows } from '../../theme';
 import { Typography } from '../../components/ui/Typography';
 import { Card } from '../../components/ui/Card';
-import { profile as mockProfile } from '../../mock';
+import { EmptyState } from '../../components/ui/EmptyState';
+import { PressableScale } from '../../components/ui/PressableScale';
+import { Screen } from '../../components/layout/Screen';
 import { useAuthStore } from '../../store/useAuthStore';
 import { supabase } from '../../lib/supabase';
 import { getAvatarPlaceholder } from '../../utils/placeholders';
@@ -117,8 +119,8 @@ export default function ProfileScreen() {
   const isPartner = authProfile?.role === 'partner' || partnerStatus === 'approved';
   let itemDelay = 280;
 
-  const displayName = authProfile?.full_name || mockProfile.fullName;
-  const displayEmail = authProfile?.email || session?.user.email || mockProfile.email;
+  const displayName = authProfile?.full_name || 'MiniGreens member';
+  const displayEmail = authProfile?.email || session?.user.email || '';
   // BUG-15: fall back to a generated initial avatar (the mock URL can 404).
   const displayAvatar = authProfile?.avatar || getAvatarPlaceholder(displayName);
   const menuSections = getMenuSections(authProfile?.role, partnerStatus);
@@ -148,6 +150,21 @@ export default function ProfileScreen() {
     await signOut();
     router.replace('/auth/login');
   };
+
+  // Signed out: show a sign-in prompt, not someone else's placeholder profile.
+  if (!session && !authProfile) {
+    return (
+      <Screen title="Profile" subtitle="Your account, addresses and rewards." largeTitle showBack={false} scroll={false} hasTabBar>
+        <EmptyState
+          icon="person-outline"
+          title="Log in to your account"
+          message="See your orders, saved addresses and subscription in one place."
+          actionLabel="Log In"
+          onAction={() => router.push('/auth/login')}
+        />
+      </Screen>
+    );
+  }
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -238,14 +255,11 @@ export default function ProfileScreen() {
 
         {/* Logout */}
         <Animated.View entering={FadeInUp.delay(640).springify().damping(31).mass(1).stiffness(100)}>
-          <Pressable
-            style={styles.logoutButton}
-            onPress={handleSignOut}
-          >
+          <PressableScale style={styles.logoutButton} onPress={handleSignOut} haptic={false} accessibilityLabel="Sign out">
             <Typography variant="body" color={colors.error} weight="semibold">
               Sign Out
             </Typography>
-          </Pressable>
+          </PressableScale>
         </Animated.View>
       </ScrollView>
     </View>
@@ -285,7 +299,7 @@ const styles = StyleSheet.create({
   partnerBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    alignSelf: 'flex-start',
+    alignSelf: 'center',
     gap: 4,
     marginTop: spacing.xs,
     paddingHorizontal: spacing.sm,
@@ -303,10 +317,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     paddingHorizontal: spacing.lg,
-    paddingBottom: spacing['2xl'],
-    borderBottomWidth: 1,
-    borderBottomColor: colors.borderLight,
+    paddingVertical: spacing.lg,
     marginHorizontal: spacing.lg,
+    marginBottom: spacing.lg,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    ...shadows.sm,
   },
   statItem: {
     alignItems: 'center',
