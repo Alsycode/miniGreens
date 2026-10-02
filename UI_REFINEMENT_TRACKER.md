@@ -96,13 +96,13 @@ Screens that need a logged-in user can only be fully checked once someone is sig
 ### Group B — Browse and buy
 | Screen | File | Status | Notes |
 |---|---|---|---|
-| Category | `category/[slug].tsx` | [ ] | |
-| Product detail | `product/[id].tsx` | [ ] | |
-| Search | `search.tsx` | [ ] | |
-| Pre-order | `preorder/[slug].tsx` | [ ] | |
-| Offers | `offers.tsx` | [ ] | |
-| Articles list | `articles.tsx` | [ ] | |
-| Article detail | `article/[id].tsx` | [ ] | |
+| Category | `category/[slug].tsx` | [x] | On `Screen`; hero is now a rounded card like Home (was edge-to-edge); neon lime count pill replaced; skeleton + not-found state. Verified at 375px |
+| Product detail | `product/[id].tsx` | [x] | On `Screen` with circular back + bag button; rounded hero; sticky `BottomActionBar`; `SectionHeader` sections; quantity buttons `PressableScale`; amber stars (was brand green). Verified at 375px |
+| Search | `search.tsx` | [x] | Home-style search pill + circular back; skeleton results; suggestions now come from the live catalogue (were old mock names like Mango Fresh that returned no results). Verified |
+| Pre-order | `preorder/[slug].tsx` | [x] | On `Screen` + `BottomActionBar` + new shared `AddressPicker`; skeleton and not-found states; logged-out users get a "Log in to pre-order" button (was a silently disabled button). Verified |
+| Offers | `offers.tsx` | [x] | On `Screen`; skeleton cards; dark/neon birthday pill replaced by `StatusPill`; coupon codes keep dashed ticket look. Verified (empty state) |
+| Articles list | `articles.tsx` | [x] | On `Screen`; light brand category pills (were near-black with neon border); press feedback. Verified |
+| Article detail | `article/[id].tsx` | [x] | On `Screen`; rounded hero; light pill; avatar contrast fixed; "More reads" uses `SectionHeader`. Verified |
 
 ### Group C — Cart, checkout, orders
 | Screen | File | Status | Notes |
@@ -157,5 +157,6 @@ Not UI (no work): `_layout.tsx` (root), `index.tsx` (redirect), `(tabs)/_layout.
 | Date | What changed | Commit |
 |---|---|---|
 | 2026-10-02 | Tracker created; Home design DNA written; 35 screens inventoried | — |
+| 2026-10-02 | Group B done (Category, Product, Search, Pre-order, Offers, Articles x2). New shared `AddressPicker` (`components/profile/`) to be reused by Checkout, Subscriptions, Business order | — |
 | 2026-10-02 | Group A done (Explore, Orders, Rewards, Profile). Orders/Profile guest bugs fixed | — |
 | 2026-10-02 | Phase 1 complete (F1 to F10): added PressableScale, StatusPill, ScreenHeader, SectionHeader, BottomActionBar, Screen; Card aligned; emojis removed from Home/placeholders/SafeImage. tsc clean for `src/` | — |

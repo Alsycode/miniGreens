@@ -1,111 +1,83 @@
 import React from 'react';
-import { View, ScrollView, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, StyleSheet, Image } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, { FadeInUp } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { colors, spacing, borderRadius } from '../theme';
+import { colors, spacing, borderRadius, shadows } from '../theme';
 import { Typography } from '../components/ui/Typography';
+import { PressableScale } from '../components/ui/PressableScale';
+import { Screen } from '../components/layout/Screen';
 import { lifestyleArticles } from '../mock';
 import { resolveImageSource } from '../utils/placeholders';
 
 export default function ArticlesScreen() {
-  const insets = useSafeAreaInsets();
-
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            router.back();
-          }}
-          style={styles.headerButton}
+    <Screen title="Healthy Living">
+      <Typography variant="bodySmall" color={colors.textSecondary} style={styles.intro}>
+        Stories on nutrition, sustainability and feeling good.
+      </Typography>
+      {lifestyleArticles.map((article, i) => (
+        <Animated.View
+          key={article.id}
+          entering={FadeInUp.delay(i * 80).springify().damping(31).mass(1).stiffness(100)}
+          style={styles.cardWrap}
         >
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
-        </TouchableOpacity>
-        <Typography variant="body" weight="semibold">Healthy Living</Typography>
-        <View style={styles.headerButton} />
-      </View>
-
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        <Typography variant="caption" color={colors.textTertiary} style={styles.intro}>
-          Stories on nutrition, sustainability and feeling good.
-        </Typography>
-
-        {lifestyleArticles.map((article) => (
-          <TouchableOpacity
-            key={article.id}
-            activeOpacity={0.9}
-            style={styles.card}
+          <PressableScale
+            haptic={false}
             onPress={() => {
               Haptics.selectionAsync();
               router.push(`/article/${article.id}`);
             }}
+            accessibilityLabel={article.title}
           >
-            <Image source={resolveImageSource(article.image)} style={styles.image} resizeMode="cover" />
-            <View style={styles.cardBody}>
-              <View style={styles.pill}>
-                <Typography variant="caption" color={colors.secondary} weight="bold" style={styles.pillText}>
-                  {article.category.toUpperCase()}
+            <View style={styles.card}>
+              <Image source={resolveImageSource(article.image)} style={styles.image} resizeMode="cover" />
+              <View style={styles.cardBody}>
+                <View style={styles.pill}>
+                  <Typography variant="caption" color={colors.primaryDark} weight="bold" style={styles.pillText}>
+                    {article.category.toUpperCase()}
+                  </Typography>
+                </View>
+                <Typography variant="body" weight="bold" color={colors.text} numberOfLines={2} style={styles.cardTitle}>
+                  {article.title}
                 </Typography>
-              </View>
-              <Typography variant="body" weight="bold" color={colors.text} numberOfLines={2} style={styles.cardTitle}>
-                {article.title}
-              </Typography>
-              <Typography variant="caption" color={colors.textSecondary} numberOfLines={2} style={styles.excerpt}>
-                {article.excerpt}
-              </Typography>
-              <View style={styles.meta}>
-                <Typography variant="caption" color={colors.textTertiary}>
-                  {article.readTime} read
+                <Typography variant="caption" color={colors.textSecondary} numberOfLines={2} style={styles.excerpt}>
+                  {article.excerpt}
                 </Typography>
-                <Ionicons name="arrow-forward" size={13} color={colors.primary} style={{ marginLeft: 6 }} />
+                <View style={styles.meta}>
+                  <Typography variant="caption" color={colors.textTertiary}>
+                    {article.readTime} read
+                  </Typography>
+                  <Ionicons name="arrow-forward" size={13} color={colors.primary} style={{ marginLeft: 6 }} />
+                </View>
               </View>
             </View>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-    </View>
+          </PressableScale>
+        </Animated.View>
+      ))}
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-  },
-  headerButton: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  scrollContent: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing['3xl'],
-  },
   intro: {
+    marginBottom: spacing.lg,
+  },
+  cardWrap: {
     marginBottom: spacing.lg,
   },
   card: {
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.xl,
-    borderWidth: 1,
+    borderRadius: borderRadius.card,
+    borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.border,
     overflow: 'hidden',
-    marginBottom: spacing.lg,
+    ...shadows.sm,
   },
   image: {
     width: '100%',
-    height: 160,
+    height: 170,
     backgroundColor: colors.surfaceVariant,
   },
   cardBody: {
@@ -113,16 +85,14 @@ const styles = StyleSheet.create({
   },
   pill: {
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(6,19,13,0.75)',
-    borderWidth: 1,
-    borderColor: 'rgba(150,255,31,0.35)',
-    paddingHorizontal: spacing.sm,
+    backgroundColor: colors.accentSurface,
+    paddingHorizontal: spacing.sm + 2,
     paddingVertical: 4,
-    borderRadius: borderRadius.full,
+    borderRadius: borderRadius.pill,
     marginBottom: spacing.sm,
   },
   pillText: {
-    fontSize: 9,
+    fontSize: 10,
     letterSpacing: 1,
   },
   cardTitle: {

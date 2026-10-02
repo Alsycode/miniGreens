@@ -1,14 +1,15 @@
 import React from 'react';
-import { View, ScrollView, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, StyleSheet, Image } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-
+import Animated, { FadeInUp } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { colors, spacing, borderRadius } from '../../theme';
 import { Typography } from '../../components/ui/Typography';
 import { EmptyState } from '../../components/ui/EmptyState';
+import { PressableScale } from '../../components/ui/PressableScale';
+import { Screen } from '../../components/layout/Screen';
+import { SectionHeader } from '../../components/layout/SectionHeader';
 import { lifestyleArticles } from '../../mock';
 import { resolveImageSource } from '../../utils/placeholders';
 
@@ -19,179 +20,123 @@ function formatDate(iso: string): string {
 }
 
 export default function ArticleScreen() {
-  const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
 
   const article = lifestyleArticles.find((a) => a.id === id || a.slug === id);
 
-  const goBack = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.back();
-  };
-
   if (!article) {
     return (
-      <View style={[styles.container, { paddingTop: insets.top }]}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={goBack} style={styles.headerButton}>
-            <Ionicons name="arrow-back" size={24} color={colors.text} />
-          </TouchableOpacity>
-          <Typography variant="body" weight="semibold">Article</Typography>
-          <View style={styles.headerButton} />
-        </View>
-        <View style={styles.notFound}>
-          <EmptyState
-            icon="reader-outline"
-            title="Article not found"
-            message="This story may have been moved or removed."
-          />
-        </View>
-      </View>
+      <Screen title="Article" scroll={false}>
+        <EmptyState
+          icon="reader-outline"
+          title="Article not found"
+          message="This story may have been moved or removed."
+          actionLabel="Back to stories"
+          onAction={() => router.back()}
+        />
+      </Screen>
     );
   }
 
   const more = lifestyleArticles.filter((a) => a.id !== article.id).slice(0, 2);
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={goBack} style={styles.headerButton}>
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
-        </TouchableOpacity>
-        <Typography variant="body" weight="semibold" numberOfLines={1} style={styles.headerTitle}>
-          {article.category}
-        </Typography>
-        <View style={styles.headerButton} />
+    <Screen title={article.category}>
+      {/* Hero image */}
+      <Animated.View entering={FadeInUp.springify().damping(34).mass(1).stiffness(100)} style={styles.heroWrap}>
+        <Image source={resolveImageSource(article.image)} style={styles.heroImage} resizeMode="cover" />
+        <LinearGradient
+          colors={['rgba(29,43,32,0)', 'rgba(29,43,32,0.82)']}
+          locations={[0.35, 1]}
+          style={StyleSheet.absoluteFill}
+          pointerEvents="none"
+        />
+        <View style={styles.heroText}>
+          <View style={styles.categoryPill}>
+            <Typography variant="caption" color={colors.textInverse} weight="bold" style={styles.categoryPillText}>
+              {article.category.toUpperCase()}
+            </Typography>
+          </View>
+          <Typography variant="h3" color={colors.textInverse} style={styles.title}>
+            {article.title}
+          </Typography>
+        </View>
+      </Animated.View>
+
+      {/* Byline */}
+      <View style={styles.byline}>
+        <View style={styles.avatar}>
+          <Typography variant="bodySmall" weight="bold" color={colors.primaryDark}>
+            {article.author.charAt(0)}
+          </Typography>
+        </View>
+        <View style={{ flex: 1 }}>
+          <Typography variant="bodySmall" weight="semibold" color={colors.text}>
+            {article.author}
+          </Typography>
+          <Typography variant="caption" color={colors.textTertiary}>
+            {formatDate(article.publishedAt)} · {article.readTime} read
+          </Typography>
+        </View>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        {/* Hero image */}
-        <View style={styles.heroWrap}>
-          <Image source={resolveImageSource(article.image)} style={styles.heroImage} resizeMode="cover" />
-          <LinearGradient
-            colors={['rgba(10,10,10,0)', 'rgba(10,10,10,0.85)']}
-            locations={[0.35, 1]}
-            style={StyleSheet.absoluteFill}
-            pointerEvents="none"
-          />
-          <View style={styles.heroText}>
-            <View style={styles.categoryPill}>
-              <Typography variant="caption" color={colors.secondary} weight="bold" style={styles.categoryPillText}>
-                {article.category.toUpperCase()}
+      <View style={styles.divider} />
+
+      {/* Body */}
+      <View style={styles.body}>
+        {article.content.map((block, i) => (
+          <View key={i}>
+            {!!block.heading && (
+              <Typography variant="body" weight="bold" color={colors.text} style={styles.blockHeading}>
+                {block.heading}
               </Typography>
-            </View>
-            <Typography variant="h3" color={colors.textInverse} style={styles.title}>
-              {article.title}
+            )}
+            <Typography variant="body" color={colors.textSecondary} style={styles.paragraph}>
+              {block.body}
             </Typography>
           </View>
-        </View>
+        ))}
+      </View>
 
-        {/* Byline */}
-        <View style={styles.byline}>
-          <View style={styles.avatar}>
-            <Typography variant="bodySmall" weight="bold" color={colors.primaryDark}>
-              {article.author.charAt(0)}
-            </Typography>
-          </View>
-          <View style={{ flex: 1 }}>
-            <Typography variant="bodySmall" weight="semibold" color={colors.text}>
-              {article.author}
-            </Typography>
-            <Typography variant="caption" color={colors.textTertiary}>
-              {formatDate(article.publishedAt)} · {article.readTime} read
-            </Typography>
-          </View>
-        </View>
-
-        <View style={styles.divider} />
-
-        {/* Body */}
-        <View style={styles.body}>
-          {article.content.map((block, i) => (
-            <View key={i}>
-              {!!block.heading && (
-                <Typography variant="body" weight="bold" color={colors.text} style={styles.blockHeading}>
-                  {block.heading}
+      {/* More reads */}
+      {more.length > 0 && (
+        <View style={styles.moreSection}>
+          <SectionHeader title="More reads" />
+          {more.map((a) => (
+            <PressableScale
+              key={a.id}
+              haptic={false}
+              style={styles.moreRow}
+              onPress={() => {
+                Haptics.selectionAsync();
+                router.push(`/article/${a.id}`);
+              }}
+              accessibilityLabel={a.title}
+            >
+              <Image source={resolveImageSource(a.image)} style={styles.moreThumb} resizeMode="cover" />
+              <View style={{ flex: 1 }}>
+                <Typography variant="caption" color={colors.primary} weight="semibold" uppercase>
+                  {a.category}
                 </Typography>
-              )}
-              <Typography variant="body" color={colors.textSecondary} style={styles.paragraph}>
-                {block.body}
-              </Typography>
-            </View>
+                <Typography variant="bodySmall" weight="semibold" color={colors.text} numberOfLines={2}>
+                  {a.title}
+                </Typography>
+                <Typography variant="caption" color={colors.textTertiary} style={{ marginTop: 2 }}>
+                  {a.readTime} read
+                </Typography>
+              </View>
+            </PressableScale>
           ))}
         </View>
-
-        {/* More reads */}
-        {more.length > 0 && (
-          <View style={styles.moreSection}>
-            <Typography variant="h4" color={colors.text} style={styles.moreTitle}>
-              More reads
-            </Typography>
-            {more.map((a) => (
-              <TouchableOpacity
-                key={a.id}
-                activeOpacity={0.85}
-                style={styles.moreRow}
-                onPress={() => {
-                  Haptics.selectionAsync();
-                  router.push(`/article/${a.id}`);
-                }}
-              >
-                <Image source={resolveImageSource(a.image)} style={styles.moreThumb} resizeMode="cover" />
-                <View style={{ flex: 1 }}>
-                  <Typography variant="caption" color={colors.primary} weight="semibold" uppercase>
-                    {a.category}
-                  </Typography>
-                  <Typography variant="bodySmall" weight="semibold" color={colors.text} numberOfLines={2}>
-                    {a.title}
-                  </Typography>
-                  <Typography variant="caption" color={colors.textTertiary} style={{ marginTop: 2 }}>
-                    {a.readTime} read
-                  </Typography>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
-      </ScrollView>
-    </View>
+      )}
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-  },
-  headerButton: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    flex: 1,
-    textAlign: 'center',
-  },
-  scrollContent: {
-    paddingBottom: spacing['3xl'],
-  },
-  notFound: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   heroWrap: {
-    marginHorizontal: spacing.lg,
     height: 240,
-    borderRadius: borderRadius['2xl'],
+    borderRadius: borderRadius.cardLarge,
     overflow: 'hidden',
     backgroundColor: colors.surfaceVariant,
     justifyContent: 'flex-end',
@@ -206,16 +151,14 @@ const styles = StyleSheet.create({
   },
   categoryPill: {
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(6,19,13,0.75)',
-    borderWidth: 1,
-    borderColor: 'rgba(150,255,31,0.35)',
-    paddingHorizontal: spacing.sm,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: spacing.sm + 2,
     paddingVertical: 4,
-    borderRadius: borderRadius.full,
+    borderRadius: borderRadius.pill,
     marginBottom: spacing.sm,
   },
   categoryPillText: {
-    fontSize: 9,
+    fontSize: 10,
     letterSpacing: 1,
   },
   title: {
@@ -225,25 +168,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    paddingHorizontal: spacing.lg,
     paddingTop: spacing.lg,
   },
   avatar: {
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: colors.secondary,
+    backgroundColor: colors.accentSurface,
     alignItems: 'center',
     justifyContent: 'center',
   },
   divider: {
     height: StyleSheet.hairlineWidth,
     backgroundColor: colors.border,
-    marginHorizontal: spacing.lg,
     marginTop: spacing.lg,
   },
   body: {
-    paddingHorizontal: spacing.lg,
     paddingTop: spacing.lg,
   },
   blockHeading: {
@@ -255,11 +195,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   moreSection: {
-    marginTop: spacing.xl,
-    paddingHorizontal: spacing.lg,
-  },
-  moreTitle: {
-    marginBottom: spacing.md,
+    marginTop: spacing.sectionGap,
   },
   moreRow: {
     flexDirection: 'row',

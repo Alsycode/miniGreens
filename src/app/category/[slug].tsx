@@ -1,26 +1,21 @@
 import React from 'react';
-import { View, ScrollView, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Image } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, {
-  FadeIn,
-  FadeInUp,
-} from 'react-native-reanimated';
-import * as Haptics from 'expo-haptics';
+import Animated, { FadeInUp } from 'react-native-reanimated';
 import { colors, spacing, borderRadius } from '../../theme';
 import { resolveImageSource } from '../../utils/placeholders';
 import { Typography } from '../../components/ui/Typography';
 import { ProductCard } from '../../components/product/ProductCard';
 import { EmptyState } from '../../components/ui/EmptyState';
-import { Loading } from '../../components/ui/Loading';
+import { Skeleton, ProductCardSkeleton } from '../../components/ui/Skeleton';
+import { Screen } from '../../components/layout/Screen';
 import { useCategory, useProducts } from '../../services/catalog';
 
 export default function CategoryScreen() {
   const params = useLocalSearchParams();
   const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
-  const insets = useSafeAreaInsets();
 
   const { category, isLoading: categoryLoading } = useCategory(slug);
   const { products, isLoading: productsLoading } = useProducts();
@@ -28,28 +23,22 @@ export default function CategoryScreen() {
 
   if (categoryLoading || productsLoading) {
     return (
-      <View style={[styles.container, { paddingTop: insets.top }]}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color={colors.text} />
-          </TouchableOpacity>
+      <Screen title="Category">
+        <Skeleton width="100%" height={190} borderRadiusVal={borderRadius.cardLarge} />
+        <View style={styles.productGrid}>
+          {[0, 1, 2, 3].map((i) => (
+            <View key={i} style={styles.productWrapper}>
+              <ProductCardSkeleton />
+            </View>
+          ))}
         </View>
-        <Loading fullScreen message="Loading category..." />
-      </View>
+      </Screen>
     );
   }
 
   if (!category) {
     return (
-      <View style={[styles.container, { paddingTop: insets.top }]}>
-        <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={styles.backButton}
-          >
-            <Ionicons name="arrow-back" size={24} color={colors.text} />
-          </TouchableOpacity>
-        </View>
+      <Screen title="Category" scroll={false}>
         <EmptyState
           icon="folder-open-outline"
           title="Category Not Found"
@@ -57,110 +46,75 @@ export default function CategoryScreen() {
           actionLabel="Go Back"
           onAction={() => router.back()}
         />
-      </View>
+      </Screen>
     );
   }
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <Animated.View entering={FadeIn.duration(280)} style={styles.header}>
-        <TouchableOpacity
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            router.back();
-          }}
-          style={styles.backButton}
-        >
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
-        </TouchableOpacity>
-        <Typography variant="body" weight="semibold">{category.name}</Typography>
-        <View style={styles.backButton} />
-      </Animated.View>
-
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Category Hero */}
-        <Animated.View entering={FadeInUp.delay(60).springify().damping(34).mass(1).stiffness(100)}>
-          <View style={styles.hero}>
-            <Image source={resolveImageSource(category.image)} style={styles.heroImage} />
-            <LinearGradient
-              colors={['transparent', 'rgba(10,36,22,0.82)']}
-              style={StyleSheet.absoluteFill}
-              start={{ x: 0, y: 0.3 }}
-              end={{ x: 0, y: 1 }}
-            />
-            <Animated.View
-              entering={FadeInUp.delay(160).springify().damping(31).mass(1).stiffness(100)}
-              style={styles.heroContent}
-            >
-              <Typography variant="h3" color={colors.textInverse}>
-                {category.name}
-              </Typography>
-              <Typography variant="body" color="rgba(255,255,255,0.82)" style={styles.heroDesc}>
+    <Screen title={category.name}>
+      {/* Category hero: a rounded card, like Home's hero */}
+      <Animated.View entering={FadeInUp.delay(60).springify().damping(34).mass(1).stiffness(100)}>
+        <View style={styles.hero}>
+          <Image source={resolveImageSource(category.image)} style={styles.heroImage} />
+          <LinearGradient
+            colors={['transparent', 'rgba(29,43,32,0.78)']}
+            style={StyleSheet.absoluteFill}
+            start={{ x: 0, y: 0.25 }}
+            end={{ x: 0, y: 1 }}
+          />
+          <Animated.View
+            entering={FadeInUp.delay(160).springify().damping(31).mass(1).stiffness(100)}
+            style={styles.heroContent}
+          >
+            <Typography variant="h3" color={colors.textInverse}>
+              {category.name}
+            </Typography>
+            {category.description ? (
+              <Typography variant="bodySmall" color="rgba(255,255,255,0.85)" style={styles.heroDesc} numberOfLines={2}>
                 {category.description}
               </Typography>
-              <View style={styles.countPill}>
-                <Ionicons name="leaf" size={12} color={colors.secondary} />
-                <Typography variant="caption" color={colors.secondary} weight="semibold" style={{ marginLeft: 4 }}>
-                  {categoryProducts.length} products
-                </Typography>
-              </View>
-            </Animated.View>
-          </View>
-        </Animated.View>
-
-        {/* Products */}
-        <View style={styles.productGrid}>
-          {categoryProducts.map((product, i) => (
-            <Animated.View
-              key={product.id}
-              entering={FadeInUp.delay(200 + i * 60).springify().damping(31).mass(1).stiffness(100)}
-              style={styles.productWrapper}
-            >
-              <ProductCard
-                product={product}
-                index={i}
-                onPress={() => router.push(`/product/${product.slug}`)}
-                style={styles.gridCard}
-              />
-            </Animated.View>
-          ))}
+            ) : null}
+            <View style={styles.countPill}>
+              <Ionicons name="leaf" size={12} color={colors.textInverse} />
+              <Typography variant="caption" color={colors.textInverse} weight="semibold" style={{ marginLeft: 4 }}>
+                {categoryProducts.length} {categoryProducts.length === 1 ? 'product' : 'products'}
+              </Typography>
+            </View>
+          </Animated.View>
         </View>
+      </Animated.View>
 
-        {categoryProducts.length === 0 && (
-          <EmptyState
-            icon="basket-outline"
-            title="No Products Yet"
-            message="This category will have products soon."
-          />
-        )}
-      </ScrollView>
-    </View>
+      {/* Products */}
+      <View style={styles.productGrid}>
+        {categoryProducts.map((product, i) => (
+          <Animated.View
+            key={product.id}
+            entering={FadeInUp.delay(200 + i * 60).springify().damping(31).mass(1).stiffness(100)}
+            style={styles.productWrapper}
+          >
+            <ProductCard
+              product={product}
+              index={i}
+              onPress={() => router.push(`/product/${product.slug}`)}
+              style={styles.gridCard}
+            />
+          </Animated.View>
+        ))}
+      </View>
+
+      {categoryProducts.length === 0 && (
+        <EmptyState icon="basket-outline" title="No Products Yet" message="This category will have products soon." />
+      )}
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    backgroundColor: colors.surface,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   hero: {
-    height: 220,
-    position: 'relative',
+    height: 190,
+    borderRadius: borderRadius.cardLarge,
+    overflow: 'hidden',
+    backgroundColor: colors.surfaceDark,
   },
   heroImage: {
     width: '100%',
@@ -168,29 +122,28 @@ const styles = StyleSheet.create({
   },
   heroContent: {
     position: 'absolute',
-    bottom: spacing.xl,
+    bottom: spacing.lg,
     left: spacing.lg,
     right: spacing.lg,
   },
   heroDesc: {
-    marginVertical: spacing.sm,
-    opacity: 0.85,
+    marginTop: spacing.xs,
   },
   countPill: {
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(150,255,31,0.15)',
-    paddingHorizontal: spacing.sm,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    paddingHorizontal: spacing.sm + 2,
     paddingVertical: 4,
-    borderRadius: borderRadius.full,
-    marginTop: spacing.xs,
+    borderRadius: borderRadius.pill,
+    marginTop: spacing.sm,
   },
   productGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    padding: spacing.md,
     justifyContent: 'space-between',
+    marginTop: spacing.sectionGap / 2,
   },
   productWrapper: {
     width: '48%',

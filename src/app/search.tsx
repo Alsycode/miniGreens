@@ -1,33 +1,37 @@
 import React, { useState, useCallback } from 'react';
-import { View, ScrollView, StyleSheet, TouchableOpacity, Pressable } from 'react-native';
+import { View, ScrollView, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-  FadeInUp,
-  ZoomIn,
-} from 'react-native-reanimated';
+import Animated, { FadeInUp, ZoomIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { colors, spacing, borderRadius } from '../theme';
 import { Typography } from '../components/ui/Typography';
 import { SearchBar } from '../components/ui/SearchBar';
 import { ProductCard } from '../components/product/ProductCard';
 import { EmptyState } from '../components/ui/EmptyState';
-import { Loading } from '../components/ui/Loading';
-import { searchSuggestions } from '../mock';
-import { useProducts } from '../services/catalog';
+import { ProductCardSkeleton } from '../components/ui/Skeleton';
+import { PressableScale } from '../components/ui/PressableScale';
+import { Screen } from '../components/layout/Screen';
+import { HeaderIconButton } from '../components/layout/ScreenHeader';
+import { useProducts, useCategories } from '../services/catalog';
 import { useAppStore } from '../store/useAppStore';
 
 export default function SearchScreen() {
-  const insets = useSafeAreaInsets();
   const [query, setQuery] = useState('');
   const recentSearches = useAppStore((s) => s.searchHistory);
   const addSearchHistory = useAppStore((s) => s.addSearchHistory);
   const clearSearchHistory = useAppStore((s) => s.clearSearchHistory);
   const { products, isLoading } = useProducts();
+  const { categories } = useCategories();
+
+  // Suggestions come from the live catalogue: category names, then best-seller names.
+  const suggestions = React.useMemo(() => {
+    const names = [
+      ...categories.map((c) => c.name),
+      ...products.filter((p) => p.isBestSeller).map((p) => p.name.replace(/\s*\(.*\)\s*$/, '')),
+    ];
+    return Array.from(new Set(names)).slice(0, 6);
+  }, [categories, products]);
 
   const recordSearch = useCallback(
     (raw: string) => {
@@ -36,11 +40,6 @@ export default function SearchScreen() {
     },
     [addSearchHistory]
   );
-
-  const headerScale = useSharedValue(1);
-  const headerAnimStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: headerScale.value }],
-  }));
 
   const searchResults = query.trim()
     ? products.filter(
@@ -55,36 +54,24 @@ export default function SearchScreen() {
   }, []);
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <Animated.View style={[styles.header, headerAnimStyle]}>
-        <View style={styles.headerContent}>
-          <TouchableOpacity
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              router.back();
-            }}
-            style={styles.backButton}
-          >
-            <Ionicons name="arrow-back" size={24} color={colors.text} />
-          </TouchableOpacity>
-          <Animated.View
-            entering={FadeInUp.delay(40).springify().damping(31).mass(1).stiffness(100)}
-            style={styles.searchWrapper}
-          >
-            <SearchBar
-              value={query}
-              onChangeText={setQuery}
-              onSubmit={() => recordSearch(query)}
-              onClear={() => setQuery('')}
-              placeholder="Search products..."
-              autoFocus
-            />
-          </Animated.View>
+    <Screen showBack={false} scroll={false} bleed>
+      {/* Back button + Home-style search pill */}
+      <Animated.View entering={FadeInUp.delay(40).springify().damping(31).mass(1).stiffness(100)} style={styles.searchRow}>
+        <HeaderIconButton icon="arrow-back" onPress={() => router.back()} label="Go back" />
+        <View style={styles.searchWrapper}>
+          <SearchBar
+            value={query}
+            onChangeText={setQuery}
+            onSubmit={() => recordSearch(query)}
+            onClear={() => setQuery('')}
+            placeholder="Search products..."
+            autoFocus
+          />
         </View>
       </Animated.View>
 
       {query.length === 0 ? (
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
           {/* Recent Searches */}
           {recentSearches.length > 0 && (
             <Animated.View entering={FadeInUp.delay(80).springify().damping(31).mass(1).stiffness(100)} style={styles.section}>
@@ -92,24 +79,25 @@ export default function SearchScreen() {
                 <Typography variant="bodySmall" color={colors.textTertiary} uppercase weight="medium">
                   Recent
                 </Typography>
-                <TouchableOpacity
-                  onPress={() => {
-                    Haptics.selectionAsync();
-                    clearSearchHistory();
-                  }}
+                <PressableScale
+                  onPress={clearSearchHistory}
+                  scaleTo={0.96}
+                  haptic={false}
+                  accessibilityLabel="Clear recent searches"
                 >
-                  <Typography variant="caption" color={colors.primary}>
+                  <Typography variant="caption" color={colors.primary} weight="semibold">
                     Clear
                   </Typography>
-                </TouchableOpacity>
+                </PressableScale>
               </View>
               {recentSearches.map((search, index) => (
                 <Animated.View
                   key={index}
                   entering={FadeInUp.delay(100 + index * 60).springify().damping(31).mass(1).stiffness(100)}
                 >
-                  <Pressable
+                  <PressableScale
                     style={styles.recentItem}
+                    haptic={false}
                     onPress={() => {
                       Haptics.selectionAsync();
                       setQuery(search);
@@ -120,7 +108,7 @@ export default function SearchScreen() {
                     <Typography variant="body" color={colors.textSecondary} style={{ marginLeft: spacing.md }}>
                       {search}
                     </Typography>
-                  </Pressable>
+                  </PressableScale>
                 </Animated.View>
               ))}
             </Animated.View>
@@ -128,45 +116,49 @@ export default function SearchScreen() {
 
           {/* Suggestions */}
           <Animated.View entering={FadeInUp.delay(280).springify().damping(31).mass(1).stiffness(100)} style={styles.section}>
-            <Typography
-              variant="bodySmall"
-              color={colors.textTertiary}
-              uppercase
-              weight="medium"
-              style={styles.suggestionsTitle}
-            >
+            <Typography variant="bodySmall" color={colors.textTertiary} uppercase weight="medium" style={styles.suggestionsTitle}>
               Suggestions
             </Typography>
             <View style={styles.suggestionsGrid}>
-              {searchSuggestions.slice(0, 6).map((suggestion, i) => (
+              {suggestions.map((suggestion, i) => (
                 <Animated.View
-                  key={suggestion.id}
+                  key={suggestion}
                   entering={ZoomIn.delay(300 + i * 40).springify().damping(24).mass(1).stiffness(100)}
                 >
-                  <Pressable
+                  <PressableScale
                     style={styles.suggestionChip}
+                    scaleTo={0.96}
+                    haptic={false}
                     onPress={() => {
                       Haptics.selectionAsync();
-                      setQuery(suggestion.text);
-                      recordSearch(suggestion.text);
+                      setQuery(suggestion);
+                      recordSearch(suggestion);
                     }}
                   >
                     <Typography variant="bodySmall" color={colors.primary} weight="medium">
-                      {suggestion.text}
+                      {suggestion}
                     </Typography>
-                  </Pressable>
+                  </PressableScale>
                 </Animated.View>
               ))}
             </View>
           </Animated.View>
         </ScrollView>
       ) : isLoading ? (
-        <Loading message="Searching..." />
-      ) : searchResults.length > 0 ? (
         <ScrollView contentContainerStyle={styles.resultsContainer}>
+          <View style={styles.resultsGrid}>
+            {[0, 1, 2, 3].map((i) => (
+              <View key={i} style={styles.productWrapper}>
+                <ProductCardSkeleton />
+              </View>
+            ))}
+          </View>
+        </ScrollView>
+      ) : searchResults.length > 0 ? (
+        <ScrollView contentContainerStyle={styles.resultsContainer} keyboardShouldPersistTaps="handled">
           <Animated.View entering={FadeInUp.springify().damping(31).mass(1).stiffness(100)}>
             <Typography variant="bodySmall" color={colors.textTertiary} style={styles.resultsCount}>
-              {searchResults.length} result{searchResults.length !== 1 ? 's' : ''} for "{query}"
+              {searchResults.length} result{searchResults.length !== 1 ? 's' : ''} for &quot;{query}&quot;
             </Typography>
           </Animated.View>
           <View style={styles.resultsGrid}>
@@ -193,31 +185,18 @@ export default function SearchScreen() {
           message={`Nothing matched "${query}". Try a different search.`}
         />
       )}
-    </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  header: {
-    backgroundColor: colors.surface,
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.md,
-  },
-  headerContent: {
+  searchRow: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing.sm,
+    gap: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.md,
   },
   searchWrapper: {
     flex: 1,
@@ -250,7 +229,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.full,
+    borderRadius: borderRadius.pill,
     borderWidth: 1,
     borderColor: colors.border,
     marginRight: spacing.sm,

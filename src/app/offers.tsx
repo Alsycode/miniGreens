@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
-import { View, ScrollView, StyleSheet, TouchableOpacity, Pressable } from 'react-native';
-import { router } from 'expo-router';
+import { View, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
+import Animated, { FadeInUp } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import * as Clipboard from 'expo-clipboard';
 import { colors, spacing, borderRadius, shadows } from '../theme';
 import { Typography } from '../components/ui/Typography';
-import { Loading } from '../components/ui/Loading';
 import { ErrorNotice } from '../components/ui/ErrorNotice';
 import { EmptyState } from '../components/ui/EmptyState';
+import { Skeleton } from '../components/ui/Skeleton';
+import { PressableScale } from '../components/ui/PressableScale';
+import { StatusPill } from '../components/ui/StatusPill';
+import { Screen } from '../components/layout/Screen';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/useAuthStore';
 import type { Database } from '../types/database';
@@ -27,7 +29,6 @@ function formatExpiry(iso: string) {
 }
 
 export default function OffersScreen() {
-  const insets = useSafeAreaInsets();
   const profile = useAuthStore((s) => s.profile);
   const [copied, setCopied] = useState<string | null>(null);
 
@@ -65,58 +66,51 @@ export default function OffersScreen() {
   }
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            router.back();
-          }}
-          style={styles.headerButton}
-        >
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
-        </TouchableOpacity>
-        <Typography variant="body" weight="semibold">My Offers</Typography>
-        <View style={styles.headerButton} />
-      </View>
+    <Screen title="My Offers">
+      <Typography variant="bodySmall" color={colors.textSecondary} style={styles.intro}>
+        Tap a code to copy it, then paste it at checkout.
+      </Typography>
+
+      <ErrorNotice
+        message={isError ? 'Could not load offers. Tap to retry.' : null}
+        title="Offers unavailable"
+        onDismiss={() => refetch()}
+      />
 
       {isLoading ? (
-        <Loading fullScreen message="Loading offers" />
+        <>
+          {[0, 1].map((i) => (
+            <View key={i} style={styles.card}>
+              <Skeleton width={84} height={24} borderRadiusVal={borderRadius.pill} />
+              <Skeleton width="70%" height={13} style={{ marginTop: spacing.md }} />
+              <Skeleton width="100%" height={44} borderRadiusVal={borderRadius.md} style={{ marginTop: spacing.lg }} />
+            </View>
+          ))}
+        </>
       ) : (
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-          <ErrorNotice
-            message={isError ? 'Could not load offers. Pull to retry.' : null}
-            title="Offers unavailable"
-            onDismiss={() => refetch()}
-          />
-
-          <Typography variant="caption" color={colors.textTertiary} style={styles.intro}>
-            Tap a code to copy it, then paste it at checkout.
-          </Typography>
-
+        <>
           {!isError && visible.length === 0 && (
             <EmptyState
               icon="pricetags-outline"
               title="No offers right now"
-              message="Check back soon — new coupons and seasonal deals show up here."
+              message="Check back soon. New coupons and seasonal deals show up here."
             />
           )}
 
-          {visible.map((d) => (
-            <View key={d.id} style={styles.card}>
+          {visible.map((d, i) => (
+            <Animated.View
+              key={d.id}
+              entering={FadeInUp.delay(i * 70).springify().damping(31).mass(1).stiffness(100)}
+              style={styles.card}
+            >
               <View style={styles.cardTop}>
                 <View style={styles.valuePill}>
-                  <Typography variant="caption" weight="bold" color={colors.primary}>
+                  <Typography variant="caption" weight="bold" color={colors.primaryDark}>
                     {valueLabel(d)}
                   </Typography>
                 </View>
                 {d.is_birthday_offer && (
-                  <View style={styles.birthdayPill}>
-                    <Ionicons name="gift-outline" size={12} color={colors.secondary} />
-                    <Typography variant="caption" weight="bold" color={colors.secondary} style={{ marginLeft: 4 }}>
-                      BIRTHDAY
-                    </Typography>
-                  </View>
+                  <StatusPill label="Birthday" tone="brand" />
                 )}
               </View>
 
@@ -139,7 +133,13 @@ export default function OffersScreen() {
                 )}
               </View>
 
-              <Pressable style={styles.codeRow} onPress={() => copyCode(d.code as string)}>
+              <PressableScale
+                style={styles.codeRow}
+                haptic={false}
+                scaleTo={0.98}
+                onPress={() => copyCode(d.code as string)}
+                accessibilityLabel={`Copy code ${d.code}`}
+              >
                 <View style={styles.codeBox}>
                   <Typography variant="body" weight="bold" color={colors.text} style={styles.codeText}>
                     {d.code}
@@ -155,31 +155,21 @@ export default function OffersScreen() {
                     {copied === d.code ? 'Copied' : 'Tap to copy'}
                   </Typography>
                 </View>
-              </Pressable>
-            </View>
+              </PressableScale>
+            </Animated.View>
           ))}
-        </ScrollView>
+        </>
       )}
-    </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-  },
-  headerButton: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  scrollContent: { paddingHorizontal: spacing.lg, paddingBottom: spacing['3xl'] },
   intro: { marginBottom: spacing.lg },
   card: {
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.xl,
-    borderWidth: 1,
+    borderRadius: borderRadius.card,
+    borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.border,
     padding: spacing.lg,
     marginBottom: spacing.lg,
@@ -187,20 +177,10 @@ const styles = StyleSheet.create({
   },
   cardTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   valuePill: {
-    backgroundColor: colors.primaryBg,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
-    borderRadius: borderRadius.full,
-  },
-  birthdayPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(6,19,13,0.75)',
-    borderWidth: 1,
-    borderColor: 'rgba(150,255,31,0.35)',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
-    borderRadius: borderRadius.full,
+    backgroundColor: colors.accentSurface,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 5,
+    borderRadius: borderRadius.pill,
   },
   cardDesc: { marginTop: spacing.md, lineHeight: 19 },
   metaRow: {
@@ -219,7 +199,7 @@ const styles = StyleSheet.create({
     flex: 1,
     borderWidth: 1,
     borderStyle: 'dashed',
-    borderColor: colors.border,
+    borderColor: colors.borderAccent,
     borderRadius: borderRadius.md,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
