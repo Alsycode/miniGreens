@@ -130,7 +130,6 @@ function trustRow(categorySlug: string | undefined) {
 const PHOTO_NOTES: Record<string, string[]> = {
   "tea-blends": ["Steep. Sip.", "Breathe."],
   microgreens: ["Cut the", "morning it", "ships."],
-  smoothies: ["Blended", "today."],
   juices: ["Pressed", "at dawn."],
 };
 
@@ -142,7 +141,7 @@ function brewSteps(categorySlug: string | undefined, tips: string[]): string[] {
       "Add a squeeze of lemon or a little honey to taste.",
       "Enjoy up to 3 cups a day, any time. It's naturally caffeine-free.",
     ];
-  if (categorySlug === "smoothies" || categorySlug === "juices")
+  if (categorySlug === "juices")
     return [
       "Shake well before opening, then serve chilled.",
       "No added sugar, water or preservatives — best enjoyed the day it arrives.",
@@ -150,7 +149,7 @@ function brewSteps(categorySlug: string | undefined, tips: string[]): string[] {
     ];
   return [
     "Rinse gently in cold water and pat dry before use.",
-    "Add raw to salads, sandwiches, bowls, juices or smoothies.",
+    "Add raw to salads, sandwiches, bowls or juices.",
     "Keep refrigerated and use within 5–7 days for peak freshness.",
   ];
 }
@@ -487,7 +486,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         <section className="relative isolate h-[380px] overflow-hidden lg:h-[460px]">
           <Image
             src="/images/story/shop-hero.webp"
-            alt="Fresh microgreens, juices and smoothies on a farm table above misty hills"
+            alt="Fresh microgreens and juices on a farm table above misty hills"
             fill
             sizes="100vw"
             className="-z-10 object-cover object-[75%_center]"

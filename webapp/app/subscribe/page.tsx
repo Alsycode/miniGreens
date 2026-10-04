@@ -35,8 +35,8 @@ export default function SubscribePage() {
   const [selections, setSelections] = useState<Record<number, string[]>>({});
   const [loadingProducts, setLoadingProducts] = useState(true);
 
-  // Fetch real product names for each pickable slot (e.g. "2 smoothies" -> which two
-  // smoothies), so people can see and choose exactly what fills their plan instead of
+  // Fetch real product names for each pickable slot (e.g. "2 juices" -> which two
+  // juices), so people can see and choose exactly what fills their plan instead of
   // just a generic count.
   useEffect(() => {
     if (categorySlugs.length === 0) {

@@ -5,7 +5,7 @@ export default async function ProductsPage() {
   const supabase = await createSupabaseServerClient();
   const [{ data: products }, { data: categories }] = await Promise.all([
     supabase.from("products").select("*").order("created_at", { ascending: false }),
-    supabase.from("categories").select("*").order("name", { ascending: true }),
+    supabase.from("categories").select("*").order("sort_order").order("name"),
   ]);
 
   return (

@@ -1,19 +1,7 @@
-// Shared category ordering; mirrors the mobile app's CATEGORY_ORDER in
-// `src/app/(tabs)/explore.tsx`. Tea-first, then the fresh lines; anything else
-// trails. Keep the two in sync.
-
-export const CATEGORY_ORDER = [
-  "tea-blends",
-  "microgreens",
-  "smoothies",
-  "juices",
-  "bowls",
-] as const;
-
-export function catRank(slug: string): number {
-  const i = CATEGORY_ORDER.indexOf(slug as (typeof CATEGORY_ORDER)[number]);
-  return i === -1 ? 99 : i;
-}
+// Categories (which exist, their order, whether they're shown) are managed in the admin
+// panel and read from the `categories` table (`sort_order`, `is_active`). Only the optional
+// hero copy below is keyed by slug; categories without an entry fall back to a heading built
+// from the category's own name and description (see `categoryCopy`).
 
 // Per-category shop hero copy. Falls back to the "everything" heading.
 export const SHOP_COPY: Record<
@@ -34,12 +22,6 @@ export const SHOP_COPY: Record<
     blurb:
       "Nothing sits in a warehouse. Pick your greens, choose a slot, and we harvest the morning your box goes out.",
   },
-  smoothies: {
-    eyebrow: "Smoothies",
-    title: "Blended Fresh,",
-    accent: "Never From Concentrate",
-    blurb: "Cold-blended fruit and microgreens, bottled the day they reach you.",
-  },
   juices: {
     eyebrow: "Cold-Pressed Juices",
     title: "Pressed That Morning,",
@@ -53,5 +35,18 @@ export const SHOP_COPY_DEFAULT = {
   title: "Everything We Grow,",
   accent: "In One Place",
   blurb:
-    "Tea blends, microgreens, cold-pressed juices and smoothies, all farm-fresh from Mini Greens.",
+    "Tea blends, microgreens and cold-pressed juices, all farm-fresh from Mini Greens.",
 };
+
+/** Hero copy for a category: the curated entry if there is one, else built from the DB row. */
+export function categoryCopy(cat: { slug: string; name: string; description: string | null } | null) {
+  if (!cat) return SHOP_COPY_DEFAULT;
+  return (
+    SHOP_COPY[cat.slug] ?? {
+      eyebrow: "Shop",
+      title: cat.name,
+      accent: "",
+      blurb: cat.description ?? SHOP_COPY_DEFAULT.blurb,
+    }
+  );
+}

@@ -419,7 +419,7 @@ export default function ProductsClient({
                 >
                   <option value="">No category</option>
                   {categories.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
+                    <option key={c.id} value={c.id}>{c.name}{c.is_active ? "" : " (hidden)"}</option>
                   ))}
                 </select>
                 <div className="grid grid-cols-2 gap-3">

@@ -3,14 +3,9 @@
 // column is empty in the current seed, so both apps fall back to this local set
 // so they show identical imagery. Files live in `public/images/products/`.
 
-// Microgreens and smoothies use the white-background set in products/white/
+// Microgreens and drinks use the white-background set in products/white/
 // (Kling renders, see IMAGE_PROMPTS.md).
 const LOCAL_IMAGE_BY_SLUG: Record<string, string> = {
-  "strawberry-banana-glow": "/images/products/white/strawberry-banana-glow.png",
-  "mango-fresh": "/images/products/white/mango-fresh.png",
-  "choco-chill": "/images/products/white/choco-chill.png",
-  "papaya-glow": "/images/products/white/papaya-glow.png",
-  "mint-melon-smoothie": "/images/products/white/mint-melon-smoothie.png",
   "carrot-lemon-radish-microgreens-juice": "/images/products/white/carrot-lemon-radish-juice.jpg",
   "cucumber-splash": "/images/products/white/cucumber-splash.png",
   "apple-sprout": "/images/products/white/apple-sprout.png",
@@ -50,7 +45,6 @@ const GALLERY_EXTRAS_BY_SLUG: Record<string, string[]> = {
 };
 
 const LOCAL_CATEGORY_IMAGE_BY_SLUG: Record<string, string> = {
-  smoothies: "/images/products/category-smoothies.jpeg",
   juices: "/images/products/category-juices.jpeg",
   microgreens: "/images/products/category-microgreens-sage.jpg",
   "tea-blends": "/images/tea/blends/green-vitality.png",
@@ -89,17 +83,12 @@ export function resolveCategoryImage(
   return LOCAL_CATEGORY_IMAGE_BY_SLUG[slug] ?? null;
 }
 
-// Bottle-shot drinks (smoothies/juices) are styled with the bottle taking only ~55% of
+// Bottle-shot drinks (juices) are styled with the bottle taking only ~55% of
 // the frame height, by design, so garnish has room around the base. That reads fine as a
 // single product photo, but in a square card grid next to microgreen trays (which fill
 // ~70% of their frame) it leaves so much white margin the card looks empty/oversized.
 // Zoom these specifically so the bottle fills the card like everything else does.
 const BOTTLE_IMAGE_FILENAMES = new Set([
-  "choco-chill.png",
-  "mango-fresh.png",
-  "mint-melon-smoothie.png",
-  "papaya-glow.png",
-  "strawberry-banana-glow.png",
   "apple-sprout.png",
   "cucumber-splash.png",
   "sweet-lime-spark.png",

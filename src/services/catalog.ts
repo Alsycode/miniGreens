@@ -18,7 +18,7 @@ type CategoryRow = Database['public']['Tables']['categories']['Row'];
 const LOCAL_IMAGE_BY_SLUG: Record<string, number> = {
   'strawberry-banana-glow': require('../assets/strawberry-banana.png'),
   'mango-fresh': require('../assets/Mango Fresh.png'),
-  'choco-chill': require('../assets/choco-chill.jpg'),
+  'choco-chill': require('../assets/choco-chill.png'),
   'papaya-glow': require('../assets/papaya-glow.png'),
   'mint-melon-smoothie': require('../assets/mint-melon.png'),
   'carrot-lemon-radish-microgreens-juice': require('../assets/carrot-lemon-juice.png'),
@@ -27,7 +27,7 @@ const LOCAL_IMAGE_BY_SLUG: Record<string, number> = {
   'sweet-lime-spark': require('../assets/sweet-lime.png'),
   'watermelon-fresh': require('../assets/watermelon-fresh.png'),
   'pink-radish': require('../assets/redraddish.png'),
-  'white-radish': require('../assets/whiteraddish.webp'),
+  'white-radish': require('../assets/whiteraddish.png'),
   'wheatgrass': require('../assets/wheatgrass.png'),
   'beetroot': require('../assets/beetroot.png'),
   'pak-choi': require('../assets/bokchoy.png'),
@@ -40,15 +40,15 @@ const LOCAL_IMAGE_BY_SLUG: Record<string, number> = {
   'red-amaranth': require('../assets/red-amaranth.png'),
   'red-cabbage': require('../assets/redcabbage.png'),
 
-  // Tea blends (assets/ at repo root — client-supplied artwork).
-  'green-vitality-bag': require('../../assets/Green Vitality (Bag).png'),
-  'green-lemon-bag': require('../../assets/Green Lemon (Bag).png'),
-  'green-detox-bag': require('../../assets/Green Detox (Bag).png'),
-  'green-masala-bag': require('../../assets/Green Masala (Bag).png'),
-  'mint-green-bag': require('../../assets/Mint Green (Bag).png'),
-  'green-apple-bag': require('../../assets/Green Apple (Bag).png'),
-  'ginger-green-bag': require('../../assets/Ginger Green (Bag).png'),
-  'green-hibiscus-bag': require('../../assets/Green Hibiscus (Bag).png'),
+  // Tea blends: lifestyle photography (with background) of the tube artwork.
+  'green-vitality-bag': require('../../assets/tea-blends/green-vitality.png'),
+  'green-lemon-bag': require('../../assets/tea-blends/green-lemon.png'),
+  'green-detox-bag': require('../../assets/tea-blends/green-detox.png'),
+  'green-masala-bag': require('../../assets/tea-blends/green-masala.png'),
+  'mint-green-bag': require('../../assets/tea-blends/mint-green.png'),
+  'green-apple-bag': require('../../assets/tea-blends/green-apple.png'),
+  'ginger-green-bag': require('../../assets/tea-blends/ginger-green.png'),
+  'green-hibiscus-bag': require('../../assets/tea-blends/green-hibiscus.png'),
 };
 
 const LOCAL_CATEGORY_IMAGE_BY_SLUG: Record<string, number> = {
@@ -190,7 +190,7 @@ export function useCategories() {
     queryKey: ['categories'],
     queryFn: async (): Promise<Category[]> => {
       const [{ data: cats, error: catErr }, { data: prods, error: prodErr }] = await Promise.all([
-        supabase.from('categories').select('*').order('name'),
+        supabase.from('categories').select('*').eq('is_active', true).order('sort_order').order('name'),
         supabase.from('products').select('category_id').eq('is_available', true),
       ]);
       if (catErr) throw catErr;

@@ -8,10 +8,11 @@ import { productImageFit } from "@/lib/productImages";
 import { QuickAdd } from "@/components/home/QuickAdd";
 import { SHOW_RATINGS } from "@/lib/reviews";
 
+// Short card labels for the original ranges; any category added in the admin falls back to
+// its own name.
 const CATEGORY_LABEL: Record<string, string> = {
   "tea-blends": "Tea Bag",
   microgreens: "Microgreens",
-  smoothies: "Smoothie",
   juices: "Juice",
 };
 
@@ -23,9 +24,9 @@ export function HomeProductCard({ product }: { product: HomeProduct }) {
   return (
     <div className="group flex h-full flex-col overflow-hidden rounded-2xl border border-black/[0.06] bg-white shadow-[0_2px_14px_rgba(31,58,36,0.08)] transition-shadow hover:shadow-[0_8px_28px_rgba(31,58,36,0.16)]">
       <Link href={`/shop/${product.slug}`} className="relative block aspect-square overflow-hidden bg-(--color-cream)">
-        {product.category && CATEGORY_LABEL[product.category] && (
+        {product.category && (CATEGORY_LABEL[product.category] ?? product.categoryName) && (
           <span className="absolute left-3 top-3 z-10 rounded-full bg-white/90 px-2.5 py-1 text-xs font-semibold text-(--color-forest)">
-            {CATEGORY_LABEL[product.category]}
+            {CATEGORY_LABEL[product.category] ?? product.categoryName}
           </span>
         )}
         {product.image ? (

@@ -2,7 +2,7 @@ import { Product, Category, Banner, LifestyleArticle, Testimonial, SubscriptionP
 
 // Product images
 const wheatgrassImg = require('../assets/wheatgrass.png');
-const whiteRadishImg = require('../assets/whiteraddish.webp');
+const whiteRadishImg = require('../assets/whiteraddish.png');
 const redRadishImg = require('../assets/redraddish.png');
 const beetrootImg = require('../assets/beetroot.png');
 const bokChoyImg = require('../assets/bokchoy.png');
@@ -10,7 +10,7 @@ const sunflowerImg = require('../assets/sunflowershoots.png');
 const redCabbageImg = require('../assets/redcabbage.png');
 const strawberryBananaImg = require('../assets/strawberry-banana.png');
 const mangoFreshImg = require('../assets/Mango Fresh.png');
-const chocChillImg = require('../assets/choco-chill.jpg');
+const chocChillImg = require('../assets/choco-chill.png');
 const papayaGlowImg = require('../assets/papaya-glow.png');
 const mintMelonImg = require('../assets/mint-melon.png');
 const carrotLemonJuiceImg = require('../assets/carrot-lemon-juice.png');
@@ -26,11 +26,12 @@ const turnipImg = require('../assets/turnip.png');
 const redAmaranthImg = require('../assets/red-amaranth.png');
 const heroBannerImg = require('../assets/bannerpic.jpeg');
 
-// Category + editorial imagery
-const smoothieImg = require('../assets/smoothie.jpeg');
-const juiceImg = require('../assets/juice.jpeg');
-const microgreensImg = require('../assets/microgreens.jpeg');
-const bowlsImg = require('../assets/bowls.jpeg');
+// Lifestyle article imagery — light, sunlit photography (matches webapp's Journal
+// section) instead of the dark-background product-shot photos used elsewhere.
+const articleColdPressedImg = require('../assets/article-cold-pressed.png');
+const articleSmoothieVsJuiceImg = require('../assets/article-smoothie-vs-juice.png');
+const articleMorningRitualsImg = require('../assets/article-morning-rituals.png');
+const articleSustainableSippingImg = require('../assets/article-sustainable-sipping.png');
 
 // SVG placeholder generator - works without network
 function ph(name: string, color: string, w = 400, h = 400): string {
@@ -62,7 +63,7 @@ export const lifestyleArticles: LifestyleArticle[] = [
     slug: 'why-cold-pressed-juice-is-a-game-changer',
     title: 'Why Cold-Pressed Juice is a Game Changer',
     excerpt: 'Discover how our cold-press process preserves nutrients and flavor better than traditional juicing.',
-    image: heroBannerImg as any,
+    image: articleColdPressedImg as any,
     category: 'Wellness',
     readTime: '5 min',
     author: 'Dr. Anjali Rao',
@@ -80,7 +81,7 @@ export const lifestyleArticles: LifestyleArticle[] = [
     slug: 'smoothies-vs-juices-which-is-better',
     title: 'Smoothies vs Juices: Which is Better?',
     excerpt: 'Understanding the difference so you can pick what your body needs.',
-    image: bowlsImg as any,
+    image: articleSmoothieVsJuiceImg as any,
     category: 'Nutrition',
     readTime: '4 min',
     author: 'Meera Nair',
@@ -98,7 +99,7 @@ export const lifestyleArticles: LifestyleArticle[] = [
     slug: 'morning-rituals-for-a-healthier-you',
     title: 'Morning Rituals for a Healthier You',
     excerpt: 'Simple routines that transform your energy and focus — starting with the right breakfast drink.',
-    image: juiceImg as any,
+    image: articleMorningRitualsImg as any,
     category: 'Lifestyle',
     readTime: '6 min',
     author: 'Kabir Menon',
@@ -117,7 +118,7 @@ export const lifestyleArticles: LifestyleArticle[] = [
     slug: 'sustainable-sipping-good-for-you-good-for-earth',
     title: 'Sustainable Sipping: Good for You, Good for Earth',
     excerpt: 'How choosing fresh, local ingredients helps the planet while nourishing your body.',
-    image: microgreensImg as any,
+    image: articleSustainableSippingImg as any,
     category: 'Sustainability',
     readTime: '3 min',
     author: 'Tara Iyer',
@@ -133,16 +134,16 @@ export const lifestyleArticles: LifestyleArticle[] = [
 ];
 
 export const testimonials: Testimonial[] = [
-  { id: 'test-1', name: 'Priya Sharma', avatar: avatarPh('P'), role: 'Wellness Coach', content: 'MiniGreens smoothies are my daily go-to. The Mango Fresh is absolutely divine — tastes like real Alphonso mangoes!', rating: 5 },
+  { id: 'test-1', name: 'Priya Sharma', avatar: avatarPh('P'), role: 'Wellness Coach', content: 'MiniGreens juices are my daily go-to. The Mango Fresh is absolutely divine — tastes like real Alphonso mangoes!', rating: 5 },
   { id: 'test-2', name: 'Rohan Mehta', avatar: avatarPh('R'), role: 'Fitness Enthusiast', content: 'The Choco Chill changed my post-workout game. Tastes like dessert but packed with protein. I\'m hooked.', rating: 5 },
   { id: 'test-3', name: 'Ananya Patel', avatar: avatarPh('A'), role: 'Busy Mom', content: 'Finally, healthy drinks my kids actually love! The Apple Sprout and Strawberry Banana Glow are household favorites.', rating: 5 },
   { id: 'test-4', name: 'Vikram Rao', avatar: avatarPh('V'), role: 'Chef', content: 'As a chef, I appreciate the freshness. The Carrot, Lemon & Radish Microgreens Juice is bold and beautifully balanced.', rating: 5 },
 ];
 
 export const subscriptionPlans: SubscriptionPlan[] = [
-  { id: 'sub-1', name: 'Starter', description: 'Perfect for individuals starting their wellness journey', price: 399, unit: 'week', deliveryFrequency: 'Weekly', items: ['2 smoothies of your choice', '1 fresh juice', 'Free delivery'], benefits: ['Free delivery', 'Flexible skip', 'Cancel anytime'], isPopular: false, color: '#6f8f4a' },
-  { id: 'sub-2', name: 'Wellness', description: 'Our most popular plan for daily freshness', price: 699, unit: 'week', deliveryFrequency: 'Weekly', items: ['4 smoothies of your choice', '3 fresh juices', '1 seasonal special'], benefits: ['Free delivery', 'Priority support', 'Exclusive recipes', 'Cancel anytime'], isPopular: true, color: '#6f8f4a' },
-  { id: 'sub-3', name: 'Family', description: 'Complete freshness for the whole family', price: 1199, unit: 'week', deliveryFrequency: 'Weekly', items: ['6 smoothies of your choice', '6 fresh juices', '2 seasonal specials', 'Family-size portions'], benefits: ['Free delivery', 'Priority support', '15% off add-ons', 'Family recipes', 'Cancel anytime'], isPopular: false, color: '#6f8f4a' },
+  { id: 'sub-1', name: 'Starter', description: 'Perfect for individuals starting their wellness journey', price: 399, unit: 'week', deliveryFrequency: 'Weekly', items: ['2 juices of your choice', '1 fresh juice', 'Free delivery'], benefits: ['Free delivery', 'Flexible skip', 'Cancel anytime'], isPopular: false, color: '#6f8f4a' },
+  { id: 'sub-2', name: 'Wellness', description: 'Our most popular plan for daily freshness', price: 699, unit: 'week', deliveryFrequency: 'Weekly', items: ['4 juices of your choice', '3 fresh juices', '1 seasonal special'], benefits: ['Free delivery', 'Priority support', 'Exclusive recipes', 'Cancel anytime'], isPopular: true, color: '#6f8f4a' },
+  { id: 'sub-3', name: 'Family', description: 'Complete freshness for the whole family', price: 1199, unit: 'week', deliveryFrequency: 'Weekly', items: ['6 juices of your choice', '6 fresh juices', '2 seasonal specials', 'Family-size portions'], benefits: ['Free delivery', 'Priority support', '15% off add-ons', 'Family recipes', 'Cancel anytime'], isPopular: false, color: '#6f8f4a' },
   { id: 'sub-4', name: 'Active Greens Box', description: 'Curated microgreens box for the health-conscious — fresh, vibrant, and nutrient-dense', price: 499, unit: 'week', deliveryFrequency: 'Weekly', items: ['3 microgreens of your choice', '1 seasonal special', 'Care instructions & recipes'], benefits: ['Free delivery', 'Flexible skip', 'Cancel anytime'], isPopular: false, color: '#6f8f4a' },
   { id: 'sub-5', name: 'Golden Years Box', description: 'Nourishing microgreens crafted for senior wellness — gentle on digestion, big on nutrition', price: 599, unit: 'week', deliveryFrequency: 'Weekly', items: ['2 nutrient-dense microgreens', '1 wellness shot pack', 'Senior-friendly recipes'], benefits: ['Free delivery', 'Flexible skip', 'Cancel anytime'], isPopular: false, color: '#FFA726' },
   { id: 'sub-6', name: 'Workplace Wellness Box', description: 'Keep your team thriving with fresh microgreens delivered to the office every week', price: 699, unit: 'week', deliveryFrequency: 'Weekly', items: ['5 assorted microgreens', '2 wellness shots', 'Team recipes & tips'], benefits: ['Free delivery', 'Priority support', 'Bulk ordering', 'Cancel anytime'], isPopular: true, color: '#42A5F5' },
@@ -162,15 +163,15 @@ export const addresses: Address[] = [
 export const profile: Profile = {
   id: 'user-1', fullName: 'Riya Kapoor', email: 'riya@minigreens.com', phone: '+91 98765 43210',
   avatar: avatarPh('R'),
-  dateOfBirth: '1995-08-22', preferences: ['Smoothies', 'Organic', 'Seasonal'],
+  dateOfBirth: '1995-08-22', preferences: ['Juices', 'Organic', 'Seasonal'],
 };
 
 export const faqs: FAQ[] = [
-  { id: 'faq-1', question: 'How are your smoothies and juices made?', answer: 'All our products are made fresh daily using premium fruits and vegetables. Our juices are cold-pressed to preserve nutrients, and our smoothies are blended to order for maximum freshness.', category: 'Products' },
-  { id: 'faq-2', question: 'How long do the smoothies and juices last?', answer: 'Our products are made fresh and delivered immediately. Smoothies are best consumed within 24 hours. Cold-pressed juices stay fresh for up to 48 hours when refrigerated properly.', category: 'Products' },
+  { id: 'faq-1', question: 'How are your juices made?', answer: 'All our products are made fresh daily using premium fruits and vegetables. Our juices are cold-pressed to preserve nutrients, and our smoothies are blended to order for maximum freshness.', category: 'Products' },
+  { id: 'faq-2', question: 'How long do the juices last?', answer: 'Our products are made fresh and delivered immediately. Smoothies are best consumed within 24 hours. Cold-pressed juices stay fresh for up to 48 hours when refrigerated properly.', category: 'Products' },
   { id: 'faq-3', question: 'What areas do you deliver to?', answer: 'We currently deliver within Mumbai city limits and are expanding to new areas every month. Enter your pincode at checkout to check availability.', category: 'Delivery' },
   { id: 'faq-4', question: 'Can I skip or cancel my subscription?', answer: 'Yes, you can skip any delivery or cancel your subscription anytime with no fees. Just adjust your preferences in your account settings.', category: 'Subscriptions' },
-  { id: 'faq-5', question: 'Do you add any sugar or preservatives?', answer: 'Never. Our smoothies and juices are made with 100% whole fruits and vegetables — no added sugar, no preservatives, no artificial anything.', category: 'Products' },
+  { id: 'faq-5', question: 'Do you add any sugar or preservatives?', answer: 'Never. Our juices are made with 100% whole fruits and vegetables — no added sugar, no preservatives, no artificial anything.', category: 'Products' },
   { id: 'faq-6', question: 'What is your refund policy?', answer: 'If you are not satisfied with any product, contact us within 24 hours of delivery and we will make it right with a refund or replacement.', category: 'Orders' },
   { id: 'faq-7', question: 'Do you offer catering or bulk orders?', answer: 'Yes, we partner with offices, gyms, and events. Contact us at hello@minigreens.com for bulk pricing and custom packages.', category: 'Business' },
   { id: 'faq-8', question: 'How should I store my drinks?', answer: 'Keep them refrigerated at 2-4°C at all times. Shake well before drinking. For best taste, consume your smoothie the same day and your juice within 48 hours.', category: 'Products' },
@@ -179,7 +180,6 @@ export const faqs: FAQ[] = [
 export const searchSuggestions = [
   { id: 'sg-1', text: 'Strawberry Banana Glow', type: 'product' as const },
   { id: 'sg-2', text: 'Mango Fresh', type: 'product' as const },
-  { id: 'sg-3', text: 'Smoothies', type: 'category' as const },
   { id: 'sg-4', text: 'Choco Chill', type: 'product' as const },
   { id: 'sg-5', text: 'Juices', type: 'category' as const },
   { id: 'sg-6', text: 'Watermelon Fresh', type: 'product' as const },
@@ -212,7 +212,7 @@ export const onboardingSlides: {
     id: 'onboard-1',
     title: 'Sip Fresh, Live Well',
     subtitle:
-      'Premium smoothies and cold-pressed juices, crafted fresh daily and delivered straight to your door.',
+      "India's first microgreens brand. Premium cold-pressed juices, crafted fresh daily and delivered straight to your door.",
     image: onboardingBerryImg,
     featureStyle: 'rows',
     features: [
@@ -238,7 +238,7 @@ export const onboardingSlides: {
     id: 'onboard-3',
     title: 'Your Daily Wellness',
     subtitle:
-      'From creamy smoothies to refreshing cold-pressed juices, discover delicious ways to nourish your body every day.',
+      'From cold-pressed juices to microgreen teas, discover delicious ways to nourish your body every day.',
     image: onboardingGreenImg,
     featureStyle: 'rows',
     features: [
@@ -250,7 +250,7 @@ export const onboardingSlides: {
 ];
 
 export const whyChooseUs = [
-  { id: 'why-1', title: 'Made Fresh Daily', description: 'Every smoothie and juice is prepared fresh each morning and delivered same-day for peak flavor and nutrition.', icon: 'sunny' },
+  { id: 'why-1', title: 'Made Fresh Daily', description: 'Every juice is prepared fresh each morning and delivered same-day for peak flavor and nutrition.', icon: 'sunny' },
   { id: 'why-2', title: '100% Natural', description: 'No added sugar, no preservatives, no artificial flavors. Just real fruits and vegetables in every sip.', icon: 'leaf' },
   { id: 'why-3', title: 'Cold-Pressed Goodness', description: 'Our hydraulic cold-press process preserves maximum nutrients and natural taste.', icon: 'thermometer' },
   { id: 'why-4', title: 'Sustainable Packaging', description: '100% recyclable glass bottles. Because loving your health should never cost the planet.', icon: 'sync' },

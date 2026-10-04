@@ -91,10 +91,10 @@ function productTags(p: Product, categorySlug?: string): string[] {
   return (p.tags || []).filter((t) => t !== 'microgreens').slice(0, 2);
 }
 
-// Preferred section order — tea-first, then the fresh lines. Anything else trails.
-const CATEGORY_ORDER = ['tea-blends', 'microgreens', 'smoothies', 'juices', 'bowls'];
-function catRank(slug: string): number {
-  const i = CATEGORY_ORDER.indexOf(slug);
+// Section order comes from the admin-managed `sort_order` (useCategories already returns
+// categories sorted by it). Anything not in that list, e.g. "other", trails.
+function catRank(categories: { slug: string }[], slug: string): number {
+  const i = categories.findIndex((c) => c.slug === slug);
   return i === -1 ? 99 : i;
 }
 
@@ -276,7 +276,7 @@ export default function ExploreScreen() {
     );
     return categories
       .filter((c) => withProducts.has(c.slug))
-      .sort((a, b) => catRank(a.slug) - catRank(b.slug));
+      .sort((a, b) => catRank(categories, a.slug) - catRank(categories, b.slug));
   }, [products, categories, catById]);
 
   const visible = selectedCat
@@ -297,7 +297,7 @@ export default function ExploreScreen() {
         family: categories.find((c) => c.slug === slug)?.name ?? 'More',
         items,
       }))
-      .sort((a, b) => catRank(a.slug) - catRank(b.slug));
+      .sort((a, b) => catRank(categories, a.slug) - catRank(categories, b.slug));
   }, [visible, catById, categories]);
 
   const handleSearch = useCallback(() => {
@@ -313,7 +313,7 @@ export default function ExploreScreen() {
         <View style={{ flex: 1 }}>
           <Typography variant="h2" color={colors.textPrimary} style={styles.title}>Shop</Typography>
           <Typography variant="caption" color={colors.textSecondary} style={styles.subtitle}>
-            Tea blends, microgreens, juices & smoothies — fresh from MiniGreens.
+            Tea blends, microgreens and juices — fresh from MiniGreens.
           </Typography>
         </View>
         <View style={styles.searchBtn}>

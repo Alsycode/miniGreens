@@ -103,10 +103,14 @@ export interface Database {
           image: string | null;
           icon: string | null;
           color: string | null;
+          sort_order: number;
+          is_active: boolean;
           created_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['categories']['Row'], 'id' | 'created_at'> & {
+        Insert: Omit<Database['public']['Tables']['categories']['Row'], 'id' | 'created_at' | 'sort_order' | 'is_active'> & {
           id?: string;
+          sort_order?: number;
+          is_active?: boolean;
         };
         Update: Partial<Database['public']['Tables']['categories']['Insert']>;
         Relationships: [];

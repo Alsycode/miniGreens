@@ -20,12 +20,11 @@ import type { Database } from '../../types/database';
 type Address = Database['public']['Tables']['addresses']['Row'];
 type PlanRow = Database['public']['Tables']['subscription_plans']['Row'];
 
-// Maps a plan line such as "2 smoothies of your choice" to a shop category and a count, so the
+// Maps a plan line such as "2 juices of your choice" to a shop category and a count, so the
 // customer can pick the actual products that fill those slots. Same rules as the webapp
 // (webapp/lib/subscriptions.ts). Lines without a leading count or category (perks, "seasonal
 // special", ...) are shown as-is.
 const ITEM_CATEGORY_KEYWORDS: { keyword: string; slug: string }[] = [
-  { keyword: 'smoothie', slug: 'smoothies' },
   { keyword: 'juice', slug: 'juices' },
   { keyword: 'microgreen', slug: 'microgreens' },
   { keyword: 'tea', slug: 'tea-blends' },

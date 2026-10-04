@@ -1,16 +1,14 @@
 import Link from "next/link";
 import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
-import { getHomeProducts, type HomeProduct } from "@/lib/homeProducts";
+import { getHomeCatalog, type HomeProduct } from "@/lib/homeProducts";
 import { HomeProductCard } from "@/components/home/HomeProductCard";
 import { BestsellerTabs, type BestsellerTab } from "@/components/home/BestsellerTabs";
 
 const PER_TAB = 4;
 
-const GROUPS: { id: string; label: string; categories: string[]; href: string }[] = [
-  { id: "tea", label: "Tea Bags", categories: ["tea-blends"], href: "/shop?category=tea-blends" },
-  { id: "microgreens", label: "Microgreens", categories: ["microgreens"], href: "/shop?category=microgreens" },
-  { id: "drinks", label: "Drinks", categories: ["smoothies", "juices"], href: "/shop?category=smoothies" },
-];
+// Tabs follow the admin-managed categories, in their sort order. These only override the tab
+// label where the category name reads awkwardly as a tab.
+const TAB_LABEL: Record<string, string> = { "tea-blends": "Tea Bags" };
 
 /** Round-robin the top of each group so "All" shows a spread, not four teas. */
 function interleave(lists: HomeProduct[][], n: number) {
@@ -22,11 +20,15 @@ function interleave(lists: HomeProduct[][], n: number) {
 }
 
 export async function Bestsellers() {
-  const products = await getHomeProducts();
-  const grouped = GROUPS.map((g) => ({
-    ...g,
-    items: products.filter((p) => p.category && g.categories.includes(p.category)),
-  })).filter((g) => g.items.length > 0);
+  const { categories, products } = await getHomeCatalog();
+  const grouped = categories
+    .map((c) => ({
+      id: c.slug,
+      label: TAB_LABEL[c.slug] ?? c.name,
+      href: `/shop?category=${c.slug}`,
+      items: products.filter((p) => p.category === c.slug),
+    }))
+    .filter((g) => g.items.length > 0);
 
   if (grouped.length === 0) return null;
 

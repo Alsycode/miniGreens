@@ -44,6 +44,13 @@ const TEAM: Member[] = [
     seed: 97,
     tilt: 1.2,
   },
+  {
+    name: "Alfred",
+    image: "/images/team/alfred.webp",
+    role: "Chief Architect",
+    seed: 109,
+    tilt: -1.3,
+  },
 ];
 
 function initials(name: string) {
@@ -88,7 +95,7 @@ function Portrait({ member }: { member: Member }) {
 
 function MemberCard({ member }: { member: Member }) {
   return (
-    <li className="relative w-full max-w-[19rem] sm:w-[calc(50%-1.5rem)] lg:w-[calc(25%-3rem)]">
+    <li className="relative w-full max-w-[19rem] sm:w-[calc(50%-1.5rem)] lg:w-[calc(20%-3.2rem)]">
       <div className="relative">
         <Portrait member={member} />
         {member.note && (
@@ -121,7 +128,7 @@ export function TeamSection() {
             Our Team
           </h2>
           <p className="mt-4 text-xl text-[#1f2a1c] lg:text-2xl">The hands behind every tray.</p>
-          <p className={`${script.className} mt-3 text-[1.35rem] text-[#3f6b36]`}>four people, one greener tomorrow</p>
+          <p className={`${script.className} mt-3 text-[1.35rem] text-[#3f6b36]`}>five people, one greener tomorrow</p>
         </div>
 
         <ul className="mt-16 flex flex-col items-center gap-x-12 gap-y-20 sm:flex-row sm:flex-wrap sm:items-start sm:justify-center lg:gap-x-16">

@@ -19,7 +19,7 @@ import { SubscribeButton } from "@/components/story/SubscribeButton";
 export const metadata: Metadata = {
   title: "Weekly Microgreens Subscription Boxes | Mini Greens Company",
   alternates: { canonical: "/subscriptions" },
-  description: "Weekly boxes of fresh microgreens, juices and smoothies, harvested the morning they reach you.",
+  description: "Weekly boxes of fresh microgreens and juices, harvested the morning they reach you.",
 };
 
 type HowStep = { n: string; icon: PhosphorIcon; title: string; kicker: string; body: string };
@@ -30,7 +30,7 @@ const HOW: HowStep[] = [
     icon: Basket,
     title: "Pick a Box",
     kicker: "Choose what fits your week",
-    body: "Smoothies for busy mornings, microgreens for the kitchen, or a box for the whole team.",
+    body: "Juices for busy mornings, microgreens for the kitchen, or a box for the whole team.",
   },
   {
     n: "02",

@@ -6,14 +6,13 @@ import { HomeProductCard } from "@/components/home/HomeProductCard";
 import { ShopFilterChips } from "@/components/ShopFilterChips";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { resolveProductImage } from "@/lib/productImages";
-import { catRank, SHOP_COPY, SHOP_COPY_DEFAULT } from "@/lib/categories";
+import { categoryCopy } from "@/lib/categories";
 import { FOREST, Note, PAPER, TornEdge, TornPhoto, condensed, serif } from "@/components/story/primitives";
 
 // Handwritten aside in the hero, per category.
 const HERO_NOTES: Record<string, string[]> = {
   "tea-blends": ["Steep it.", "Sip it.", "Feel it."],
   microgreens: ["Cut the", "morning", "it ships."],
-  smoothies: ["Blended", "the day", "you drink it."],
   juices: ["Pressed", "at dawn."],
 };
 const DEFAULT_NOTE = ["Grown with", "care, cut", "to order."];
@@ -21,7 +20,7 @@ const DEFAULT_NOTE = ["Grown with", "care, cut", "to order."];
 export const metadata: Metadata = {
   title: "Shop Fresh Microgreens, Juices & Tea Blends | Mini Greens Company",
   description:
-    "Order pesticide-free microgreens, cold-pressed juices, smoothies and microgreen tea blends, harvested to order in Bangalore and delivered fresh.",
+    "Order pesticide-free microgreens, cold-pressed juices and microgreen tea blends, harvested to order in Bangalore and delivered fresh.",
   alternates: { canonical: "/shop" },
 };
 
@@ -46,7 +45,12 @@ export default async function ShopPage({
   const supabase = await createSupabaseServerClient();
 
   const [{ data: categories }, { data: products }] = await Promise.all([
-    supabase.from("categories").select("id, slug, name"),
+    supabase
+      .from("categories")
+      .select("id, slug, name, description")
+      .eq("is_active", true)
+      .order("sort_order")
+      .order("name"),
     supabase
       .from("products")
       .select(
@@ -58,13 +62,15 @@ export default async function ShopPage({
   ]);
 
   const cats = categories ?? [];
-  const rows = (products ?? []) as ProductRow[];
   const catById = new Map(cats.map((c) => [c.id, c]));
+  // Products in a category the admin has hidden are hidden with it.
+  const rows = ((products ?? []) as ProductRow[]).filter(
+    (p) => !p.category_id || catById.has(p.category_id),
+  );
   const catBySlug = new Map(cats.map((c) => [c.slug, c]));
 
   const chipCats = cats
-    .filter((c) => rows.some((p) => p.category_id === c.id))
-    .sort((a, b) => catRank(a.slug) - catRank(b.slug));
+    .filter((c) => rows.some((p) => p.category_id === c.id));
 
   const activeSlug = category && catBySlug.has(category) ? category : null;
   const byCategory = activeSlug
@@ -80,7 +86,7 @@ export default async function ShopPage({
       )
     : byCategory;
 
-  const copy = (activeSlug && SHOP_COPY[activeSlug]) || SHOP_COPY_DEFAULT;
+  const copy = categoryCopy(activeSlug ? (catBySlug.get(activeSlug) ?? null) : null);
 
   const note = (activeSlug && HERO_NOTES[activeSlug]) || DEFAULT_NOTE;
 
@@ -90,7 +96,7 @@ export default async function ShopPage({
       <section className="relative isolate min-h-[520px] overflow-hidden lg:min-h-[600px]">
         <Image
           src="/images/story/shop-hero.webp"
-          alt="A rustic farm table of fresh microgreens, juices and smoothies on a misty hillside at sunrise"
+          alt="A rustic farm table of fresh microgreens and juices on a misty hillside at sunrise"
           fill
           priority
           sizes="100vw"
@@ -114,8 +120,12 @@ export default async function ShopPage({
             style={{ ...condensed, color: FOREST }}
           >
             {copy.title}
-            <br />
-            {copy.accent}
+            {copy.accent && (
+              <>
+                <br />
+                {copy.accent}
+              </>
+            )}
           </h1>
           <p className="mt-5 max-w-[27rem] text-[15px] leading-relaxed text-[#2f352c]">{copy.blurb}</p>
           <a href="#products" className="group mt-8 inline-flex items-center gap-4">
@@ -166,6 +176,7 @@ export default async function ShopPage({
                   rating: product.rating,
                   reviewCount: product.review_count,
                   category: catById.get(product.category_id ?? "")?.slug ?? null,
+                  categoryName: catById.get(product.category_id ?? "")?.name ?? null,
                 }}
               />
             ))}

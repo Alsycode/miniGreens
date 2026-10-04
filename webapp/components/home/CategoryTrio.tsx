@@ -12,12 +12,12 @@ type Tile = {
 };
 
 // The three customer categories from the MGC 2.0 brief. "Microgreen Drinks" maps to
-// the existing smoothies + juices lines until a dedicated drinks range exists.
+// the cold-pressed juices line until a dedicated drinks range exists.
 const TILES: Tile[] = [
   {
     eyebrow: "Cut to order",
     title: "Raw Microgreens",
-    blurb: "Fresh trays for your meals, salads and smoothies.",
+    blurb: "Fresh trays for your meals, salads and bowls.",
     image: "/images/products/category-microgreens-sage.jpg",
     imageClass: "object-cover",
     links: [{ label: "Shop Microgreens", href: "/shop?category=microgreens" }],
@@ -33,13 +33,10 @@ const TILES: Tile[] = [
   {
     eyebrow: "For active lifestyles",
     title: "Microgreen Drinks",
-    blurb: "Smoothies and cold-pressed juices with a microgreen boost.",
+    blurb: "Cold-pressed juices with a microgreen boost.",
     image: "/images/products/category-drinks-sage.jpg",
     imageClass: "object-cover object-[65%_center]",
-    links: [
-      { label: "Smoothies", href: "/shop?category=smoothies" },
-      { label: "Juices", href: "/shop?category=juices" },
-    ],
+    links: [{ label: "Shop Juices", href: "/shop?category=juices" }],
   },
 ];
 

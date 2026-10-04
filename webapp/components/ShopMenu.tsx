@@ -4,19 +4,51 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { CaretDown } from "@phosphor-icons/react";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
-const SHOP_ITEMS = [
-  { label: "Teas", href: "/shop?category=tea-blends", note: "Microgreen tea bags" },
-  { label: "Microgreens", href: "/shop?category=microgreens", note: "Fresh-cut trays" },
-  { label: "Smoothies", href: "/shop?category=smoothies", note: "Cold-blended" },
-  { label: "Juices", href: "/shop?category=juices", note: "Cold-pressed" },
-];
+type ShopItem = { label: string; href: string; note: string };
+
+// Hand-written menu copy for the original ranges; categories added in the admin panel use
+// their own name and description.
+const MENU_COPY: Record<string, { label: string; note: string }> = {
+  "tea-blends": { label: "Teas", note: "Microgreen tea bags" },
+  microgreens: { label: "Microgreens", note: "Fresh-cut trays" },
+  juices: { label: "Juices", note: "Cold-pressed" },
+};
+
+function useShopItems(): ShopItem[] {
+  const [items, setItems] = useState<ShopItem[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    createSupabaseBrowserClient()
+      .from("categories")
+      .select("slug, name, description")
+      .eq("is_active", true)
+      .order("sort_order")
+      .order("name")
+      .then(({ data }) => {
+        if (cancelled || !data) return;
+        setItems(
+          data.map((c) => ({
+            label: MENU_COPY[c.slug]?.label ?? c.name,
+            note: MENU_COPY[c.slug]?.note ?? c.description ?? "",
+            href: `/shop?category=${c.slug}`,
+          })),
+        );
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  return items;
+}
 
 export function ShopMenu() {
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pinned = useRef(false);
+  const shopItems = useShopItems();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -97,7 +129,7 @@ export function ShopMenu() {
           role="menu"
           className="absolute left-0 top-full z-30 mt-3 w-56 overflow-hidden rounded-xl border border-black/[0.07] bg-white p-1.5 shadow-xl shadow-black/10"
         >
-          {SHOP_ITEMS.map((item) => {
+          {shopItems.map((item) => {
             const isActive = activeCategory === item.href.split("category=")[1];
             return (
               <Link
@@ -109,7 +141,7 @@ export function ShopMenu() {
                 }`}
               >
                 <span className="text-sm font-medium text-(--color-forest)">{item.label}</span>
-                <span className="text-xs text-(--color-forest)/70">{item.note}</span>
+                {item.note && <span className="line-clamp-1 text-xs text-(--color-forest)/70">{item.note}</span>}
               </Link>
             );
           })}
