@@ -11,7 +11,7 @@ type Member = {
   tilt: number;
 };
 
-// TODO: add roles/bios for Rahul and Hadeep.
+// TODO: add bios for Rahul and Hadeep.
 const TEAM: Member[] = [
   {
     name: "Anand Lal S S",
@@ -25,7 +25,7 @@ const TEAM: Member[] = [
   {
     name: "Keerthi Krishnakumar Nair",
     image: "/images/team/keerthi.webp",
-    role: "Co-Founder",
+    role: "Managing Director",
     bio: "Joined the vision early to bring fresh microgreens to modern city life.",
     seed: 73,
     tilt: 1.5,
@@ -33,14 +33,14 @@ const TEAM: Member[] = [
   {
     name: "Rahul",
     image: "/images/team/rahul.webp",
-    role: "Mini Greens Team",
+    role: "CTO",
     seed: 85,
     tilt: -1,
   },
   {
     name: "Hadeep",
     image: "/images/team/hadeep.webp",
-    role: "Mini Greens Team",
+    role: "Tech Lead",
     seed: 97,
     tilt: 1.2,
   },
