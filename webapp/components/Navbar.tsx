@@ -15,6 +15,7 @@ const LINKS = [
   { label: "Our Story", href: "/about" },
   { label: "Journal", href: "/blog" },
   { label: "Partner With Us", href: "/partner/apply" },
+  { label: "Women Who Grow", href: "/women-who-grow" },
   { label: "Contact", href: "/contact" },
 ];
 

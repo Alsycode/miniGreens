@@ -1,10 +1,11 @@
 import Link from "next/link";
 import {
   ArrowRight,
-  FacebookLogo,
+  EnvelopeSimple,
   InstagramLogo,
   LinkedinLogo,
   Plant,
+  XLogo,
   YoutubeLogo,
 } from "@phosphor-icons/react/dist/ssr";
 import { Logo } from "@/components/Logo";
@@ -26,6 +27,7 @@ const COLUMNS = [
       { label: "Our Story", href: "/about" },
       { label: "Journal", href: "/blog" },
       { label: "Become a Partner", href: "/partner/apply" },
+      { label: "Women Who Grow", href: "/women-who-grow" },
       { label: "Contact", href: "/contact" },
     ],
   },
@@ -42,10 +44,11 @@ const COLUMNS = [
 ];
 
 const SOCIALS = [
-  { label: "Instagram", Icon: InstagramLogo },
-  { label: "Facebook", Icon: FacebookLogo },
-  { label: "YouTube", Icon: YoutubeLogo },
-  { label: "LinkedIn", Icon: LinkedinLogo },
+  { label: "Instagram", href: "https://www.instagram.com/minigreenscompany?stkn=Z2xicDlsMTV3aDR2", Icon: InstagramLogo },
+  { label: "YouTube", href: "https://youtube.com/@minigreenscompany?si=qGXg6oBTXMWQc8Ps", Icon: YoutubeLogo },
+  { label: "LinkedIn", href: "https://www.linkedin.com/company/mini-greens-company/", Icon: LinkedinLogo },
+  { label: "X", href: "https://x.com/MiniGreencompay", Icon: XLogo },
+  { label: "Email", href: "mailto:theminigreenscompany@gmail.com", Icon: EnvelopeSimple },
 ];
 
 export function Footer() {
@@ -99,14 +102,16 @@ export function Footer() {
               </button>
             </form>
             <div className="mt-5 flex gap-5">
-              {SOCIALS.map(({ label, Icon }) => (
-                <span
+              {SOCIALS.map(({ label, href, Icon }) => (
+                <a
                   key={label}
+                  href={href}
                   aria-label={label}
+                  {...(href.startsWith("http") ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                   className="text-white/85 transition-colors hover:text-(--color-sun)"
                 >
                   <Icon size={20} weight="fill" />
-                </span>
+                </a>
               ))}
             </div>
           </div>
