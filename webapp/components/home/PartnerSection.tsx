@@ -1,10 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
+import { ArrowRight, House, Handshake, Plant, Users } from "@phosphor-icons/react/dist/ssr";
+import type { Icon as PhosphorIcon } from "@phosphor-icons/react";
 import { BRAND_CLAIM } from "@/lib/brand";
 
-// "Become an MGC Partner" pitch from the MGC 2.0 brief. The 0% fee line mirrors the
-// Women partner option already shown in PartnerApplyForm.
+// "Become an MGC Partner" pitch from the MGC 2.0 brief.
 
 const STEPS = [
   { title: "You Grow", body: "Fresh microgreens from your home, farm or space, following MGC's growing practices." },
@@ -13,7 +13,12 @@ const STEPS = [
   { title: "You Earn", body: "You supply and earn from your sales. MGC earns a small platform fee." },
 ];
 
-const WHO = ["Women", "Senior citizens", "Homemakers", "Home growers", "Small farmers", "New growers"];
+const WHO: { title: string; body: string; icon: PhosphorIcon }[] = [
+  { title: "Women entrepreneurs", body: "An extra source of income, grown from your own home.", icon: Handshake },
+  { title: "Small farmers", body: "Add microgreens to your land, and we help find the buyers.", icon: Plant },
+  { title: "Senior citizens", body: "Stay active and productive, on a schedule that suits you.", icon: Users },
+  { title: "Homemakers & home growers", body: "Start small with a tray on your balcony or in a spare room.", icon: House },
+];
 
 export function PartnerSection() {
   return (
@@ -32,18 +37,24 @@ export function PartnerSection() {
             serve a larger market together.
           </p>
 
-          <ul className="mt-6 flex flex-wrap gap-2" aria-label="Who can become a partner">
-            {WHO.map((w) => (
-              <li key={w} className="rounded-full border border-white/25 px-3 py-1.5 text-xs font-medium text-white/90">
-                {w}
+          <ul className="mt-8 grid gap-3 sm:grid-cols-2" aria-label="Who can become a partner">
+            {WHO.map(({ title, body, icon: Icon }) => (
+              <li key={title}>
+                <Link
+                  href="/partner/apply"
+                  className="group flex h-full gap-4 rounded-2xl border border-white/15 bg-white/[0.06] p-5 transition-colors hover:border-(--color-sun)/60 hover:bg-white/[0.1]"
+                >
+                  <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-(--color-sun) text-(--color-forest)">
+                    <Icon size={22} weight="fill" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-sm font-semibold">{title}</span>
+                    <span className="mt-1 block text-[13px] leading-relaxed text-white/75">{body}</span>
+                  </span>
+                </Link>
               </li>
             ))}
           </ul>
-
-          <p className="mt-6 inline-flex items-center gap-2 rounded-xl bg-white/10 px-4 py-3 text-sm">
-            <span className="rounded-full bg-(--color-sun) px-2.5 py-0.5 text-xs font-bold text-(--color-forest)">0%</span>
-            Platform fee for women partners
-          </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-4">
             <Link

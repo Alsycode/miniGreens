@@ -27,8 +27,8 @@ const DETAILS = [
   {
     icon: EnvelopeSimple,
     label: "Email",
-    value: "hello@minigreenscompany.com",
-    href: "mailto:hello@minigreenscompany.com",
+    value: "theminigreenscompany@gmail.com",
+    href: "mailto:theminigreenscompany@gmail.com",
   },
   { icon: MapPin, label: "The farm", value: "Green Farm Road, Wayanad" },
   { icon: Clock, label: "Hours", value: "Mon – Sat, 7:00 – 18:00" },
@@ -161,7 +161,7 @@ export default function ContactPage() {
                   volumes and delivery days. We usually reply within one working day.
                 </p>
                 <a
-                  href="mailto:hello@minigreenscompany.com"
+                  href="mailto:theminigreenscompany@gmail.com"
                   className="mt-6 inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-(--color-forest) transition-colors hover:bg-(--color-sun)"
                 >
                   Email the Team

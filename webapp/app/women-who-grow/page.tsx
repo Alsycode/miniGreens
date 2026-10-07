@@ -47,6 +47,14 @@ export default function WomenWhoGrowPage() {
       intro="In many homes, a woman is the one who holds everything together. We believe she should also have the chance to build something for herself."
     >
       <div className="space-y-16 pb-16">
+        {/* Sumam badge — sits right under the page title/intro from PageShell */}
+        <div className="flex justify-center">
+          <span className="inline-flex items-center gap-2 rounded-full border border-(--color-leaf)/30 bg-(--color-cream) px-5 py-2 text-sm font-semibold text-(--color-forest)">
+            <span className="font-serif-display text-base text-(--color-leaf)">Sumam</span>
+            <span className="text-(--color-forest)/60">· MGC&apos;s women entrepreneurship program</span>
+          </span>
+        </div>
+
         {/* Hero image */}
         <figure>
           <div className="overflow-hidden rounded-3xl shadow-[0_12px_40px_rgba(31,58,36,0.18)]">
@@ -137,7 +145,7 @@ export default function WomenWhoGrowPage() {
 
         {/* Sumam + CTA */}
         <section className="rounded-3xl bg-(--color-cream) p-8 text-center md:p-14">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-(--color-leaf)">Sumam</p>
+          <p className="font-serif-display text-5xl leading-none text-(--color-leaf) md:text-7xl">Sumam</p>
           <h2 className="font-serif-display mx-auto mt-3 max-w-2xl text-3xl text-(--color-forest) md:text-4xl">
             Our women entrepreneurship program
           </h2>
