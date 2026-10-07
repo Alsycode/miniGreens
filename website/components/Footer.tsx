@@ -74,11 +74,11 @@ export function Footer() {
               <Phone size={16} className="text-(--color-sage)" /> +91 98765 43210
             </li>
             <li className="flex items-center gap-2">
-              <EnvelopeSimple size={16} className="text-(--color-sage)" /> hello@minigreenscompany.com
+              <EnvelopeSimple size={16} className="text-(--color-sage)" /> theminigreenscompany@gmail.com
             </li>
             <li className="flex items-start gap-2">
               <MapPin size={16} className="mt-0.5 text-(--color-sage)" />
-              123 Green Farm Road, Bangalore, Karnataka 560001
+              123 Green Farm Road, Wayanad, Kerala 673121
             </li>
           </ul>
         </div>

@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { View, ScrollView, StyleSheet, RefreshControl, Pressable, ActivityIndicator, Image } from 'react-native';
+import { View, ScrollView, StyleSheet, RefreshControl, Pressable, Image } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -9,44 +9,19 @@ import { Typography } from '../../components/ui/Typography';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Loading } from '../../components/ui/Loading';
-import { ErrorNotice } from '../../components/ui/ErrorNotice';
+import { EmptyState } from '../../components/ui/EmptyState';
+import { Screen } from '../../components/layout/Screen';
 import { useAuthStore } from '../../store/useAuthStore';
 import { supabase } from '../../lib/supabase';
 import type { Database } from '../../types/database';
 
 type PartnerRow = Database['public']['Tables']['partners']['Row'];
 type OrderRow = Database['public']['Tables']['orders']['Row'];
-type PayoutRow = Database['public']['Tables']['payouts']['Row'];
-type EarningsSummary = Database['public']['Functions']['partner_earnings_summary']['Returns'];
 
 // App accent green, aliased locally for the tinted rgba() helpers below.
 const GREEN = colors.accent;
-const GREEN_RGB = '150,255,31';
 
 const verifiedBadge = require('../../assets/tick.jpeg');
-
-const PAYOUT_STATUS_COLORS: Record<PayoutRow['status'], string> = {
-  pending: colors.warning,
-  processing: colors.info,
-  paid: colors.success,
-  rejected: colors.error,
-};
-
-const PAYOUT_STATUS_LABELS: Record<PayoutRow['status'], string> = {
-  pending: 'Pending',
-  processing: 'Processing',
-  paid: 'Completed',
-  rejected: 'Rejected',
-};
-
-const formatDateTime = (iso: string) =>
-  new Date(iso).toLocaleString('en-IN', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
 
 const BUSINESS_TYPE_LABELS: Record<string, string> = {
   individual: 'Individual Partner',
@@ -115,43 +90,6 @@ function StatCard({
       <Typography variant="bodySmall" color={colors.text} weight="semibold">
         {label}
       </Typography>
-      <Typography variant="caption" color={colors.textTertiary}>
-        This Month
-      </Typography>
-    </View>
-  );
-}
-
-function EarningsRow({
-  icon,
-  label,
-  amount,
-  amountColor = colors.text,
-  chipChar,
-}: {
-  icon?: keyof typeof Ionicons.glyphMap;
-  label: string;
-  amount: string;
-  amountColor?: string;
-  chipChar?: string;
-}) {
-  return (
-    <View style={styles.earningsRow}>
-      <View style={styles.chip}>
-        {chipChar ? (
-          <Typography variant="bodySmall" weight="bold" color={GREEN}>
-            {chipChar}
-          </Typography>
-        ) : (
-          <Ionicons name={icon ?? 'ellipse-outline'} size={16} color={GREEN} />
-        )}
-      </View>
-      <Typography variant="bodySmall" color={colors.textSecondary} style={styles.earningsLabel}>
-        {label}
-      </Typography>
-      <Typography variant="bodySmall" weight="bold" color={amountColor}>
-        {amount}
-      </Typography>
     </View>
   );
 }
@@ -164,12 +102,8 @@ export default function PartnerDashboardScreen() {
 
   const [partner, setPartner] = useState<PartnerRow | null>(null);
   const [orders, setOrders] = useState<OrderRow[]>([]);
-  const [earnings, setEarnings] = useState<EarningsSummary | null>(null);
-  const [payouts, setPayouts] = useState<PayoutRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [requesting, setRequesting] = useState(false);
-  const [requestError, setRequestError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!session) return;
@@ -181,44 +115,17 @@ export default function PartnerDashboardScreen() {
     setPartner(partnerData ?? null);
 
     if (partnerData?.status === 'approved') {
-      const [{ data: orderData }, { data: earningsData }, { data: payoutData }] = await Promise.all([
-        supabase
-          .from('orders')
-          .select('*')
-          .eq('profile_id', session.user.id)
-          .eq('order_type', 'business')
-          .order('created_at', { ascending: false }),
-        supabase.rpc('partner_earnings_summary', { p_partner_id: partnerData.id }),
-        supabase
-          .from('payouts')
-          .select('*')
-          .eq('partner_id', partnerData.id)
-          .order('requested_at', { ascending: false }),
-      ]);
+      const { data: orderData } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('profile_id', session.user.id)
+        .eq('order_type', 'business')
+        .order('created_at', { ascending: false });
       setOrders(orderData ?? []);
-      setEarnings((earningsData as EarningsSummary | null) ?? null);
-      setPayouts(payoutData ?? []);
     }
     setLoading(false);
     setRefreshing(false);
   }, [session]);
-
-  const handleRequestPayout = useCallback(async () => {
-    if (!partner) return;
-    setRequesting(true);
-    setRequestError(null);
-    const { data, error } = await supabase.rpc('request_payout', { p_partner_id: partner.id });
-    setRequesting(false);
-    if (error) {
-      setRequestError(error.message);
-      return;
-    }
-    if (data?.error) {
-      setRequestError(data.error);
-      return;
-    }
-    load();
-  }, [partner, load]);
 
   useFocusEffect(
     useCallback(() => {
@@ -230,6 +137,20 @@ export default function PartnerDashboardScreen() {
     setRefreshing(true);
     load();
   };
+
+  if (!session) {
+    return (
+      <Screen title="Partner Dashboard" scroll={false}>
+        <EmptyState
+          icon="briefcase-outline"
+          title="Log in to see your partner dashboard"
+          message="Your business orders and status show up here."
+          actionLabel="Log In"
+          onAction={() => router.push('/auth/login')}
+        />
+      </Screen>
+    );
+  }
 
   if (loading) {
     return <Loading />;
@@ -249,9 +170,7 @@ export default function PartnerDashboardScreen() {
     );
   }
 
-  const totalSales = orders.reduce((sum, o) => sum + Number(o.total), 0);
-  const netEarnings = totalSales * (1 - Number(partner.platform_fee_percent) / 100);
-  const available = Number(earnings?.available ?? 0);
+  const totalOrdered = orders.reduce((sum, o) => sum + Number(o.total), 0);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -272,7 +191,7 @@ export default function PartnerDashboardScreen() {
               </Typography>
             </View>
             <Typography variant="caption" color={colors.textTertiary}>
-              {BUSINESS_TYPE_LABELS[partner.business_type]} · {Number(partner.platform_fee_percent)}% platform fee
+              {BUSINESS_TYPE_LABELS[partner.business_type]}
             </Typography>
           </View>
           <Image source={verifiedBadge} style={styles.shield} resizeMode="cover" />
@@ -281,173 +200,12 @@ export default function PartnerDashboardScreen() {
         {partner.status === 'approved' && (
           <>
             <Animated.View entering={FadeInUp.delay(120).springify().damping(31).mass(1).stiffness(100)} style={styles.statsRow}>
-              <StatCard icon="trending-up-outline" value={`₹${totalSales.toFixed(0)}`} label="Total Sales" />
-              <StatCard icon="wallet-outline" value={`₹${netEarnings.toFixed(0)}`} label="Net Earnings" />
+              <StatCard icon="trending-up-outline" value={`₹${totalOrdered.toFixed(0)}`} label="Total Ordered" />
               <StatCard icon="bag-handle-outline" value={`${orders.length}`} label="Orders" />
             </Animated.View>
 
-            <Animated.View entering={FadeInUp.delay(180).springify().damping(31).mass(1).stiffness(100)}>
-              <Pressable
-                onPress={() => router.push('/partner/business-order')}
-                style={({ pressed }) => [styles.primaryCta, pressed && styles.pressed]}
-              >
-                <View style={styles.ctaIconRing}>
-                  <Ionicons name="add" size={18} color="#06130D" />
-                </View>
-                <Typography variant="body" weight="bold" color="#06130D" style={styles.primaryCtaLabel}>
-                  Place Business Order
-                </Typography>
-                <Ionicons name="chevron-forward" size={18} color="#06130D" />
-              </Pressable>
-            </Animated.View>
-
-            {earnings && !earnings.error && (
-              <Animated.View entering={FadeInUp.delay(210).springify().damping(31).mass(1).stiffness(100)}>
-                <Card variant="outlined" padding="lg" style={styles.earningsCard}>
-                  <View style={styles.earningsHeader}>
-                    <View style={styles.earningsHeaderLeft}>
-                      <View style={styles.accentBar} />
-                      <Typography variant="h4" color={colors.textInverse}>
-                        Earnings
-                      </Typography>
-                    </View>
-                    <View style={styles.periodPill}>
-                      <Typography variant="caption" color={colors.textSecondary}>
-                        This Month
-                      </Typography>
-                      <Ionicons name="chevron-down" size={14} color={colors.textSecondary} />
-                    </View>
-                  </View>
-
-                  <EarningsRow
-                    icon="cart-outline"
-                    label="Gross sales"
-                    amount={`₹${Number(earnings.gross ?? 0).toFixed(2)}`}
-                    amountColor={colors.textInverse}
-                  />
-                  <EarningsRow
-                    chipChar="%"
-                    label={`Platform fee (${Number(earnings.fee_percent ?? 0)}%)`}
-                    amount={`−₹${Number(earnings.fee ?? 0).toFixed(2)}`}
-                    amountColor={colors.error}
-                  />
-                  <EarningsRow
-                    icon="wallet-outline"
-                    label="Net earned"
-                    amount={`₹${Number(earnings.net ?? 0).toFixed(2)}`}
-                    amountColor={GREEN}
-                  />
-                  <EarningsRow
-                    icon="arrow-redo-outline"
-                    label="Paid out"
-                    amount={`₹${Number(earnings.paid_out ?? 0).toFixed(2)}`}
-                    amountColor={colors.textInverse}
-                  />
-                  <EarningsRow
-                    icon="time-outline"
-                    label="Pending requests"
-                    amount={`₹${Number(earnings.pending ?? 0).toFixed(2)}`}
-                    amountColor={colors.textInverse}
-                  />
-
-                  <View style={styles.divider} />
-
-                  <View style={styles.availableRow}>
-                    <View style={styles.chip}>
-                      <Ionicons name="wallet-outline" size={16} color={GREEN} />
-                    </View>
-                    <View style={styles.availableBody}>
-                      <Typography variant="body" weight="bold" color={colors.textInverse}>
-                        Available to withdraw
-                      </Typography>
-                      <Typography variant="caption" color={colors.textTertiary}>
-                        Ready to transfer to your bank
-                      </Typography>
-                    </View>
-                    <Typography variant="body" weight="bold" color={GREEN}>
-                      ₹{available.toFixed(2)}
-                    </Typography>
-                  </View>
-
-                  <ErrorNotice
-                    message={requestError}
-                    onDismiss={() => setRequestError(null)}
-                    style={styles.requestError}
-                  />
-
-                  <Pressable
-                    onPress={handleRequestPayout}
-                    disabled={requesting || available < 1}
-                    style={({ pressed }) => [
-                      styles.payoutCta,
-                      (requesting || available < 1) && styles.payoutCtaDisabled,
-                      pressed && styles.pressed,
-                    ]}
-                  >
-                    {requesting ? (
-                      <ActivityIndicator size="small" color={GREEN} />
-                    ) : (
-                      <>
-                        <View style={styles.payoutCtaChip}>
-                          <Ionicons name="business-outline" size={16} color={GREEN} />
-                        </View>
-                        <Typography variant="body" weight="bold" color={GREEN} style={styles.payoutCtaLabel}>
-                          Request Payout
-                        </Typography>
-                        <Ionicons name="chevron-forward" size={18} color={GREEN} />
-                      </>
-                    )}
-                  </Pressable>
-                </Card>
-              </Animated.View>
-            )}
-
-            {payouts.length > 0 && (
-              <Animated.View entering={FadeInUp.delay(230).springify().damping(31).mass(1).stiffness(100)}>
-                <View style={styles.sectionHeader}>
-                  <Typography variant="h4" color={colors.textInverse}>
-                    Payout History
-                  </Typography>
-                  <View style={styles.viewAll}>
-                    <Typography variant="caption" color={GREEN} weight="bold">
-                      View all
-                    </Typography>
-                    <Ionicons name="chevron-forward" size={14} color={GREEN} />
-                  </View>
-                </View>
-
-                {payouts.map((payout) => (
-                  <Card key={payout.id} variant="outlined" padding="md" style={styles.payoutCard}>
-                    <View style={styles.chip}>
-                      <Ionicons name="download-outline" size={16} color={GREEN} />
-                    </View>
-                    <View style={styles.payoutBody}>
-                      <Typography variant="bodySmall" weight="bold" color={colors.textInverse}>
-                        Payout to Bank Account
-                      </Typography>
-                      <Typography variant="caption" color={colors.textTertiary}>
-                        {formatDateTime(payout.requested_at)}
-                      </Typography>
-                    </View>
-                    <View style={styles.payoutRight}>
-                      <Typography variant="bodySmall" weight="bold" color={colors.textInverse}>
-                        ₹{Number(payout.amount).toFixed(2)}
-                      </Typography>
-                      <View
-                        style={[
-                          styles.statusPill,
-                          { borderColor: PAYOUT_STATUS_COLORS[payout.status] },
-                        ]}
-                      >
-                        <Typography variant="caption" weight="bold" color={PAYOUT_STATUS_COLORS[payout.status]}>
-                          {PAYOUT_STATUS_LABELS[payout.status]}
-                        </Typography>
-                      </View>
-                    </View>
-                  </Card>
-                ))}
-              </Animated.View>
-            )}
+            {/* Bulk/business ordering disabled for now — re-enable by restoring the
+                "Place Business Order" CTA (router.push('/partner/business-order')). */}
 
             <Animated.View entering={FadeInUp.delay(240).springify().damping(31).mass(1).stiffness(100)}>
               <Typography variant="h4" color={colors.textInverse} style={styles.sectionTitle}>
@@ -562,7 +320,7 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: borderRadius.full,
-    backgroundColor: `rgba(${GREEN_RGB},0.14)`,
+    backgroundColor: 'rgba(150,255,31,0.14)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -591,116 +349,6 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.85,
-  },
-  // ── earnings ──
-  earningsCard: {
-    marginBottom: spacing['2xl'],
-  },
-  earningsHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.md,
-  },
-  earningsHeaderLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  accentBar: {
-    width: 3,
-    height: 18,
-    borderRadius: 2,
-    backgroundColor: GREEN,
-  },
-  periodPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  earningsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-  },
-  earningsLabel: {
-    flex: 1,
-    marginLeft: spacing.md,
-  },
-  divider: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: colors.border,
-    marginVertical: spacing.md,
-  },
-  availableRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  availableBody: {
-    flex: 1,
-    marginLeft: spacing.md,
-  },
-  requestError: {
-    marginTop: spacing.md,
-    marginBottom: 0,
-  },
-  payoutCta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 52,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: `rgba(${GREEN_RGB},0.55)`,
-    backgroundColor: `rgba(${GREEN_RGB},0.08)`,
-    paddingHorizontal: spacing.md,
-    marginTop: spacing.lg,
-  },
-  payoutCtaDisabled: {
-    opacity: 0.6,
-  },
-  payoutCtaChip: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: `rgba(${GREEN_RGB},0.16)`,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  payoutCtaLabel: {
-    flex: 1,
-    textAlign: 'center',
-  },
-  // ── payout history ──
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.md,
-  },
-  viewAll: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 2,
-  },
-  payoutCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.sm,
-  },
-  payoutBody: {
-    flex: 1,
-    marginLeft: spacing.md,
-  },
-  payoutRight: {
-    alignItems: 'flex-end',
-    gap: spacing.xs,
-  },
-  statusPill: {
-    borderWidth: 1,
-    borderRadius: borderRadius.full,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
   },
   // ── order history ──
   sectionTitle: {

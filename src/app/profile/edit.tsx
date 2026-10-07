@@ -16,10 +16,12 @@ import Animated, {
   FadeInUp,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { colors, spacing, borderRadius, shadows } from '../../theme';
+import { colors, spacing, borderRadius, shadows, typography, fontFamily } from '../../theme';
 import { Typography } from '../../components/ui/Typography';
 import { Button } from '../../components/ui/Button';
 import { ErrorNotice } from '../../components/ui/ErrorNotice';
+import { EmptyState } from '../../components/ui/EmptyState';
+import { Screen } from '../../components/layout/Screen';
 import { useAuthStore } from '../../store/useAuthStore';
 import { supabase } from '../../lib/supabase';
 import { formatDobDisplay, maskDobInput, parseDobInput } from '../../utils/date';
@@ -69,6 +71,7 @@ function Field({ label, value, onChangeText, placeholder, keyboardType = 'defaul
 
 export default function EditProfileScreen() {
   const insets = useSafeAreaInsets();
+  const session = useAuthStore((s) => s.session);
   const profile = useAuthStore((s) => s.profile);
   const fetchProfile = useAuthStore((s) => s.fetchProfile);
 
@@ -108,6 +111,20 @@ export default function EditProfileScreen() {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     router.back();
   };
+
+  if (!session && !profile) {
+    return (
+      <Screen title="Edit Profile" scroll={false}>
+        <EmptyState
+          icon="person-outline"
+          title="Log in to edit your profile"
+          message="Your name, phone and birthday are saved to your account."
+          actionLabel="Log In"
+          onAction={() => router.push('/auth/login')}
+        />
+      </Screen>
+    );
+  }
 
   return (
     <KeyboardAvoidingView
@@ -196,6 +213,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     backgroundColor: colors.surface,
+    ...shadows.sm,
   },
   headerButton: {
     width: 40,
@@ -241,10 +259,11 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     backgroundColor: colors.surface,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: colors.border,
     borderRadius: borderRadius.md,
     overflow: 'hidden',
+    ...shadows.sm,
   },
   inputFocused: {
     borderColor: colors.primary,
@@ -252,13 +271,15 @@ const styles = StyleSheet.create({
   inputReadOnly: {
     backgroundColor: colors.borderLight,
     borderColor: colors.border,
+    shadowOpacity: 0,
+    elevation: 0,
   },
   input: {
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
-    fontSize: 16,
+    fontSize: typography.fontSize.base,
     color: colors.text,
-    fontFamily: 'PlusJakartaSans_400Regular',
+    fontFamily: fontFamily.sans,
   },
   inputTextReadOnly: {
     color: colors.textTertiary,

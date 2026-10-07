@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Pressable, ActivityIndicator } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInUp } from 'react-native-reanimated';
@@ -26,11 +26,18 @@ const BUSINESS_TYPES: { value: PartnerBusinessType; label: string }[] = [
   { value: 'community', label: 'Community Partner' },
 ];
 
+const VALID_BUSINESS_TYPES = new Set(BUSINESS_TYPES.map((t) => t.value));
+
 export default function PartnerApplyScreen() {
   const insets = useSafeAreaInsets();
   const session = useAuthStore((s) => s.session);
+  const params = useLocalSearchParams<{ type?: string }>();
+  const presetType =
+    params.type && VALID_BUSINESS_TYPES.has(params.type as PartnerBusinessType)
+      ? (params.type as PartnerBusinessType)
+      : null;
 
-  const [businessType, setBusinessType] = useState<PartnerBusinessType | null>(null);
+  const [businessType, setBusinessType] = useState<PartnerBusinessType | null>(presetType);
   const [businessName, setBusinessName] = useState('');
   const [contactPerson, setContactPerson] = useState('');
   const [phone, setPhone] = useState('');
@@ -141,9 +148,16 @@ export default function PartnerApplyScreen() {
             ))}
           </View>
           {businessType === 'women' && (
-            <Typography variant="caption" color={colors.primary} style={styles.womenNote}>
-              Women Partners get 0% platform fee.
-            </Typography>
+            <View style={styles.womenNoteRow}>
+              <Typography variant="caption" color={colors.primary} style={styles.womenNote}>
+                Women Partners get 0% platform fee.
+              </Typography>
+              <Pressable onPress={() => router.push('/women-who-grow')} hitSlop={8}>
+                <Typography variant="caption" color={colors.primary} weight="semibold" style={{ textDecorationLine: 'underline' }}>
+                  Learn more about Sumam
+                </Typography>
+              </Pressable>
+            </View>
           )}
         </Animated.View>
 
@@ -246,9 +260,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
   },
-  womenNote: {
+  womenNoteRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginTop: -spacing.xs,
     marginBottom: spacing.md,
+  },
+  womenNote: {
+    flexShrink: 1,
   },
   form: {
     marginTop: spacing.lg,

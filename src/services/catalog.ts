@@ -117,6 +117,8 @@ export function dbProductToUi(row: ProductRow): Product {
     isSeasonal: row.is_seasonal,
     isBestSeller: row.is_best_seller,
     isPreorder: row.is_preorder,
+    isAvailable: row.is_available,
+    stock: row.stock,
     rating: Number(row.rating),
     reviewCount: row.review_count,
     tags: row.tags ?? [],

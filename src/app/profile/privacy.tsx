@@ -8,7 +8,7 @@ import Animated, {
   FadeInUp,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { colors, spacing, borderRadius } from '../../theme';
+import { colors, spacing, borderRadius, shadows } from '../../theme';
 import { Typography } from '../../components/ui/Typography';
 
 const sections = [
@@ -35,7 +35,7 @@ const sections = [
   {
     icon: 'phone-portrait-outline' as const,
     title: 'Your Rights',
-    body: 'You have the right to access, correct, or delete your personal data at any time. You may also opt out of marketing communications. Contact us at privacy@minigreens.in to exercise these rights.',
+    body: 'You have the right to access, correct, or delete your personal data at any time. You may also opt out of marketing communications. Contact us at theminigreenscompany@gmail.com to exercise these rights.',
   },
   {
     icon: 'refresh-outline' as const,
@@ -97,7 +97,7 @@ export default function PrivacyScreen() {
         <Animated.View entering={FadeInUp.delay(100 + sections.length * 60).springify().damping(31).mass(1).stiffness(100)} style={styles.contact}>
           <Typography variant="caption" color={colors.textTertiary} style={{ textAlign: 'center' }}>
             Questions? Contact us at{' '}
-            <Typography variant="caption" color={colors.primary}>privacy@minigreens.in</Typography>
+            <Typography variant="caption" color={colors.primary}>theminigreenscompany@gmail.com</Typography>
           </Typography>
         </Animated.View>
       </ScrollView>
@@ -117,6 +117,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     backgroundColor: colors.surface,
+    ...shadows.sm,
   },
   headerButton: {
     width: 40,

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, ScrollView, StyleSheet, TouchableOpacity, Pressable, Switch } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, ScrollView, StyleSheet, TouchableOpacity, Pressable } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -7,12 +7,15 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
+  withTiming,
   FadeIn,
   FadeInUp,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { colors, spacing, borderRadius } from '../../theme';
+import { colors, spacing, borderRadius, shadows } from '../../theme';
 import { Typography } from '../../components/ui/Typography';
+import { useAuthStore } from '../../store/useAuthStore';
+import { supabase } from '../../lib/supabase';
 
 interface ToggleSetting {
   type: 'toggle';
@@ -32,32 +35,67 @@ interface NavSetting {
 
 type SettingItem = ToggleSetting | NavSetting;
 
-const settingSections: { title: string; items: SettingItem[] }[] = [
-  {
-    title: 'Notifications',
-    items: [
-      { type: 'toggle', icon: 'notifications-outline', label: 'Push Notifications', key: 'push' },
-      { type: 'toggle', icon: 'mail-outline', label: 'Email Updates', subtitle: 'Promos, tips & freshness alerts', key: 'email' },
-      { type: 'toggle', icon: 'bicycle-outline', label: 'Order Updates', subtitle: 'Delivery status changes', key: 'orderUpdates' },
-    ],
-  },
-  {
-    title: 'Preferences',
-    items: [
-      { type: 'nav', icon: 'language-outline', label: 'Language', value: 'English' },
-      { type: 'nav', icon: 'location-outline', label: 'Default Address', value: 'Home' },
-      { type: 'toggle', icon: 'moon-outline', label: 'Dark Mode', key: 'darkMode' },
-    ],
-  },
-  {
-    title: 'Privacy',
-    items: [
-      { type: 'nav', icon: 'shield-outline', label: 'Privacy Policy', route: '/profile/privacy' },
-      { type: 'nav', icon: 'document-text-outline', label: 'Terms of Service', route: '/profile/terms' },
-      { type: 'toggle', icon: 'analytics-outline', label: 'Analytics', subtitle: 'Help us improve the app', key: 'analytics' },
-    ],
-  },
-];
+function buildSettingSections(defaultAddressLabel: string): { title: string; items: SettingItem[] }[] {
+  return [
+    {
+      title: 'Notifications',
+      items: [
+        { type: 'toggle', icon: 'notifications-outline', label: 'Push Notifications', key: 'push' },
+        { type: 'toggle', icon: 'mail-outline', label: 'Email Updates', subtitle: 'Promos, tips & freshness alerts', key: 'email' },
+        { type: 'toggle', icon: 'bicycle-outline', label: 'Order Updates', subtitle: 'Delivery status changes', key: 'orderUpdates' },
+      ],
+    },
+    {
+      title: 'Preferences',
+      items: [
+        { type: 'nav', icon: 'language-outline', label: 'Language', value: 'English' },
+        { type: 'nav', icon: 'location-outline', label: 'Default Address', value: defaultAddressLabel, route: '/profile/addresses' },
+        { type: 'toggle', icon: 'moon-outline', label: 'Dark Mode', key: 'darkMode' },
+      ],
+    },
+    {
+      title: 'Privacy',
+      items: [
+        { type: 'nav', icon: 'shield-outline', label: 'Privacy Policy', route: '/profile/privacy' },
+        { type: 'nav', icon: 'document-text-outline', label: 'Terms of Service', route: '/profile/terms' },
+        { type: 'nav', icon: 'return-up-back-outline', label: 'Returns & Refunds', route: '/profile/returns' },
+        { type: 'nav', icon: 'bicycle-outline', label: 'Shipping Policy', route: '/profile/shipping-policy' },
+        { type: 'toggle', icon: 'analytics-outline', label: 'Analytics', subtitle: 'Help us improve the app', key: 'analytics' },
+      ],
+    },
+  ];
+}
+
+// ─── Branded pill toggle — replaces the stock RN Switch ────────────────────
+
+function Toggle({ value, onValueChange }: { value: boolean; onValueChange: (v: boolean) => void }) {
+  const progress = useSharedValue(value ? 1 : 0);
+
+  useEffect(() => {
+    progress.value = withTiming(value ? 1 : 0, { duration: 180 });
+  }, [value]);
+
+  const trackStyle = useAnimatedStyle(() => ({
+    backgroundColor: progress.value > 0.5 ? colors.primary : colors.border,
+  }));
+  const thumbStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: progress.value * 20 }],
+  }));
+
+  return (
+    <Pressable
+      onPress={() => {
+        Haptics.selectionAsync();
+        onValueChange(!value);
+      }}
+      hitSlop={8}
+    >
+      <Animated.View style={[styles.toggleTrack, trackStyle]}>
+        <Animated.View style={[styles.toggleThumb, thumbStyle]} />
+      </Animated.View>
+    </Pressable>
+  );
+}
 
 function SettingRow({
   item,
@@ -103,14 +141,9 @@ function SettingRow({
           )}
         </View>
         {item.type === 'toggle' ? (
-          <Switch
-            value={toggleValue}
-            onValueChange={(val) => {
-              Haptics.selectionAsync();
-              onToggle?.(item.key, val);
-            }}
-            trackColor={{ false: colors.border, true: colors.primary }}
-            thumbColor={colors.surface}
+          <Toggle
+            value={!!toggleValue}
+            onValueChange={(val) => onToggle?.(item.key, val)}
           />
         ) : (
           <View style={styles.navRight}>
@@ -129,6 +162,7 @@ function SettingRow({
 
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
+  const profile = useAuthStore((s) => s.profile);
   const [toggles, setToggles] = useState<Record<string, boolean>>({
     push: true,
     email: false,
@@ -136,6 +170,20 @@ export default function SettingsScreen() {
     darkMode: false,
     analytics: true,
   });
+  const [defaultAddressLabel, setDefaultAddressLabel] = useState('Not set');
+
+  useEffect(() => {
+    if (!profile) return;
+    supabase
+      .from('addresses')
+      .select('label')
+      .eq('profile_id', profile.id)
+      .eq('is_default', true)
+      .maybeSingle()
+      .then(({ data }) => setDefaultAddressLabel(data?.label ?? 'Not set'));
+  }, [profile]);
+
+  const settingSections = buildSettingSections(defaultAddressLabel);
 
   let rowDelay = 80;
 
@@ -212,6 +260,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     backgroundColor: colors.surface,
+    ...shadows.sm,
   },
   headerButton: {
     width: 40,
@@ -235,6 +284,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderRadius: borderRadius.xl,
     overflow: 'hidden',
+    ...shadows.sm,
   },
   row: {
     flexDirection: 'row',
@@ -264,5 +314,19 @@ const styles = StyleSheet.create({
   },
   versionRow: {
     marginTop: spacing.xl,
+  },
+  toggleTrack: {
+    width: 46,
+    height: 27,
+    borderRadius: borderRadius.pill,
+    padding: 3,
+    justifyContent: 'center',
+  },
+  toggleThumb: {
+    width: 21,
+    height: 21,
+    borderRadius: borderRadius.pill,
+    backgroundColor: colors.surface,
+    ...shadows.sm,
   },
 });

@@ -8,7 +8,7 @@ import Animated, {
   FadeInUp,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { colors, spacing, borderRadius } from '../../theme';
+import { colors, spacing, borderRadius, shadows } from '../../theme';
 import { Typography } from '../../components/ui/Typography';
 
 const sections = [
@@ -101,7 +101,7 @@ export default function TermsScreen() {
         >
           <Typography variant="caption" color={colors.textTertiary} style={{ textAlign: 'center' }}>
             Questions about these terms?{'\n'}
-            <Typography variant="caption" color={colors.primary}>legal@minigreens.in</Typography>
+            <Typography variant="caption" color={colors.primary}>theminigreenscompany@gmail.com</Typography>
           </Typography>
         </Animated.View>
       </ScrollView>
@@ -121,6 +121,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     backgroundColor: colors.surface,
+    ...shadows.sm,
   },
   headerButton: {
     width: 40,

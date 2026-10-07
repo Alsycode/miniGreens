@@ -101,6 +101,9 @@ export default function RootLayout() {
           <Stack.Screen name="profile/contact" options={{ animation: 'slide_from_right' }} />
           <Stack.Screen name="profile/terms" options={{ animation: 'slide_from_right' }} />
           <Stack.Screen name="profile/privacy" options={{ animation: 'slide_from_right' }} />
+          <Stack.Screen name="profile/returns" options={{ animation: 'slide_from_right' }} />
+          <Stack.Screen name="profile/shipping-policy" options={{ animation: 'slide_from_right' }} />
+          <Stack.Screen name="women-who-grow" options={{ animation: 'slide_from_right' }} />
           <Stack.Screen name="partner/apply" options={{ animation: 'slide_from_right' }} />
           <Stack.Screen name="partner/submitted" options={{ animation: 'fade', gestureEnabled: false }} />
           <Stack.Screen name="partner/dashboard" options={{ animation: 'slide_from_right' }} />

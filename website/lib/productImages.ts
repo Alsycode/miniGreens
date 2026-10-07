@@ -30,14 +30,14 @@ const LOCAL_IMAGE_BY_SLUG: Record<string, string> = {
   "red-cabbage": "/images/products/red-cabbage.png",
 
   // Microgreen tea blends — client-supplied bag artwork, shared with the mobile app.
-  "green-vitality-bag": "/images/products/green-vitality-bag.png",
-  "green-lemon-bag": "/images/products/green-lemon-bag.png",
-  "green-detox-bag": "/images/products/green-detox-bag.png",
-  "green-masala-bag": "/images/products/green-masala-bag.png",
-  "mint-green-bag": "/images/products/mint-green-bag.png",
-  "green-apple-bag": "/images/products/green-apple-bag.png",
-  "ginger-green-bag": "/images/products/ginger-green-bag.png",
-  "green-hibiscus-bag": "/images/products/green-hibiscus-bag.png",
+  "green-vitality-bag": "/images/tea/blends/green-vitality.png",
+  "green-lemon-bag": "/images/tea/blends/green-lemon.png",
+  "green-detox-bag": "/images/tea/blends/green-detox.png",
+  "green-masala-bag": "/images/tea/blends/green-masala.png",
+  "mint-green-bag": "/images/tea/blends/mint-green.png",
+  "green-apple-bag": "/images/tea/blends/green-apple.png",
+  "ginger-green-bag": "/images/tea/blends/ginger-green.png",
+  "green-hibiscus-bag": "/images/tea/blends/green-hibiscus.png",
 };
 
 // Extra gallery angles for the product detail page, keyed by slug. The first
@@ -85,4 +85,12 @@ export function resolveCategoryImage(
 ): string | null {
   if (image) return image;
   return LOCAL_CATEGORY_IMAGE_BY_SLUG[slug] ?? null;
+}
+
+/**
+ * Transparent tea-tube cutouts must be shown whole (contain + breathing room);
+ * photos fill their frame. Pass the result as the `<Image>` className.
+ */
+export function productImageFit(src: string | null | undefined): string {
+  return src?.startsWith("/images/tea/") ? "object-contain p-[8%]" : "object-cover";
 }

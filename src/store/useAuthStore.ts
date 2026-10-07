@@ -83,7 +83,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     syncPushTokenForUser(userId).catch(() => {});
   },
 
-  // Same passwordless flow as the webapp: email a 6-digit code, creating the account on first use.
+  // Passwordless email code; creates the account on first use.
   sendCode: async (email) => {
     const { error } = await supabase.auth.signInWithOtp({
       email,

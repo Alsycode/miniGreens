@@ -24,20 +24,22 @@ type Blend = {
   bg: string;
 };
 
-// Stills are Kling renders (product lit on pure black) keyed to transparency and
-// re-seated on one shared 2160x2880 canvas, so every blend shares a baseline and
-// scale. Regenerate with scratchpad/kling/cutout.mjs if the artwork changes.
+// Stills are the client tube artwork from assets/teasassets, keyed to
+// transparency on one shared 1158x1359 canvas (copied to public/images/tea/blends).
 //
 // Backdrops are dark, low-saturation tints built off the site's --color-ink
 // (#05100a) rather than the product's own hue, so each slide reads as a
 // near-black variant that stays inside the theme instead of a bright color
 // block against it.
 const BLENDS: Blend[] = [
-  { slug: "green-vitality", name: "Green Vitality",  src: "/images/carousel/green-vitality.png",  bg: "#0a180f" },
-  { slug: "green-detox",    name: "Green Detox",     src: "/images/carousel/green-detox.png",     bg: "#0a1a15" },
-  { slug: "mint-green",     name: "Mint Green",      src: "/images/carousel/mint-green.png",      bg: "#0a1b17" },
-  { slug: "green-lemon",    name: "Green Lemon",     src: "/images/carousel/green-lemon.png",     bg: "#14190a" },
-  { slug: "green-masala",   name: "Green Masala",    src: "/images/carousel/green-masala.png",    bg: "#180f09" },
+  { slug: "green-vitality", name: "Green Vitality",  src: "/images/tea/blends/green-vitality.png",  bg: "#0a180f" },
+  { slug: "green-detox",    name: "Green Detox",     src: "/images/tea/blends/green-detox.png",     bg: "#0a1a15" },
+  { slug: "mint-green",     name: "Mint Green",      src: "/images/tea/blends/mint-green.png",      bg: "#0a1b17" },
+  { slug: "green-lemon",    name: "Green Lemon",     src: "/images/tea/blends/green-lemon.png",     bg: "#14190a" },
+  { slug: "green-masala",   name: "Green Masala",    src: "/images/tea/blends/green-masala.png",    bg: "#180f09" },
+  { slug: "green-apple",    name: "Green Apple",     src: "/images/tea/blends/green-apple.png",     bg: "#0f190a" },
+  { slug: "ginger-green",   name: "Ginger Green",    src: "/images/tea/blends/ginger-green.png",    bg: "#18140a" },
+  { slug: "green-hibiscus", name: "Green Hibiscus",  src: "/images/tea/blends/green-hibiscus.png",  bg: "#1a0c10" },
 ];
 
 const DURATION = 650;

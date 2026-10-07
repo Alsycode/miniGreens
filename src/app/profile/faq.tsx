@@ -12,10 +12,15 @@ import Animated, {
   FadeInUp,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { colors, spacing, borderRadius } from '../../theme';
+import { colors, spacing, borderRadius, shadows } from '../../theme';
 import { Typography } from '../../components/ui/Typography';
+import { BRAND_CLAIM } from '../../theme/brand';
 
 const faqs = [
+  {
+    q: 'Who is MiniGreens?',
+    a: `MiniGreens is ${BRAND_CLAIM}. We grow microgreens and microgreen teas in India and deliver them fresh to your door.`,
+  },
   {
     q: 'How fresh are the microgreens?',
     a: 'Our microgreens are harvested within 24 hours of delivery. We grow them in our climate-controlled facility and cut them fresh for every order.',
@@ -42,7 +47,7 @@ const faqs = [
   },
   {
     q: 'Do you offer corporate or bulk orders?',
-    a: 'Absolutely! We supply restaurants, cafes, and offices. Reach out via the Contact Us page or email us at hello@minigreens.in for bulk pricing.',
+    a: 'Absolutely! We supply restaurants, cafes, and offices. Reach out via the Contact Us page or email us at theminigreenscompany@gmail.com for bulk pricing.',
   },
 ];
 
@@ -140,6 +145,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     backgroundColor: colors.surface,
+    ...shadows.sm,
   },
   headerButton: {
     width: 40,

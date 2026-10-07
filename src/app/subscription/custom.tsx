@@ -12,6 +12,8 @@ import { Chip } from '../../components/ui/Chip';
 import { TextField } from '../../components/ui/TextField';
 import { Loading } from '../../components/ui/Loading';
 import { ErrorNotice } from '../../components/ui/ErrorNotice';
+import { EmptyState } from '../../components/ui/EmptyState';
+import { Screen } from '../../components/layout/Screen';
 import { useProducts } from '../../services/catalog';
 import { useAuthStore } from '../../store/useAuthStore';
 import { supabase } from '../../lib/supabase';
@@ -22,6 +24,7 @@ type Frequency = 'weekly' | 'monthly';
 
 export default function CustomSubscriptionScreen() {
   const insets = useSafeAreaInsets();
+  const session = useAuthStore((s) => s.session);
   const profile = useAuthStore((s) => s.profile);
   const { products, isLoading: productsLoading } = useProducts();
 
@@ -135,6 +138,20 @@ export default function CustomSubscriptionScreen() {
 
   if (productsLoading) {
     return <Loading fullScreen />;
+  }
+
+  if (!session) {
+    return (
+      <Screen title="Build Your Own" scroll={false}>
+        <EmptyState
+          icon="calendar-outline"
+          title="Log in to subscribe"
+          message="Pick your products, quantities and delivery details once you're logged in."
+          actionLabel="Log In"
+          onAction={() => router.push('/auth/login')}
+        />
+      </Screen>
+    );
   }
 
   return (

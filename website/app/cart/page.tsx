@@ -9,6 +9,7 @@ import { Footer } from "@/components/Footer";
 import { LeafDecor } from "@/components/LeafDecor";
 import { useCartStore, cartSubtotal } from "@/store/useCartStore";
 import { displayName } from "@/lib/productCopy";
+import { productImageFit } from "@/lib/productImages";
 
 const DELIVERY_FEE = 35.49;
 
@@ -54,7 +55,7 @@ export default function CartPage() {
                 >
                   <div className="relative size-16 shrink-0 overflow-hidden rounded-xl bg-black">
                     {item.image ? (
-                      <Image src={item.image} alt={name} fill className="object-cover" sizes="64px" />
+                      <Image src={item.image} alt={name} fill className={productImageFit(item.image)} sizes="64px" />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center bg-(--color-olive)/20">
                         <Leaf size={20} className="text-(--color-sage)" />

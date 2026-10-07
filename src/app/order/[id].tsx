@@ -13,11 +13,11 @@ import Animated, {
   ZoomIn,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { colors, spacing, borderRadius } from '../../theme';
+import { colors, spacing, borderRadius, shadows } from '../../theme';
 import { Typography } from '../../components/ui/Typography';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
-import { Loading } from '../../components/ui/Loading';
+import { Skeleton } from '../../components/ui/Skeleton';
 import { supabase } from '../../lib/supabase';
 import { resolveImageSource, getProductPlaceholder } from '../../utils/placeholders';
 import type { Database, OrderStatus, PaymentStatus } from '../../types/database';
@@ -161,7 +161,16 @@ export default function OrderDetailScreen() {
   if (loading) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
-        <Loading fullScreen />
+        <View style={styles.header}>
+          <View style={styles.headerButton}>
+            <Ionicons name="arrow-back" size={24} color={colors.textTertiary} />
+          </View>
+        </View>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: spacing.lg }}>
+          <Skeleton width="100%" height={100} borderRadiusVal={borderRadius.lg} />
+          <Skeleton width="100%" height={140} borderRadiusVal={borderRadius.lg} style={{ marginTop: spacing.lg }} />
+          <Skeleton width="100%" height={90} borderRadiusVal={borderRadius.lg} style={{ marginTop: spacing.lg }} />
+        </ScrollView>
       </View>
     );
   }
@@ -212,6 +221,18 @@ export default function OrderDetailScreen() {
               <Typography variant="bodySmall" color={colors.textTertiary}>Placed on</Typography>
               <Typography variant="bodySmall" weight="semibold">{formatDate(order.created_at)}</Typography>
             </View>
+            {order.order_type === 'preorder' && (
+              <View style={styles.orderInfoRow}>
+                <Typography variant="bodySmall" color={colors.textTertiary}>Type</Typography>
+                <Typography variant="bodySmall" weight="semibold">Pre-order</Typography>
+              </View>
+            )}
+            {order.expected_availability_date && (
+              <View style={styles.orderInfoRow}>
+                <Typography variant="bodySmall" color={colors.textTertiary}>Expected availability</Typography>
+                <Typography variant="bodySmall" weight="semibold">{formatDate(order.expected_availability_date)}</Typography>
+              </View>
+            )}
             <View style={styles.orderInfoRow}>
               <Typography variant="bodySmall" color={colors.textTertiary}>Status</Typography>
               <Animated.View
@@ -356,6 +377,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     backgroundColor: colors.surface,
+    ...shadows.sm,
   },
   headerButton: {
     width: 40,

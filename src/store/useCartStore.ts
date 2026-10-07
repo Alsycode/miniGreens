@@ -36,16 +36,33 @@ export const useCartStore = create<CartState>()(
       items: [],
 
       addItemBySlug: async (slug, quantity = 1) => {
+        // Already in cart — increment locally, no network round-trip needed.
+        // This also removes the only window where rapid repeat taps could race:
+        // each increment now applies synchronously against the latest state.
+        if (get().items.some((i) => i.slug === slug)) {
+          set((state) => ({
+            items: state.items.map((i) =>
+              i.slug === slug ? { ...i, quantity: i.quantity + quantity } : i,
+            ),
+          }));
+          return true;
+        }
+
         const { data: product } = await supabase
           .from('products')
-          .select('id, slug, name, price, images')
+          .select('id, slug, name, price, images, is_available, is_preorder, stock')
           .eq('slug', slug)
           .maybeSingle();
-        if (!product) {
+        if (!product || !product.is_available) {
+          return false;
+        }
+        if (!product.is_preorder && product.stock <= 0) {
           return false;
         }
 
         set((state) => {
+          // Re-check inside the updater: another concurrent add for the same new
+          // item may have already landed while this fetch was in flight.
           const existing = state.items.find((i) => i.productId === product.id);
           if (existing) {
             return {

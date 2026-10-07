@@ -5,11 +5,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import * as Haptics from 'expo-haptics';
-import { colors, spacing, borderRadius } from '../theme';
+import { colors, spacing, borderRadius, shadows } from '../theme';
 import { Typography } from '../components/ui/Typography';
 import { Loading } from '../components/ui/Loading';
 import { ErrorNotice } from '../components/ui/ErrorNotice';
 import { EmptyState } from '../components/ui/EmptyState';
+import { Screen } from '../components/layout/Screen';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/useAuthStore';
 import { routeFromNotificationData } from '../lib/notifications';
@@ -39,6 +40,7 @@ function relativeTime(iso: string): string {
 
 export default function NotificationsScreen() {
   const insets = useSafeAreaInsets();
+  const session = useAuthStore((s) => s.session);
   const profileId = useAuthStore((s) => s.profile?.id);
   const queryClient = useQueryClient();
 
@@ -87,6 +89,20 @@ export default function NotificationsScreen() {
       invalidate();
     }
     routeFromNotificationData(n.data);
+  }
+
+  if (!session) {
+    return (
+      <Screen title="Notifications" scroll={false}>
+        <EmptyState
+          icon="notifications-outline"
+          title="Log in to see notifications"
+          message="Order updates, offers and birthday rewards show up here."
+          actionLabel="Log In"
+          onAction={() => router.push('/auth/login')}
+        />
+      </Screen>
+    );
   }
 
   return (
@@ -186,6 +202,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
+    backgroundColor: colors.surface,
+    ...shadows.sm,
   },
   headerButton: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
   scrollContent: { paddingHorizontal: spacing.lg, paddingBottom: spacing['3xl'] },
@@ -198,6 +216,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.borderLight,
+    ...shadows.sm,
   },
   rowUnread: { borderColor: colors.primary, backgroundColor: colors.primaryBg },
   iconWrap: {

@@ -81,6 +81,8 @@ export default function ProductDetailScreen() {
     );
   }
 
+  const unavailable = !!product && (!product.isAvailable || (!product.isPreorder && product.stock <= 0));
+
   if (!product) {
     return (
       <Screen title="Details" scroll={false}>
@@ -120,7 +122,7 @@ export default function ProductDetailScreen() {
               ₹{(product.price * quantity).toFixed(2)}
             </Typography>
           </View>
-          {product.isPreorder ? (
+          {product.isPreorder && !unavailable ? (
             <Button
               title="Pre-order"
               variant="primary"
@@ -132,9 +134,10 @@ export default function ProductDetailScreen() {
             />
           ) : (
             <Button
-              title="Add to Cart"
+              title={unavailable ? (product.isAvailable ? 'Out of Stock' : 'Currently Unavailable') : 'Add to Cart'}
               variant="primary"
               size="lg"
+              disabled={unavailable}
               loading={adding}
               onPress={async () => {
                 setAdding(true);
@@ -216,7 +219,7 @@ export default function ProductDetailScreen() {
           )}
         </Animated.View>
 
-        {product.isPreorder && (
+        {product.isPreorder && !unavailable && (
           <Animated.View entering={FadeInUp.delay(230).springify().damping(31).mass(1).stiffness(100)} style={styles.preorderNote}>
             <Ionicons name="time-outline" size={15} color={colors.primaryDark} />
             <Typography variant="caption" color={colors.primaryDark} weight="semibold" style={{ marginLeft: spacing.xs }}>

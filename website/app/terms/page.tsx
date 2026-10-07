@@ -44,7 +44,7 @@ const SECTIONS = [
     title: "6. Your Data",
     body: [
       "We collect only what we need to grow, pack, and deliver your order, and to contact you about it. We don't sell your details to anyone.",
-      "You can ask us to delete your account and associated data at any time by writing to hello@minigreenscompany.com.",
+      "You can ask us to delete your account and associated data at any time by writing to theminigreenscompany@gmail.com.",
     ],
   },
   {

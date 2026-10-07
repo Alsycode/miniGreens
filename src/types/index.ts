@@ -19,6 +19,8 @@ export interface Product {
   isSeasonal: boolean;
   isBestSeller: boolean;
   isPreorder: boolean;
+  isAvailable: boolean;
+  stock: number;
   rating: number;
   reviewCount: number;
   tags: string[];

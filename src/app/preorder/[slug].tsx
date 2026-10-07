@@ -83,6 +83,20 @@ export default function PreorderScreen() {
     );
   }
 
+  if (!product.isAvailable) {
+    return (
+      <Screen title="Pre-order" scroll={false}>
+        <EmptyState
+          icon="leaf-outline"
+          title="Not taking pre-orders"
+          message="This product is no longer available to pre-order."
+          actionLabel="Go Back"
+          onAction={() => router.back()}
+        />
+      </Screen>
+    );
+  }
+
   const lineTotal = product.price * quantity;
 
   async function handlePlacePreorder() {

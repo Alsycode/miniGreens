@@ -11,6 +11,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { colors, spacing, borderRadius, shadows } from '../../theme';
+import { BRAND_CLAIM_SHORT } from '../../theme/brand';
 import { Typography } from '../../components/ui/Typography';
 
 const values = [
@@ -89,7 +90,7 @@ export default function AboutScreen() {
                 MiniGreens
               </Typography>
               <Typography variant="bodySmall" color="rgba(255,255,255,0.72)" style={styles.heroTagline}>
-                Growing nutrition. Delivering freshness. Building community.
+                {BRAND_CLAIM_SHORT}. Growing nutrition, delivering freshness.
               </Typography>
             </Animated.View>
           </LinearGradient>
@@ -164,6 +165,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     backgroundColor: colors.surface,
+    ...shadows.sm,
   },
   headerButton: {
     width: 40,

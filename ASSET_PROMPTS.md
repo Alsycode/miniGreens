@@ -119,3 +119,6 @@ Professional macro food photography of a full tray of red cabbage microgreens gr
 | `broccoli.jpg` | Broccoli microgreens |
 | `redcabbage.webp` | Red Cabbage microgreens |
 | `cabbage.jpg` | Red Cabbage microgreens (spare) |
+
+## Brand claim (add to all new pack and OG artwork)
+Include a small badge reading "India's First Microgreens Brand" (source of truth: `webapp/lib/brand.ts`). Keep it secondary to the logo, on packaging, the OG/social banner, and hero imagery.

@@ -12,6 +12,8 @@ import { Chip } from '../../components/ui/Chip';
 import { TextField } from '../../components/ui/TextField';
 import { Loading } from '../../components/ui/Loading';
 import { ErrorNotice } from '../../components/ui/ErrorNotice';
+import { EmptyState } from '../../components/ui/EmptyState';
+import { Screen } from '../../components/layout/Screen';
 import { useProducts, useCategories } from '../../services/catalog';
 import { useAuthStore } from '../../store/useAuthStore';
 import { supabase } from '../../lib/supabase';
@@ -47,6 +49,7 @@ function parsePlanItem(raw: string): ParsedPlanItem {
 export default function PlanSubscriptionScreen() {
   const insets = useSafeAreaInsets();
   const { planId } = useLocalSearchParams<{ planId: string }>();
+  const session = useAuthStore((s) => s.session);
   const profile = useAuthStore((s) => s.profile);
   const { products, isLoading: productsLoading } = useProducts();
   const { categories, isLoading: categoriesLoading } = useCategories();
@@ -196,6 +199,20 @@ export default function PlanSubscriptionScreen() {
 
   if (planLoading || productsLoading || categoriesLoading) {
     return <Loading fullScreen />;
+  }
+
+  if (!session) {
+    return (
+      <Screen title="Subscribe" scroll={false}>
+        <EmptyState
+          icon="calendar-outline"
+          title="Log in to subscribe"
+          message="Choose your delivery address and start this plan once you're logged in."
+          actionLabel="Log In"
+          onAction={() => router.push('/auth/login')}
+        />
+      </Screen>
+    );
   }
 
   if (!plan) {

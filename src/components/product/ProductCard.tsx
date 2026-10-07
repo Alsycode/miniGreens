@@ -36,7 +36,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 // Widened from the old 152 so the product photography can actually breathe
 // (the reference gets its richness from proportion, not a huge card).
 // Two cards + a peek of the third — the reference Home Screen's proportion.
-const FEATURE_CARD_W = Math.min(Math.round(SCREEN_WIDTH * 0.42), 190);
+const FEATURE_CARD_W = Math.min(Math.round(SCREEN_WIDTH * 0.46), 210);
 
 
 // ─── Inline cart stepper ─────────────────────────────────────────────────────
@@ -46,9 +46,10 @@ function CartStepper({ slug, compact = false }: { slug: string; compact?: boolea
   const updateQuantity = useCartStore((s) => s.updateQuantity);
   const qty = cartItem?.quantity ?? 0;
 
-  const inc = () => {
+  const inc = async () => {
     Haptics.selectionAsync();
-    useCartStore.getState().addItemBySlug(slug, 1);
+    const ok = await useCartStore.getState().addItemBySlug(slug, 1);
+    if (!ok) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
   };
   const dec = () => {
     if (!cartItem) return;
@@ -193,9 +194,10 @@ export function ProductCard({ product, onPress, variant = 'default', index = 0, 
               </View>
               <Pressable
                 style={styles.addToCartBtn}
-                onPress={() => {
+                onPress={async () => {
                   Haptics.selectionAsync();
-                  useCartStore.getState().addItemBySlug(product.slug, 1);
+                  const ok = await useCartStore.getState().addItemBySlug(product.slug, 1);
+                  if (!ok) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
                 }}
               >
                 <Typography weight="bold" color={colors.primary} style={styles.addToCartText}>Add To Cart</Typography>
@@ -334,16 +336,16 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: spacing.md,
-    paddingTop: spacing.xs,
-    paddingBottom: spacing.sm,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.md,
   },
   name: {
-    fontSize: 12,
-    lineHeight: 15,
+    fontSize: 13,
+    lineHeight: 17,
   },
   price: {
-    fontSize: 13,
-    lineHeight: 16,
+    fontSize: 14,
+    lineHeight: 18,
   },
   unitBadgeOnImage: {
     position: 'absolute',
@@ -481,18 +483,19 @@ const styles = StyleSheet.create({
     lineHeight: 15,
     minHeight: 30,
   },
-  // Tighter description used by the compact default card (reference proportions)
+  // Description used by the compact default card — enough line-height to
+  // breathe (the old fontSize:10/lineHeight:12 pairing read as cramped).
   cardDesc: {
     marginTop: spacing.xs,
-    fontSize: 10,
-    lineHeight: 12,
-    minHeight: 22,
+    fontSize: 11,
+    lineHeight: 15,
+    minHeight: 30,
   },
   bottomRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: spacing.xs,
+    marginTop: spacing.sm,
   },
 
   // ── Inline stepper ───────────────────────────────────────────────────────

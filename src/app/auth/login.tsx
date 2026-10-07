@@ -13,6 +13,8 @@ import { maskDobInput, parseDobInput } from '../../utils/date';
 
 type Stage = 'email' | 'code' | 'details';
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
   const sendCode = useAuthStore((s) => s.sendCode);
@@ -30,6 +32,10 @@ export default function LoginScreen() {
   const handleSendCode = async () => {
     if (!email.trim()) {
       setError('Enter your email.');
+      return;
+    }
+    if (!EMAIL_PATTERN.test(email.trim())) {
+      setError('Enter a valid email address.');
       return;
     }
     setError(null);

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   ScrollView,
@@ -28,6 +28,8 @@ import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { TextField } from '../../components/ui/TextField';
 import { ErrorNotice } from '../../components/ui/ErrorNotice';
+import { EmptyState } from '../../components/ui/EmptyState';
+import { Screen } from '../../components/layout/Screen';
 import { useCartStore, cartSubtotal } from '../../store/useCartStore';
 import { useAuthStore } from '../../store/useAuthStore';
 import { supabase } from '../../lib/supabase';
@@ -44,20 +46,13 @@ const CONNECTOR_WIDTH = 60;
 // BUG-13: flat delivery fee — a round INR figure (was 35.49).
 const DELIVERY_FEE = 40;
 
-const TIME_SLOTS = ['Morning 8–12', 'Afternoon 12–4', 'Evening 4–8'];
+const DELIVERY_WINDOW_DAYS = 7;
 
-/** Next `count` days as { iso: 'YYYY-MM-DD', label } — iso is what Postgres `date` expects. */
-function nextDays(count: number) {
-  const out: { iso: string; label: string }[] = [];
-  const now = new Date();
-  for (let i = 0; i < count; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
-    const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    const label =
-      i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
-    out.push({ iso, label });
-  }
-  return out;
+/** ISO date `DELIVERY_WINDOW_DAYS` from now — what Postgres `date` expects. */
+function estimatedDeliveryDate() {
+  const d = new Date();
+  d.setDate(d.getDate() + DELIVERY_WINDOW_DAYS);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 // ─── Step Dot ────────────────────────────────────────────────────────────────
@@ -144,16 +139,16 @@ function AddressCard({
 
 export default function CheckoutScreen() {
   const insets = useSafeAreaInsets();
+  const session = useAuthStore((s) => s.session);
   const profile = useAuthStore((s) => s.profile);
   const items = useCartStore((s) => s.items);
   const clearCart = useCartStore((s) => s.clearCart);
+  const orderPlacedRef = useRef(false);
 
   const [step, setStep] = useState<CheckoutStep>('review');
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string>('');
-  const [deliveryDate, setDeliveryDate] = useState('');
-  const [deliveryTime, setDeliveryTime] = useState('');
-  const dateOptions = useMemo(() => nextDays(6), []);
+  const deliveryDate = useMemo(() => estimatedDeliveryDate(), []);
   const [notes, setNotes] = useState('');
   const [placing, setPlacing] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
@@ -262,7 +257,11 @@ export default function CheckoutScreen() {
   }, [subtotal]);
 
   async function handlePlaceOrder() {
-    if (!profile || items.length === 0) return;
+    if (items.length === 0) return;
+    if (!profile) {
+      setOrderError('Your account is still loading. Please try again in a moment.');
+      return;
+    }
     setOrderError(null);
     if (!selectedAddressId) {
       setOrderError('Please select a delivery address.');
@@ -281,12 +280,14 @@ export default function CheckoutScreen() {
         delivery_fee: DELIVERY_FEE,
         total,
         delivery_address_id: selectedAddressId,
-        delivery_date: deliveryDate || null,
-        delivery_time: deliveryTime || null,
+        delivery_date: deliveryDate,
+        delivery_time: null,
         notes: notes || null,
         order_type: 'preorder',
         business_name: null,
         contact_person: null,
+        business_phone: null,
+        business_address: null,
         discount_code: appliedCoupon?.code ?? null,
         discount_amount: discountAmount,
       })
@@ -321,6 +322,7 @@ export default function CheckoutScreen() {
     setPlacing(false);
 
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    orderPlacedRef.current = true;
     clearCart();
     router.replace(`/checkout/success?orderId=${order.id}`);
   }
@@ -428,40 +430,11 @@ export default function CheckoutScreen() {
           <Animated.View key="delivery" entering={FadeInRight.springify().damping(34).stiffness(180).mass(1)}>
             <Typography variant="h4" color={colors.text} style={styles.stepTitle}>Delivery Information</Typography>
 
-            <Typography variant="bodySmall" weight="semibold" color={colors.text} style={styles.fieldLabel}>Delivery Date</Typography>
-            <View style={styles.chipRow}>
-              {dateOptions.map((opt) => {
-                const selected = deliveryDate === opt.iso;
-                return (
-                  <Pressable
-                    key={opt.iso}
-                    onPress={() => { Haptics.selectionAsync(); setDeliveryDate(opt.iso); }}
-                    style={[styles.chip, selected && styles.chipSelected]}
-                  >
-                    <Typography variant="bodySmall" weight={selected ? 'semibold' : 'regular'} color={selected ? '#06130D' : colors.text}>
-                      {opt.label}
-                    </Typography>
-                  </Pressable>
-                );
-              })}
-            </View>
-
-            <Typography variant="bodySmall" weight="semibold" color={colors.text} style={styles.fieldLabel}>Preferred Time</Typography>
-            <View style={styles.chipRow}>
-              {TIME_SLOTS.map((slot) => {
-                const selected = deliveryTime === slot;
-                return (
-                  <Pressable
-                    key={slot}
-                    onPress={() => { Haptics.selectionAsync(); setDeliveryTime(slot); }}
-                    style={[styles.chip, selected && styles.chipSelected]}
-                  >
-                    <Typography variant="bodySmall" weight={selected ? 'semibold' : 'regular'} color={selected ? colors.textInverse : colors.text}>
-                      {slot}
-                    </Typography>
-                  </Pressable>
-                );
-              })}
+            <View style={styles.deliveryNotice}>
+              <Ionicons name="time-outline" size={18} color={colors.primary} />
+              <Typography variant="bodySmall" color={colors.text} style={{ marginLeft: spacing.sm, flex: 1 }}>
+                All pre-orders are delivered within {DELIVERY_WINDOW_DAYS} days.
+              </Typography>
             </View>
 
             <TextField label="Notes (Optional)" placeholder="Special instructions..." value={notes} onChangeText={setNotes} leftIcon="chatbubble-outline" multiline />
@@ -470,7 +443,6 @@ export default function CheckoutScreen() {
               variant="primary"
               size="lg"
               fullWidth
-              disabled={!deliveryDate || !deliveryTime}
               onPress={() => goTo('address')}
             />
             <Button title="Back" variant="ghost" fullWidth onPress={() => goTo('review')} style={styles.backButton} />
@@ -527,6 +499,34 @@ export default function CheckoutScreen() {
     }
   };
 
+  if (!session) {
+    return (
+      <Screen title="Checkout" scroll={false}>
+        <EmptyState
+          icon="bag-handle-outline"
+          title="Log in to check out"
+          message="Your cart is saved. Log in to choose a delivery address and place your order."
+          actionLabel="Log In"
+          onAction={() => router.push('/auth/login')}
+        />
+      </Screen>
+    );
+  }
+
+  if (items.length === 0 && !orderPlacedRef.current) {
+    return (
+      <Screen title="Checkout" scroll={false}>
+        <EmptyState
+          icon="bag-handle-outline"
+          title="Your cart is empty"
+          message="Add some greens to your cart to check out."
+          actionLabel="Start Shopping"
+          onAction={() => router.replace('/(tabs)/explore')}
+        />
+      </Screen>
+    );
+  }
+
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <Animated.View entering={FadeIn.duration(280)} style={styles.header}>
@@ -570,8 +570,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     backgroundColor: colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.borderLight,
+    ...shadows.sm,
   },
   headerButton: {
     width: 40,
@@ -614,16 +613,14 @@ const styles = StyleSheet.create({
   scrollContent: { padding: spacing.lg, paddingBottom: spacing['8xl'] },
   stepTitle: { marginBottom: spacing.xl, marginTop: spacing.sm },
   fieldLabel: { marginBottom: spacing.sm, marginTop: spacing.md },
-  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.sm },
-  chip: {
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    borderRadius: borderRadius.full,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
+  deliveryNotice: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.primaryBg,
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
   },
-  chipSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
   productCard: { marginBottom: spacing.md },
   productRow: { flexDirection: 'row', alignItems: 'center' },
   productImage: {
@@ -686,6 +683,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     padding: spacing.lg,
     backgroundColor: colors.surface,
+    ...shadows.sm,
   },
   addressCardSelected: { borderColor: colors.primary, backgroundColor: colors.primaryBg },
   addressHeader: {

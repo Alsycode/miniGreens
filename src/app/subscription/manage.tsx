@@ -9,13 +9,35 @@ import { Typography } from '../../components/ui/Typography';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Loading } from '../../components/ui/Loading';
+import { EmptyState } from '../../components/ui/EmptyState';
+import { ErrorNotice } from '../../components/ui/ErrorNotice';
+import { Screen } from '../../components/layout/Screen';
 import { useAuthStore } from '../../store/useAuthStore';
 import { supabase } from '../../lib/supabase';
 import type { Database } from '../../types/database';
 
 type SubscriptionRow = Database['public']['Tables']['subscriptions']['Row'] & {
   subscription_plans: Database['public']['Tables']['subscription_plans']['Row'] | null;
+  subscription_items: { quantity: number; products: { name: string; price: number } | null }[];
 };
+
+function planName(s: SubscriptionRow): string {
+  if (!s.is_custom) return s.subscription_plans?.name ?? 'Subscription';
+  return `Custom (${s.custom_frequency === 'monthly' ? 'Monthly' : 'Weekly'})`;
+}
+
+function planPrice(s: SubscriptionRow): number {
+  if (!s.is_custom) return Number(s.subscription_plans?.price ?? 0);
+  return s.subscription_items.reduce(
+    (sum, item) => sum + Number(item.products?.price ?? 0) * item.quantity,
+    0
+  );
+}
+
+function planUnit(s: SubscriptionRow): string {
+  if (!s.is_custom) return s.subscription_plans?.unit ?? '';
+  return s.custom_frequency === 'monthly' ? 'month' : 'week';
+}
 
 const STATUS_LABELS: Record<string, string> = {
   active: 'Active',
@@ -36,6 +58,7 @@ export default function ManageSubscriptionScreen() {
   const [subscription, setSubscription] = useState<SubscriptionRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!session) {
@@ -44,7 +67,7 @@ export default function ManageSubscriptionScreen() {
     }
     const { data } = await supabase
       .from('subscriptions')
-      .select('*, subscription_plans(*)')
+      .select('*, subscription_plans(*), subscription_items(quantity, products(name, price))')
       .eq('profile_id', session.user.id)
       .order('started_at', { ascending: false })
       .limit(1)
@@ -62,10 +85,16 @@ export default function ManageSubscriptionScreen() {
   const handlePause = async () => {
     if (!subscription) return;
     setUpdating(true);
-    await supabase
+    setActionError(null);
+    const { error } = await supabase
       .from('subscriptions')
       .update({ status: 'paused', paused_at: new Date().toISOString() })
       .eq('id', subscription.id);
+    if (error) {
+      setActionError("Couldn't pause your subscription. Please try again.");
+      setUpdating(false);
+      return;
+    }
     await load();
     setUpdating(false);
   };
@@ -73,10 +102,16 @@ export default function ManageSubscriptionScreen() {
   const handleResume = async () => {
     if (!subscription) return;
     setUpdating(true);
-    await supabase
+    setActionError(null);
+    const { error } = await supabase
       .from('subscriptions')
       .update({ status: 'active', paused_at: null })
       .eq('id', subscription.id);
+    if (error) {
+      setActionError("Couldn't resume your subscription. Please try again.");
+      setUpdating(false);
+      return;
+    }
     await load();
     setUpdating(false);
   };
@@ -84,16 +119,36 @@ export default function ManageSubscriptionScreen() {
   const handleCancel = async () => {
     if (!subscription) return;
     setUpdating(true);
-    await supabase
+    setActionError(null);
+    const { error } = await supabase
       .from('subscriptions')
       .update({ status: 'cancelled', cancelled_at: new Date().toISOString() })
       .eq('id', subscription.id);
+    if (error) {
+      setActionError("Couldn't cancel your subscription. Please try again.");
+      setUpdating(false);
+      return;
+    }
     await load();
     setUpdating(false);
   };
 
   if (loading) {
     return <Loading />;
+  }
+
+  if (!session) {
+    return (
+      <Screen title="My Subscription" scroll={false}>
+        <EmptyState
+          icon="calendar-outline"
+          title="Log in to manage your subscription"
+          message="Your plan, next delivery and pause or cancel options show up here."
+          actionLabel="Log In"
+          onAction={() => router.push('/auth/login')}
+        />
+      </Screen>
+    );
   }
 
   if (!subscription) {
@@ -109,8 +164,6 @@ export default function ManageSubscriptionScreen() {
       </View>
     );
   }
-
-  const plan = subscription.subscription_plans;
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -134,17 +187,21 @@ export default function ManageSubscriptionScreen() {
               </Typography>
             </View>
             <Typography variant="h3" color={colors.text} style={styles.planName}>
-              {plan?.name ?? 'Subscription'}
+              {planName(subscription)}
             </Typography>
             <Typography variant="body" color={colors.textSecondary}>
-              {plan?.description}
+              {subscription.is_custom
+                ? subscription.subscription_items
+                    .map((item) => `${item.products?.name ?? 'Item'} × ${item.quantity}`)
+                    .join(', ')
+                : subscription.subscription_plans?.description}
             </Typography>
             <View style={styles.priceRow}>
               <Typography variant="h2" color={colors.primaryDark}>
-                ₹{plan?.price ?? 0}
+                ₹{planPrice(subscription)}
               </Typography>
               <Typography variant="caption" color={colors.textSecondary}>
-                /{plan?.unit}
+                /{planUnit(subscription)}
               </Typography>
             </View>
             {subscription.next_delivery_date && (
@@ -154,6 +211,10 @@ export default function ManageSubscriptionScreen() {
             )}
           </Card>
         </Animated.View>
+
+        {actionError && (
+          <ErrorNotice message={actionError} onDismiss={() => setActionError(null)} style={{ marginBottom: spacing.lg }} />
+        )}
 
         <Animated.View entering={FadeInUp.delay(180).springify().damping(31).mass(1).stiffness(100)} style={styles.actions}>
           {subscription.status === 'active' && (

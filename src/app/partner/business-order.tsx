@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Pressable, TextInput } from 'react-native';
 import { router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInUp } from 'react-native-reanimated';
-import { colors, spacing } from '../../theme';
+import { colors, spacing, borderRadius } from '../../theme';
 import { Typography } from '../../components/ui/Typography';
 import { TextField } from '../../components/ui/TextField';
 import { Button } from '../../components/ui/Button';
@@ -15,6 +16,10 @@ import type { Database } from '../../types/database';
 
 type PartnerRow = Database['public']['Tables']['partners']['Row'];
 type ProductRow = Database['public']['Tables']['products']['Row'];
+type CartLine = { productId: string; quantity: number };
+
+// Bulk/business ordering disabled for now — flip to true to re-enable.
+const BUSINESS_ORDER_ENABLED = false;
 
 export default function BusinessOrderScreen() {
   const insets = useSafeAreaInsets();
@@ -28,8 +33,7 @@ export default function BusinessOrderScreen() {
   const [contactPerson, setContactPerson] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
-  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
-  const [quantity, setQuantity] = useState('1');
+  const [cart, setCart] = useState<CartLine[]>([]);
   const [deliveryDate, setDeliveryDate] = useState('');
   const [notes, setNotes] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -54,14 +58,32 @@ export default function BusinessOrderScreen() {
     })();
   }, [session]);
 
-  const selectedProduct = products.find((p) => p.id === selectedProductId) ?? null;
-  const qty = Math.max(1, parseInt(quantity, 10) || 0);
-  const subtotal = selectedProduct ? Number(selectedProduct.price) * qty : 0;
+  function toggleProduct(productId: string) {
+    setCart((prev) =>
+      prev.some((line) => line.productId === productId)
+        ? prev.filter((line) => line.productId !== productId)
+        : [...prev, { productId, quantity: 1 }]
+    );
+  }
+
+  function setLineQuantity(productId: string, quantity: number) {
+    const clamped = Math.max(1, Math.floor(quantity) || 1);
+    setCart((prev) => prev.map((line) => (line.productId === productId ? { ...line, quantity: clamped } : line)));
+  }
+
+  function removeLine(productId: string) {
+    setCart((prev) => prev.filter((line) => line.productId !== productId));
+  }
+
+  const cartLines = cart
+    .map((line) => ({ line, product: products.find((p) => p.id === line.productId) }))
+    .filter((entry): entry is { line: CartLine; product: ProductRow } => !!entry.product);
+  const total = cartLines.reduce((sum, { line, product }) => sum + Number(product.price) * line.quantity, 0);
 
   const handleSubmit = async () => {
     if (!session || !partner) return;
-    if (!businessName.trim() || !contactPerson.trim() || !phone.trim() || !selectedProduct || !deliveryDate.trim()) {
-      setError('Fill in all required fields and pick a product.');
+    if (!businessName.trim() || !contactPerson.trim() || !phone.trim() || cartLines.length === 0 || !deliveryDate.trim()) {
+      setError('Fill in all required fields and add at least one product.');
       return;
     }
     setError(null);
@@ -74,9 +96,9 @@ export default function BusinessOrderScreen() {
         order_number: orderNumber,
         profile_id: session.user.id,
         status: 'pending',
-        subtotal,
+        subtotal: total,
         delivery_fee: 0,
-        total: subtotal,
+        total,
         delivery_address_id: null,
         delivery_date: deliveryDate.trim(),
         delivery_time: null,
@@ -84,6 +106,8 @@ export default function BusinessOrderScreen() {
         order_type: 'business',
         business_name: businessName.trim(),
         contact_person: contactPerson.trim(),
+        business_phone: phone.trim(),
+        business_address: address.trim() || null,
       })
       .select()
       .single();
@@ -94,14 +118,16 @@ export default function BusinessOrderScreen() {
       return;
     }
 
-    const { error: itemError } = await supabase.from('order_items').insert({
-      order_id: order.id,
-      product_id: selectedProduct.id,
-      product_name: selectedProduct.name,
-      quantity: qty,
-      price: Number(selectedProduct.price),
-      image: null,
-    });
+    const { error: itemError } = await supabase.from('order_items').insert(
+      cartLines.map(({ line, product }) => ({
+        order_id: order.id,
+        product_id: product.id,
+        product_name: product.name,
+        quantity: line.quantity,
+        price: Number(product.price),
+        image: null,
+      }))
+    );
 
     if (itemError) {
       // BUG-10: roll back the orphaned order row (exists with zero items).
@@ -119,6 +145,20 @@ export default function BusinessOrderScreen() {
 
   if (loading) {
     return <Loading fullScreen />;
+  }
+
+  if (!BUSINESS_ORDER_ENABLED) {
+    return (
+      <View style={[styles.container, styles.disabledContainer, { paddingTop: insets.top + spacing['2xl'] }]}>
+        <Typography variant="h3" color={colors.text} style={styles.title}>
+          Business Ordering Unavailable
+        </Typography>
+        <Typography variant="body" color={colors.textSecondary} style={styles.subtitle}>
+          Bulk ordering is temporarily unavailable. Please contact us directly for business orders.
+        </Typography>
+        <Button title="Back to Dashboard" onPress={() => router.replace('/partner/dashboard')} size="lg" />
+      </View>
+    );
   }
 
   return (
@@ -148,28 +188,69 @@ export default function BusinessOrderScreen() {
 
         <Animated.View entering={FadeInUp.delay(160).springify().damping(31).mass(1).stiffness(100)}>
           <Typography variant="bodySmall" color={colors.textSecondary} weight="medium" style={styles.sectionLabel}>
-            Product
+            Products
+          </Typography>
+          <Typography variant="caption" color={colors.textTertiary} style={styles.sectionHint}>
+            Tap to add a product, then set its quantity below.
           </Typography>
           <View style={styles.chipRow}>
             {products.map((product) => (
               <Chip
                 key={product.id}
                 label={`${product.name} · ₹${Number(product.price).toFixed(0)}`}
-                selected={selectedProductId === product.id}
-                onPress={() => setSelectedProductId(product.id)}
+                selected={cart.some((line) => line.productId === product.id)}
+                onPress={() => toggleProduct(product.id)}
               />
             ))}
           </View>
         </Animated.View>
 
+        {cartLines.length > 0 && (
+          <Animated.View entering={FadeInUp.delay(190).springify().damping(31).mass(1).stiffness(100)} style={styles.cartList}>
+            {cartLines.map(({ line, product }) => (
+              <View key={product.id} style={styles.cartRow}>
+                <View style={styles.cartRowInfo}>
+                  <Typography variant="bodySmall" weight="semibold" color={colors.text} numberOfLines={1}>
+                    {product.name}
+                  </Typography>
+                  <Typography variant="caption" color={colors.textTertiary}>
+                    ₹{Number(product.price).toFixed(0)} each
+                  </Typography>
+                </View>
+                <View style={styles.stepper}>
+                  <Pressable
+                    onPress={() => setLineQuantity(product.id, line.quantity - 1)}
+                    style={styles.stepperButton}
+                    hitSlop={8}
+                  >
+                    <Ionicons name="remove" size={14} color={colors.text} />
+                  </Pressable>
+                  <TextInput
+                    value={String(line.quantity)}
+                    onChangeText={(v) => setLineQuantity(product.id, parseInt(v, 10))}
+                    keyboardType="number-pad"
+                    style={styles.stepperInput}
+                  />
+                  <Pressable
+                    onPress={() => setLineQuantity(product.id, line.quantity + 1)}
+                    style={styles.stepperButton}
+                    hitSlop={8}
+                  >
+                    <Ionicons name="add" size={14} color={colors.text} />
+                  </Pressable>
+                </View>
+                <Typography variant="bodySmall" weight="semibold" color={colors.text} style={styles.cartRowTotal}>
+                  ₹{(Number(product.price) * line.quantity).toFixed(0)}
+                </Typography>
+                <Pressable onPress={() => removeLine(product.id)} hitSlop={8} style={styles.removeButton}>
+                  <Ionicons name="trash-outline" size={16} color={colors.textTertiary} />
+                </Pressable>
+              </View>
+            ))}
+          </Animated.View>
+        )}
+
         <Animated.View entering={FadeInUp.delay(220).springify().damping(31).mass(1).stiffness(100)}>
-          <TextField
-            label="Quantity"
-            value={quantity}
-            onChangeText={setQuantity}
-            keyboardType="number-pad"
-            leftIcon="cube-outline"
-          />
           <TextField
             label="Required Delivery Date"
             placeholder="e.g., 2026-09-01"
@@ -184,9 +265,9 @@ export default function BusinessOrderScreen() {
             leftIcon="chatbubble-outline"
             multiline
           />
-          {selectedProduct && (
+          {cartLines.length > 0 && (
             <Typography variant="body" weight="semibold" color={colors.primaryDark} style={styles.subtotal}>
-              Subtotal: ₹{subtotal.toFixed(2)}
+              Total: ₹{total.toFixed(2)}
             </Typography>
           )}
           {error && (
@@ -206,6 +287,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+  disabledContainer: {
+    paddingHorizontal: spacing['2xl'],
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.lg,
+  },
   scrollContent: {
     paddingHorizontal: spacing['2xl'],
     paddingBottom: spacing['4xl'],
@@ -217,12 +304,63 @@ const styles = StyleSheet.create({
     marginBottom: spacing['2xl'],
   },
   sectionLabel: {
+    marginBottom: 2,
+  },
+  sectionHint: {
     marginBottom: spacing.sm,
   },
   chipRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     marginBottom: spacing.md,
+  },
+  cartList: {
+    marginBottom: spacing.md,
+    gap: spacing.sm,
+  },
+  cartRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surfaceVariant,
+    borderRadius: borderRadius.lg,
+    padding: spacing.sm,
+    gap: spacing.sm,
+  },
+  cartRowInfo: {
+    flex: 1,
+    minWidth: 0,
+  },
+  cartRowTotal: {
+    width: 56,
+    textAlign: 'right',
+  },
+  stepper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: borderRadius.full,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  stepperButton: {
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepperInput: {
+    width: 32,
+    textAlign: 'center',
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.text,
+    padding: 0,
+  },
+  removeButton: {
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   subtotal: {
     marginBottom: spacing.lg,

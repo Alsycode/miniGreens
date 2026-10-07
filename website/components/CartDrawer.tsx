@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { Leaf, Minus, Plus, Trash, X } from "@phosphor-icons/react";
 import { useCartStore, cartSubtotal } from "@/store/useCartStore";
 import { displayName } from "@/lib/productCopy";
+import { productImageFit } from "@/lib/productImages";
 
 export const FREE_DELIVERY_THRESHOLD = 499;
 
@@ -134,7 +135,7 @@ export function CartDrawer() {
                           src={item.image}
                           alt={name}
                           fill
-                          className="object-cover"
+                          className={productImageFit(item.image)}
                           sizes="64px"
                         />
                       ) : (

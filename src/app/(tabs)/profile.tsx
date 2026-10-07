@@ -59,6 +59,7 @@ function getMenuSections(
       items: [
         { icon: 'settings-outline', label: 'Settings', route: '/profile/settings' },
         { icon: 'information-circle-outline', label: 'About', route: '/profile/about' },
+        { icon: 'people-outline', label: 'Women Who Grow', route: '/women-who-grow' },
         { icon: 'call-outline', label: 'Contact Us', route: '/profile/contact' },
         { icon: 'help-circle-outline', label: 'FAQ', route: '/profile/faq' },
       ],

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { Leaf } from "@phosphor-icons/react";
+import { productImageFit } from "@/lib/productImages";
 
 export function Gallery({ images, name }: { images: string[]; name: string }) {
   const [active, setActive] = useState(0);
@@ -17,7 +18,7 @@ export function Gallery({ images, name }: { images: string[]; name: string }) {
             alt={name}
             fill
             priority
-            className="object-cover"
+            className={productImageFit(src)}
             sizes="(min-width: 1024px) 45vw, 90vw"
           />
         ) : (
@@ -42,7 +43,7 @@ export function Gallery({ images, name }: { images: string[]; name: string }) {
                   : "border-(--color-border) hover:border-(--color-sage)/60"
               }`}
             >
-              <Image src={img} alt="" fill className="object-cover" sizes="80px" />
+              <Image src={img} alt="" fill className={productImageFit(img)} sizes="80px" />
             </button>
           ))}
         </div>

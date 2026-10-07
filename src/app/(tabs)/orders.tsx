@@ -44,9 +44,18 @@ function OrderCard({ order, index }: { order: OrderWithItems; index: number }) {
       <PressableScale onPress={() => router.push(`/order/${order.id}`)} accessibilityLabel={`Order ${order.order_number}`}>
         <Card padding="lg">
           <View style={styles.orderHeader}>
-            <Typography variant="bodySmall" weight="semibold" color={colors.text}>
-              {order.order_number}
-            </Typography>
+            <View style={styles.orderHeaderLeft}>
+              <Typography variant="bodySmall" weight="semibold" color={colors.text}>
+                {order.order_number}
+              </Typography>
+              {order.order_type === 'preorder' && (
+                <View style={styles.preorderPill}>
+                  <Typography variant="caption" weight="bold" color={colors.primaryDark} style={{ fontSize: 9, letterSpacing: 0.5 }}>
+                    PRE-ORDER
+                  </Typography>
+                </View>
+              )}
+            </View>
             <StatusPill label={order.status} status={order.status} />
           </View>
 
@@ -83,6 +92,11 @@ function OrderCard({ order, index }: { order: OrderWithItems; index: number }) {
               <Typography variant="caption" color={colors.textTertiary}>
                 {paymentLabel[order.payment_status]}
               </Typography>
+              {order.expected_availability_date && (
+                <Typography variant="caption" color={colors.primaryDark} weight="semibold">
+                  Expected {formatDate(order.expected_availability_date)}
+                </Typography>
+              )}
             </View>
             <Typography variant="body" weight="bold" color={colors.accent}>
               ₹{order.total.toFixed(2)}
@@ -218,6 +232,17 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: spacing.md,
+  },
+  orderHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  preorderPill: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: borderRadius.sm,
+    backgroundColor: colors.primaryBg,
   },
   orderItems: {
     borderTopWidth: 1,

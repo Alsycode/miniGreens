@@ -18,8 +18,8 @@ const contactMethods = [
   {
     icon: 'mail-outline' as const,
     label: 'Email Us',
-    value: 'hello@minigreens.in',
-    action: () => Linking.openURL('mailto:hello@minigreens.in'),
+    value: 'theminigreenscompany@gmail.com',
+    action: () => Linking.openURL('mailto:theminigreenscompany@gmail.com'),
     hint: 'Replies within 24 hours',
   },
   {
@@ -142,9 +142,9 @@ export default function ContactScreen() {
             </Typography>
           </View>
           <Typography variant="bodySmall" color={colors.textSecondary} style={styles.officeAddress}>
-            Plot 12, Green Valley Industrial Area{'\n'}
-            Whitefield, Bengaluru — 560066{'\n'}
-            Karnataka, India
+            Green Farm Road{'\n'}
+            Wayanad — 673121{'\n'}
+            Kerala, India
           </Typography>
         </Animated.View>
       </ScrollView>
@@ -164,6 +164,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     backgroundColor: colors.surface,
+    ...shadows.sm,
   },
   headerButton: {
     width: 40,

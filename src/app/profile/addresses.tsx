@@ -16,6 +16,8 @@ import { colors, spacing, borderRadius, shadows } from '../../theme';
 import { Typography } from '../../components/ui/Typography';
 import { TextField } from '../../components/ui/TextField';
 import { Button } from '../../components/ui/Button';
+import { EmptyState } from '../../components/ui/EmptyState';
+import { Screen } from '../../components/layout/Screen';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../store/useAuthStore';
 import type { Database } from '../../types/database';
@@ -108,6 +110,7 @@ function AddressCard({
 
 export default function AddressesScreen() {
   const insets = useSafeAreaInsets();
+  const session = useAuthStore((s) => s.session);
   const profile = useAuthStore((s) => s.profile);
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [loading, setLoading] = useState(true);
@@ -195,6 +198,19 @@ export default function AddressesScreen() {
         style: 'destructive',
         onPress: async () => {
           await supabase.from('addresses').delete().eq('id', address.id);
+          if (address.is_default && profile) {
+            // Deleting the default address leaves no default — promote the most
+            // recently added remaining one so checkout always has one to fall back on.
+            const { data: remaining } = await supabase
+              .from('addresses')
+              .select('id')
+              .eq('profile_id', profile.id)
+              .order('created_at', { ascending: false })
+              .limit(1);
+            if (remaining && remaining.length > 0) {
+              await supabase.from('addresses').update({ is_default: true }).eq('id', remaining[0].id);
+            }
+          }
           load();
         },
       },
@@ -204,9 +220,29 @@ export default function AddressesScreen() {
   async function handleSetDefault(address: Address) {
     if (address.is_default || !profile) return;
     Haptics.selectionAsync();
-    await supabase.from('addresses').update({ is_default: false }).eq('profile_id', profile.id);
-    await supabase.from('addresses').update({ is_default: true }).eq('id', address.id);
+    // Set the new default first so a failure on the clear-others step never
+    // leaves the account with zero default addresses.
+    const { error: setErr } = await supabase.from('addresses').update({ is_default: true }).eq('id', address.id);
+    if (setErr) {
+      Alert.alert('Error', 'Could not set default address. Please try again.');
+      return;
+    }
+    await supabase.from('addresses').update({ is_default: false }).eq('profile_id', profile.id).neq('id', address.id);
     load();
+  }
+
+  if (!session) {
+    return (
+      <Screen title="Saved Addresses" scroll={false}>
+        <EmptyState
+          icon="location-outline"
+          title="Log in to manage addresses"
+          message="Your saved delivery addresses show up here."
+          actionLabel="Log In"
+          onAction={() => router.push('/auth/login')}
+        />
+      </Screen>
+    );
   }
 
   return (
@@ -295,6 +331,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     backgroundColor: colors.surface,
+    ...shadows.sm,
   },
   headerButton: {
     width: 40,

@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Leaf, ShoppingCart, Check, Star } from "@phosphor-icons/react";
 import { useCartStore } from "@/store/useCartStore";
 import { displayName } from "@/lib/productCopy";
+import { productImageFit } from "@/lib/productImages";
 
 export interface ProductCardData {
   slug: string;
@@ -42,7 +43,7 @@ export function ProductCard({ product }: { product: ProductCardData }) {
               src={product.image}
               alt={name}
               fill
-              className="object-cover transition-transform duration-300 hover:scale-105"
+              className={`${productImageFit(product.image)} transition-transform duration-300 hover:scale-105`}
               sizes="(min-width: 1024px) 22vw, 45vw"
             />
           ) : (

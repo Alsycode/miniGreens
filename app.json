@@ -1,6 +1,7 @@
 {
   "expo": {
     "name": "MiniGreens",
+    "description": "India's first microgreens brand. Fresh microgreens and microgreen teas, delivered.",
     "slug": "minigreens",
     "version": "1.0.0",
     "orientation": "portrait",
